@@ -263,6 +263,8 @@ app.use("/api/currency", currencyRateRoutes);
 
 app.use("/api", require("./routes/allgameroute/allGameRoute"));
 
+app.use('/api',require('./routes/gameRoutes'))
+
 
 // =====================================================
 // USER TICKET TYPES
