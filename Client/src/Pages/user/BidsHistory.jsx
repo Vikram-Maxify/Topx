@@ -102,6 +102,10 @@ const BidsHistory = () => {
   });
   const [actionMessage, setActionMessage] = useState(null);
 
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
+
   useEffect(() => {
     dispatch(getBiddingHistory(filter));
   }, [dispatch, filter]);
@@ -169,33 +173,33 @@ const BidsHistory = () => {
   const getStatusConfig = (status) => {
     const configs = {
       pending: {
-        color: "from-amber-400 to-yellow-500",
-        bgColor: "bg-amber-50",
-        borderColor: "border-amber-200",
+        color: "from-[#F1C40F] to-[#E67E22]",
+        bgColor: "bg-[#F1C40F]/10",
+        borderColor: "border-[#F1C40F]/30",
         icon: Clock,
         label: "Pending",
-        glow: "shadow-amber-500/30",
+        glow: "shadow-[#F1C40F]/30",
       },
       won: {
-        color: "from-emerald-400 to-green-500",
-        bgColor: "bg-emerald-50",
-        borderColor: "border-emerald-200",
+        color: "from-[#00E676] to-[#00c853]",
+        bgColor: "bg-[#00E676]/10",
+        borderColor: "border-[#00E676]/30",
         icon: Trophy,
         label: "Won",
-        glow: "shadow-emerald-500/30",
+        glow: "shadow-[#00E676]/30",
       },
       lost: {
         color: "from-red-400 to-rose-500",
-        bgColor: "bg-red-50",
-        borderColor: "border-red-200",
+        bgColor: "bg-red-500/10",
+        borderColor: "border-red-500/30",
         icon: XCircle,
         label: "Lost",
         glow: "shadow-red-500/30",
       },
       cancelled: {
         color: "from-gray-400 to-gray-500",
-        bgColor: "bg-gray-50",
-        borderColor: "border-gray-200",
+        bgColor: "bg-[#2a1b3d]",
+        borderColor: "border-[#3a2a4d]",
         icon: AlertCircle,
         label: "Cancelled",
         glow: "shadow-gray-500/30",
@@ -342,10 +346,10 @@ const BidsHistory = () => {
       text-white font-extrabold
       ${
         isWin
-          ? "bg-gradient-to-br from-green-400 to-emerald-600 shadow-md shadow-emerald-300/50"
+          ? "bg-gradient-to-br from-[#00E676] to-[#00c853] shadow-md shadow-[#00E676]/40"
           : isLost
-            ? "bg-gradient-to-br from-red-400 to-rose-600 shadow-md shadow-red-300/50"
-            : "bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-300/50"
+            ? "bg-gradient-to-br from-red-400 to-rose-600 shadow-md shadow-red-400/40"
+            : "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] shadow-md shadow-[#B45CFF]/40"
       }
     `;
 
@@ -360,7 +364,7 @@ const BidsHistory = () => {
             ))}
           </div>
 
-          <span className="font-extrabold text-gray-400 text-xs">-</span>
+          <span className="font-extrabold text-gray-500 text-xs">-</span>
 
           <div className="flex items-center gap-1">
             {parsed.second.map((digit, index) => (
@@ -386,7 +390,7 @@ const BidsHistory = () => {
 
   const renderResultNumber = (number, gameType) => {
     if (number === undefined || number === null || number === "") {
-      return <span className="text-[10px] text-gray-400">Pending</span>;
+      return <span className="text-[10px] text-gray-500">Pending</span>;
     }
 
     const parsed = getResultDigits(number, gameType);
@@ -398,20 +402,20 @@ const BidsHistory = () => {
             {parsed.first.map((digit, index) => (
               <div
                 key={`result-first-${index}`}
-                className="w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-[10px] font-extrabold text-gray-700"
+                className="w-6 h-6 rounded-full bg-[#12061C] border-2 border-[#2a1b3d] flex items-center justify-center text-[10px] font-extrabold text-gray-200"
               >
                 {digit}
               </div>
             ))}
           </div>
 
-          <span className="font-extrabold text-gray-400 text-[10px]">-</span>
+          <span className="font-extrabold text-gray-500 text-[10px]">-</span>
 
           <div className="flex items-center gap-1">
             {parsed.second.map((digit, index) => (
               <div
                 key={`result-second-${index}`}
-                className="w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-[10px] font-extrabold text-gray-700"
+                className="w-6 h-6 rounded-full bg-[#12061C] border-2 border-[#2a1b3d] flex items-center justify-center text-[10px] font-extrabold text-gray-200"
               >
                 {digit}
               </div>
@@ -426,7 +430,7 @@ const BidsHistory = () => {
         {parsed.first.map((digit, index) => (
           <div
             key={index}
-            className="w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-[10px] font-extrabold text-gray-700"
+            className="w-6 h-6 rounded-full bg-[#12061C] border-2 border-[#2a1b3d] flex items-center justify-center text-[10px] font-extrabold text-gray-200"
           >
             {digit}
           </div>
@@ -447,20 +451,20 @@ const BidsHistory = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-amber-500"></div>
+      <div className="flex justify-center items-center min-h-[60vh] bg-[#0B0410]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#B45CFF]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/80 px-4 py-4">
+    <div className="min-h-screen bg-[#0B0410] px-4 py-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-800 flex items-center gap-2">
-              <History size={24} className="text-amber-500" />
+            <h1 className="text-2xl font-extrabold text-white flex items-center gap-2">
+              <History size={24} className="text-[#B45CFF]" />
               Bidding History
             </h1>
             <p className="text-sm text-gray-400">
@@ -469,9 +473,9 @@ const BidsHistory = () => {
           </div>
           <button
             onClick={() => dispatch(getBiddingHistory(filter))}
-            className="p-2 bg-white rounded-xl border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all"
+            className="p-2 bg-[#1C0F2B] rounded-xl border border-[#2a1b3d] hover:border-[#B45CFF]/50 hover:bg-[#2a1b3d] transition-all"
           >
-            <RefreshCw size={18} className="text-gray-500" />
+            <RefreshCw size={18} className="text-gray-400" />
           </button>
         </div>
 
@@ -481,25 +485,25 @@ const BidsHistory = () => {
             {[
               {
                 icon: Coins,
-                gradient: "from-blue-500 to-indigo-600",
+                gradient: "from-[#3498DB] to-[#2471A3]",
                 label: "Total Bids",
                 value: totalBids,
               },
               {
                 icon: DollarSign,
-                gradient: "from-green-500 to-emerald-600",
+                gradient: "from-[#00E676] to-[#00c853]",
                 label: "Invested",
                 value: formatCurrency(totalAmount),
               },
               {
                 icon: Trophy,
-                gradient: "from-amber-500 to-orange-600",
+                gradient: "from-[#F1C40F] to-[#E67E22]",
                 label: "Won",
                 value: formatWinAmount(totalWinAmount),
               },
               {
                 icon: BarChart3,
-                gradient: "from-purple-500 to-violet-600",
+                gradient: "from-[#B45CFF] via-[#7418F5] to-[#3A00C9]",
                 label: "Win Rate",
                 value:
                   totalBids > 0
@@ -509,7 +513,7 @@ const BidsHistory = () => {
             ].map((stat, index) => (
               <div
                 key={index}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-3"
+                className="bg-[#1C0F2B] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.5)] border border-[#2a1b3d] p-3"
               >
                 <div className="flex items-center gap-2.5">
                   <div
@@ -518,10 +522,10 @@ const BidsHistory = () => {
                     <stat.icon size={16} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-gray-400 text-[9px] font-medium uppercase tracking-wider">
+                    <p className="text-gray-500 text-[9px] font-medium uppercase tracking-wider">
                       {stat.label}
                     </p>
-                    <p className="text-sm font-extrabold text-gray-800">
+                    <p className="text-sm font-extrabold text-white">
                       {stat.value}
                     </p>
                   </div>
@@ -532,9 +536,9 @@ const BidsHistory = () => {
         )}
 
         {/* Filter */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm mb-4">
+        <div className="bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] p-3 shadow-[0_4px_12px_rgba(0,0,0,0.5)] mb-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
               Filter:
             </span>
             <select
@@ -542,7 +546,7 @@ const BidsHistory = () => {
               onChange={(e) =>
                 setFilter({ ...filter, status: e.target.value, page: 1 })
               }
-              className="px-4 py-1.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm bg-white"
+              className="px-4 py-1.5 border border-[#2a1b3d] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B45CFF]/30 focus:border-[#B45CFF]/60 text-sm bg-[#12061C] text-white"
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
@@ -559,8 +563,8 @@ const BidsHistory = () => {
             <div
               className={`px-4 py-3 rounded-xl border flex items-center gap-2 ${
                 actionMessage.type === "success"
-                  ? "bg-emerald-50/80 border-emerald-200 text-emerald-700"
-                  : "bg-red-50/80 border-red-200 text-red-700"
+                  ? "bg-[#00E676]/10 border-[#00E676]/40 text-[#00E676]"
+                  : "bg-red-500/10 border-red-500/40 text-red-400"
               }`}
             >
               <span className="text-lg">
@@ -573,7 +577,7 @@ const BidsHistory = () => {
 
         {/* Error */}
         {error && !actionMessage && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-2 mb-4">
+          <div className="bg-red-500/10 border border-red-500/40 text-red-400 px-4 py-3 rounded-xl text-sm flex items-center gap-2 mb-4">
             <AlertCircle size={16} />
             {error}
           </div>
@@ -581,8 +585,8 @@ const BidsHistory = () => {
 
         {/* Bids list */}
         {bidsArray.length > 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="divide-y divide-gray-100">
+          <div className="bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] shadow-[0_4px_12px_rgba(0,0,0,0.5)] overflow-hidden">
+            <div className="divide-y divide-[#2a1b3d]">
               {bidsArray.map((bid) => {
                 const statusConfig = getStatusConfig(bid.status);
                 const StatusIcon = statusConfig.icon;
@@ -595,15 +599,15 @@ const BidsHistory = () => {
                 return (
                   <div
                     key={bid._id}
-                    className="p-3.5 hover:bg-amber-50/30 transition-colors"
+                    className="p-3.5 hover:bg-[#2a1b3d]/40 transition-colors"
                   >
                     {/* Row 1: Market + Status */}
                     <div className="flex items-start justify-between mb-2.5">
                       <div>
-                        <p className="text-sm font-bold text-gray-800">
+                        <p className="text-sm font-bold text-white">
                           {bid.marketId?.name || "N/A"}
                         </p>
-                        <p className="text-[9px] text-gray-400">
+                        <p className="text-[9px] text-gray-500">
                           {bid.marketId?.marketId || ""}
                         </p>
                       </div>
@@ -618,37 +622,37 @@ const BidsHistory = () => {
                     {/* Row 2: Game type + Date */}
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-gray-100 text-gray-700">
+                        <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-[#12061C] border border-[#2a1b3d] text-gray-300">
                           {gameTypeDisplay}
                         </span>
 
                         {bid.gameType === "half-sangam" && (
-                          <span className="text-[9px] text-gray-400">
+                          <span className="text-[9px] text-gray-500">
                             123-5 / 5-123
                           </span>
                         )}
 
                         {bid.gameType === "full-sangam" && (
-                          <span className="text-[9px] text-gray-400">
+                          <span className="text-[9px] text-gray-500">
                             123-456
                           </span>
                         )}
 
                         {getDigitType(bid) && (
-                          <span className="px-2 py-1 text-[9px] font-extrabold rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                          <span className="px-2 py-1 text-[9px] font-extrabold rounded-full bg-[#9B59B6]/15 text-[#C77AFF] border border-[#9B59B6]/30">
                             {getDigitType(bid)}
                           </span>
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-gray-500">
+                        <p className="text-[10px] text-gray-400">
                           {new Date(bid.createdAt).toLocaleDateString("en-IN", {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
                           })}
                         </p>
-                        <p className="text-[9px] text-gray-400">
+                        <p className="text-[9px] text-gray-500">
                           {new Date(bid.createdAt).toLocaleTimeString("en-IN", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -658,10 +662,10 @@ const BidsHistory = () => {
                     </div>
 
                     {/* Row 3: Number, Result, Amount */}
-                    <div className="flex items-center justify-between gap-2 bg-gray-50/70 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2 bg-[#12061C] rounded-xl px-3 py-2.5 border border-[#2a1b3d]">
                       {/* Your Number */}
                       <div>
-                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        <p className="text-[8px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                           Your Number
                         </p>
                         {renderNumberBalls(
@@ -674,13 +678,13 @@ const BidsHistory = () => {
 
                       {/* Result */}
                       <div>
-                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        <p className="text-[8px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                           Result
                         </p>
                         {isResultDeclared ? (
                           renderResultNumber(bid.resultNumber, bid.gameType)
                         ) : (
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-gray-500">
                             Pending
                           </span>
                         )}
@@ -688,16 +692,16 @@ const BidsHistory = () => {
 
                       {/* Amount */}
                       <div className="text-right">
-                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        <p className="text-[8px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                           Amount
                         </p>
 
-                        <p className="text-sm font-bold text-gray-700">
+                        <p className="text-sm font-bold text-gray-200">
                           {formatCurrency(bid.bidAmount)}
                         </p>
 
                         {bid.winAmount > 0 && (
-                          <p className="text-[10px] font-extrabold text-green-500">
+                          <p className="text-[10px] font-extrabold text-[#00E676]">
                             + {formatWinAmount(bid.winAmount)}
                           </p>
                         )}
@@ -709,8 +713,8 @@ const BidsHistory = () => {
             </div>
 
             {/* Pagination */}
-            <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-2">
-              <span className="text-sm text-gray-600">
+            <div className="px-4 py-3 border-t border-[#2a1b3d] flex flex-col sm:flex-row justify-between items-center gap-2">
+              <span className="text-sm text-gray-400">
                 Showing {bidsArray.length} of {pagination?.total || 0} bids
               </span>
               <div className="flex gap-2">
@@ -722,11 +726,13 @@ const BidsHistory = () => {
                     })
                   }
                   disabled={filter.page === 1}
-                  className="px-4 py-1.5 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 disabled:opacity-50 transition"
+                  className="px-4 py-1.5 border border-[#2a1b3d] bg-[#12061C] text-gray-300 rounded-xl text-sm hover:bg-[#2a1b3d] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="px-4 py-1.5 rounded-xl text-sm font-bold bg-amber-100 text-amber-700">
+                <span
+                  className={`px-4 py-1.5 rounded-xl text-sm font-bold ${purpleGradient} text-white`}
+                >
                   {filter.page} / {pagination?.pages || 1}
                 </span>
                 <button
@@ -737,7 +743,7 @@ const BidsHistory = () => {
                     })
                   }
                   disabled={filter.page === (pagination?.pages || 1)}
-                  className="px-4 py-1.5 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 disabled:opacity-50 transition"
+                  className="px-4 py-1.5 border border-[#2a1b3d] bg-[#12061C] text-gray-300 rounded-xl text-sm hover:bg-[#2a1b3d] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -746,15 +752,15 @@ const BidsHistory = () => {
           </div>
         ) : (
           /* Empty State */
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+          <div className="bg-[#1C0F2B] rounded-2xl shadow-[0_4_12px_rgba(0,0,0,0.5)] border border-[#2a1b3d] p-12 text-center">
             <div className="text-5xl mb-4 opacity-30">📭</div>
-            <p className="text-gray-500 text-lg font-medium">No Bids Found</p>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-gray-300 text-lg font-medium">No Bids Found</p>
+            <p className="text-gray-500 text-sm mt-1">
               Start exploring active markets and place your first bid!
             </p>
             <Link
               to="/matka/markets"
-              className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-xl transition-all"
+              className={`inline-flex items-center gap-2 mt-4 px-6 py-2.5 ${purpleGradient} text-white rounded-xl font-bold transition-all active:scale-[0.98]`}
             >
               <Target size={16} />
               Browse Markets

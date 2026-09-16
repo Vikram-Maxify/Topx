@@ -8,6 +8,10 @@ const tabs = [
 ];
 
 const PromoTabs = ({ activeTab, setActiveTab }) => {
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
+
   return (
     <div className="grid grid-cols-4 gap-2.5">
       {tabs.map((tab) => {
@@ -18,10 +22,10 @@ const PromoTabs = ({ activeTab, setActiveTab }) => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-1.5 rounded-2xl py-3 px-1 transition-all duration-200 border ${
+            className={`flex flex-col items-center gap-1.5 rounded-2xl py-3 px-1 transition-all duration-200 ${
               isActive
-                ? "bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] text-black"
-                : "bg-white border-gray-200 text-gray-700"
+                ? `${purpleGradient} text-white`
+                : "bg-[#1C0F2B] border border-[#2a1b3d] text-gray-400 hover:border-[#9B59B6]/50 hover:text-white"
             }`}
           >
             <Icon size={19} strokeWidth={2} />

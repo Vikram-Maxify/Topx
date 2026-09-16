@@ -90,9 +90,6 @@ const GAME_TYPE_MAP = {
 const getBackendGameType = (frontendType) =>
   GAME_TYPE_MAP[frontendType] || frontendType;
 
-// =========================================================
-// NORMALIZE API gameTypes
-// =========================================================
 const normalizeGameKey = (key) =>
   String(key || "")
     .trim()
@@ -104,11 +101,9 @@ const normalizeGameKey = (key) =>
 // =========================================================
 const generateBidAmounts = (min, max, maxButtons = 9) => {
   if (!min || !max || min >= max) return [min || 0];
-
   const niceBases = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8];
   const candidates = new Set();
   let magnitude = 1;
-
   while (magnitude <= max) {
     niceBases.forEach((b) => {
       const val = Math.round(b * magnitude);
@@ -116,12 +111,9 @@ const generateBidAmounts = (min, max, maxButtons = 9) => {
     });
     magnitude *= 10;
   }
-
   candidates.add(min);
   candidates.add(max);
-
   let amounts = Array.from(candidates).sort((a, b) => a - b);
-
   if (amounts.length > maxButtons) {
     const step = (amounts.length - 1) / (maxButtons - 1);
     const picked = [];
@@ -130,7 +122,6 @@ const generateBidAmounts = (min, max, maxButtons = 9) => {
     }
     amounts = Array.from(new Set(picked));
   }
-
   return amounts;
 };
 
@@ -213,23 +204,23 @@ const PlaceBid = () => {
   const { currentMarket, loading: marketLoading } = useSelector(
     (state) => state.market,
   );
-
   const { user } = useSelector((state) => state.auth);
-
   const {
     loading: bidLoading,
     error,
     message,
   } = useSelector((state) => state.bid);
-
   const { results: publicResults, loading: resultsLoading } = useSelector(
     selectPublicBidResults,
   );
-
   const currencies = useSelector((state) => state.currencyRate?.currencies);
 
   const { gameType: autoGameType, digitType: autoDigitType } =
     location.state || {};
+
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
 
   // =========================================================
   // FLATTEN SESSION DATA FROM marketArray
@@ -314,8 +305,6 @@ const PlaceBid = () => {
     );
   }, [currencies, userCountryCode]);
 
-  // Rate = 1 user currency = X INR
-  // e.g. 1 AUD = 68.37 INR, 1 INR = 1 INR
   const exchangeRate = useMemo(() => {
     const rate = Number(userCurrencyRate?.rate);
     return Number.isFinite(rate) && rate > 0 ? rate : 1;
@@ -323,32 +312,18 @@ const PlaceBid = () => {
 
   const userCurrencyCode = userCurrencyRate?.currencyCode || "INR";
 
-  // =========================================================
-  // CORE CONVERSION HELPERS (INR <-> user currency)
-  // =========================================================
-  /**
-   * Convert user currency amount -> INR
-   * (bid amount user ne user-currency me daala hai)
-   */
   const userToINR = (amount) => {
     const a = Number(amount);
     if (!Number.isFinite(a)) return 0;
     return a * exchangeRate;
   };
 
-  /**
-   * Convert INR amount -> user currency
-   * (market min/max INR me hain, user ko user-currency me dikhana hai)
-   */
   const inrToUser = (amountINR) => {
     const a = Number(amountINR);
     if (!Number.isFinite(a)) return 0;
     return a / exchangeRate;
   };
 
-  /**
-   * Format an amount that is ALREADY in user's currency.
-   */
   const formatUserCurrency = (amount) => {
     const amt = Number(amount) || 0;
     return new Intl.NumberFormat("en-IN", {
@@ -359,9 +334,6 @@ const PlaceBid = () => {
     }).format(amt);
   };
 
-  /**
-   * Format an INR amount (e.g. market min/max, stats).
-   */
   const formatINR = (amount) => {
     const amt = Number(amount) || 0;
     return new Intl.NumberFormat("en-IN", {
@@ -403,16 +375,13 @@ const PlaceBid = () => {
   const [isCustomAmount, setIsCustomAmount] = useState(false);
   const [customAmountError, setCustomAmountError] = useState("");
 
-  // Bid amount quick buttons — INR se user currency me convert
   const bidAmountOptions = useMemo(() => {
     const inrAmounts = generateBidAmounts(
       marketData?.minBid,
       marketData?.maxBid,
     );
-    // Convert each INR option to user currency & round sensibly
     const userAmounts = inrAmounts.map((amt) => {
       const v = inrToUser(amt);
-      // Round nicely: small amounts -> 2 decimals, large -> whole
       if (v < 1) return Number(v.toFixed(2));
       if (v < 100) return Number(v.toFixed(2));
       return Math.round(v);
@@ -424,12 +393,7 @@ const PlaceBid = () => {
   // FETCHES
   // =========================================================
   useEffect(() => {
-    dispatch(
-      fetchPublicBidResults({
-        gameType: "panna",
-        status: "all",
-      }),
-    );
+    dispatch(fetchPublicBidResults({ gameType: "panna", status: "all" }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -453,7 +417,6 @@ const PlaceBid = () => {
     }
 
     const marketResults = publicResults.filter((r) => r.resultNumber);
-
     const sorted = [...marketResults].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
@@ -497,7 +460,6 @@ const PlaceBid = () => {
       "last-digit": 2,
       "first-digit": 2,
     };
-
     return counts[gameType] || 1;
   };
 
@@ -507,7 +469,6 @@ const PlaceBid = () => {
         ? ["Digit", "H", "T", "U"]
         : ["H", "T", "U", "Digit"];
     }
-
     if (gameType === "full-sangam") {
       return ["OH", "OT", "OU", "CH", "CT", "CU"];
     }
@@ -521,7 +482,6 @@ const PlaceBid = () => {
       "last-digit": ["T", "U"],
       "first-digit": ["T", "U"],
     };
-
     return labels[gameType] || ["Digit"];
   };
 
@@ -642,10 +602,7 @@ const PlaceBid = () => {
     }
 
     const number = buildGameNumber(formData.gameType, newSelected);
-    setFormData({
-      ...formData,
-      number: number,
-    });
+    setFormData({ ...formData, number });
 
     if (
       ["single-patti", "double-patti", "triple-patti"].includes(
@@ -720,9 +677,6 @@ const PlaceBid = () => {
     setFormData({ ...formData, bidAmount: amount.toString() });
   };
 
-  // =========================================================
-  // CUSTOM AMOUNT VALIDATION (user currency me)
-  // =========================================================
   const handleCustomAmountChange = (e) => {
     const value = e.target.value;
     if (value !== "" && !/^\d*\.?\d*$/.test(value)) return;
@@ -740,7 +694,6 @@ const PlaceBid = () => {
       return;
     }
 
-    // ✅ User currency me validate karo (INR me convert karke)
     const amountInINR = userToINR(amount);
 
     if (amountInINR < (marketData?.minBid || 0)) {
@@ -786,9 +739,6 @@ const PlaceBid = () => {
       return setLocalError(customAmountError);
 
     const bidAmountUser = parseFloat(formData.bidAmount);
-
-    // ✅ min/max validation ke liye INR me convert karo
-    // (kyunki market min/max backend me INR me define hain)
     const bidAmountInINR = userToINR(bidAmountUser);
 
     if (bidAmountInINR < (marketData?.minBid || 0)) {
@@ -803,11 +753,7 @@ const PlaceBid = () => {
       );
     }
 
-    // ✅ BALANCE CHECK — user ki currency me hi compare karo (INR me convert NAHI)
-    // Backend user.balance.local ko user ki currency me bhejta hai.
-    const userBalance = Number(
-      user?.balance?.local ?? user?.balance ?? 0,
-    );
+    const userBalance = Number(user?.balance?.local ?? user?.balance ?? 0);
 
     if (!Number.isFinite(userBalance) || userBalance < bidAmountUser) {
       return setLocalError(
@@ -817,15 +763,12 @@ const PlaceBid = () => {
 
     const backendGameType = getBackendGameType(formData.gameType);
 
-    // ⚠️ IMPORTANT:
-    // Backend ko USER CURRENCY me amount bhejo.
-    // Backend khud INR me convert karega (calculateWinAmount + placeBid).
     const result = await dispatch(
       placeBid({
         marketId,
         gameType: backendGameType,
         number: formData.number,
-        bidAmount: bidAmountUser, // user currency amount
+        bidAmount: bidAmountUser,
       }),
     );
 
@@ -840,7 +783,7 @@ const PlaceBid = () => {
   };
 
   // =========================================================
-  // WIN CALC — user currency me
+  // WIN CALC
   // =========================================================
   const calculateWinAmount = () => {
     if (!formData.bidAmount || !formData.gameType) return 0;
@@ -953,13 +896,13 @@ const PlaceBid = () => {
     return (
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
-          <h3 className="text-sm font-bold text-gray-700">
+          <div className="w-1 h-5 bg-[#B45CFF] rounded-full"></div>
+          <h3 className="text-sm font-bold text-gray-200">
             STEP 1: SELECT {getGameTypeDisplay(formData.gameType).toUpperCase()}{" "}
             ({count} NUMBERS)
           </h3>
         </div>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-gray-400 mb-4">
           {formData.gameType === "half-sangam"
             ? `Select ${isHalfSangamMode === "single" ? "1 digit + 3-digit Panna" : "3-digit Panna + 1 digit"}`
             : formData.gameType === "full-sangam"
@@ -970,11 +913,11 @@ const PlaceBid = () => {
         </p>
 
         {isPattiGame && (
-          <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-            <p className="text-xs font-medium text-blue-700">
+          <div className="mb-4 p-3 bg-[#9B59B6]/10 rounded-xl border border-[#9B59B6]/40">
+            <p className="text-xs font-medium text-[#C77AFF]">
               📌 {getPattiTypeLabel(formData.gameType)} Pattern
             </p>
-            <p className="text-xs text-blue-600 mt-0.5">
+            <p className="text-xs text-gray-300 mt-0.5">
               Examples: {getPattiExample(formData.gameType)}
             </p>
           </div>
@@ -986,10 +929,10 @@ const PlaceBid = () => {
               <div
                 className={`w-14 h-14 rounded-full border-2 flex items-center justify-center text-2xl font-bold transition-all ${
                   selectedDigits[i] !== null && selectedDigits[i] !== undefined
-                    ? "bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] text-white"
+                    ? `${purpleGradient} text-white`
                     : i === currentDigitIndex
-                      ? "border-amber-400 bg-amber-50 text-gray-400"
-                      : "border-gray-200 bg-gray-50 text-gray-300"
+                      ? "border-[#B45CFF]/60 bg-[#9B59B6]/10 text-gray-400"
+                      : "border-[#2a1b3d] bg-[#12061C] text-gray-600"
                 }`}
               >
                 {selectedDigits[i] !== null && selectedDigits[i] !== undefined
@@ -997,7 +940,7 @@ const PlaceBid = () => {
                   : "?"}
               </div>
               {labels[i] && (
-                <p className="text-[10px] text-gray-400 mt-1 font-medium">
+                <p className="text-[10px] text-gray-500 mt-1 font-medium">
                   {labels[i]}
                 </p>
               )}
@@ -1029,10 +972,10 @@ const PlaceBid = () => {
                   w-11 h-11 rounded-full font-mono font-bold text-lg transition-all duration-200
                   ${
                     isSelected
-                      ? "bg-amber-500 text-white shadow-lg shadow-amber-200 scale-95"
+                      ? `${purpleGradient} text-white scale-95`
                       : isComplete
-                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                        : "bg-white border-2 border-gray-200 text-gray-700 hover:border-amber-400 hover:bg-amber-50 hover:scale-110 active:scale-95"
+                        ? "bg-[#12061C] text-gray-600 cursor-not-allowed border border-[#2a1b3d]"
+                        : "bg-[#1C0F2B] border-2 border-[#2a1b3d] text-gray-200 hover:border-[#B45CFF]/60 hover:bg-[#2a1b3d] hover:scale-110 active:scale-95"
                   }
                 `}
               >
@@ -1044,46 +987,46 @@ const PlaceBid = () => {
 
         {isComplete && (
           <div className="mt-4 text-center">
-            <div className="inline-flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-full px-5 py-2">
-              <span className="text-xs text-gray-500 font-medium">
+            <div className="inline-flex items-center gap-3 bg-[#9B59B6]/10 border border-[#9B59B6]/40 rounded-full px-5 py-2">
+              <span className="text-xs text-gray-400 font-medium">
                 SELECTED {getGameTypeDisplay(formData.gameType).toUpperCase()}
               </span>
-              <span className="text-xl font-extrabold text-amber-600 font-mono tracking-wider">
+              <span className="text-xl font-extrabold text-[#C77AFF] font-mono tracking-wider">
                 {formData.number}
               </span>
               <button
                 type="button"
                 onClick={resetSelection}
-                className="p-0.5 rounded-full hover:bg-amber-200/50 transition-colors"
+                className="p-0.5 rounded-full hover:bg-[#9B59B6]/30 transition-colors"
               >
-                <X size={16} className="text-amber-400" />
+                <X size={16} className="text-[#B45CFF]" />
               </button>
             </div>
           </div>
         )}
 
-        <p className="text-xs text-gray-400 text-center mt-3">
+        <p className="text-xs text-gray-500 text-center mt-3">
           Format:{" "}
-          <span className="font-medium text-gray-500">
+          <span className="font-medium text-gray-400">
             {getNumberHint(formData.gameType)}
           </span>
         </p>
 
         {formData.gameType && (
-          <div className="mt-5 p-4 bg-amber-50/60 rounded-xl border border-amber-100">
+          <div className="mt-5 p-4 bg-[#9B59B6]/10 rounded-xl border border-[#9B59B6]/40">
             <div className="flex items-start gap-3">
               <Award
                 size={18}
-                className="text-amber-500 mt-0.5 flex-shrink-0"
+                className="text-[#B45CFF] mt-0.5 flex-shrink-0"
               />
               <div>
-                <p className="text-xs font-bold text-amber-700">
+                <p className="text-xs font-bold text-[#C77AFF]">
                   {getAboutText(formData.gameType).title}
                 </p>
-                <p className="text-xs text-gray-600 mt-0.5">
+                <p className="text-xs text-gray-300 mt-0.5">
                   {getAboutText(formData.gameType).desc}
                 </p>
-                <p className="text-xs font-medium text-amber-600 mt-1.5 bg-white/70 rounded-lg px-3 py-1.5 border border-amber-100">
+                <p className="text-xs font-medium text-[#C77AFF] mt-1.5 bg-[#0B0410]/70 rounded-lg px-3 py-1.5 border border-[#9B59B6]/30">
                   💡 {getAboutText(formData.gameType).example}
                 </p>
               </div>
@@ -1100,7 +1043,7 @@ const PlaceBid = () => {
         <div className="text-center py-10">
           <div className="text-5xl mb-3 opacity-30">👆</div>
           <p className="text-gray-400 font-medium">Select a game type</p>
-          <p className="text-xs text-gray-300">Then choose your digits</p>
+          <p className="text-xs text-gray-500">Then choose your digits</p>
         </div>
       );
     }
@@ -1119,8 +1062,8 @@ const PlaceBid = () => {
               }}
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
                 isHalfSangamMode === "triple"
-                  ? "bg-amber-50 border-amber-400 text-amber-700"
-                  : "bg-white border-gray-200 text-gray-500"
+                  ? `${purpleGradient} text-white`
+                  : "bg-[#12061C] border-[#2a1b3d] text-gray-400 hover:bg-[#2a1b3d]"
               }`}
             >
               Panna + Digit
@@ -1138,8 +1081,8 @@ const PlaceBid = () => {
               }}
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
                 isHalfSangamMode === "single"
-                  ? "bg-amber-50 border-amber-400 text-amber-700"
-                  : "bg-white border-gray-200 text-gray-500"
+                  ? `${purpleGradient} text-white`
+                  : "bg-[#12061C] border-[#2a1b3d] text-gray-400 hover:bg-[#2a1b3d]"
               }`}
             >
               Digit + Panna
@@ -1162,21 +1105,21 @@ const PlaceBid = () => {
   // =========================================================
   if (marketLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-amber-500"></div>
+      <div className="flex justify-center items-center min-h-[60vh] bg-[#0B0410]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#B45CFF]"></div>
       </div>
     );
   }
 
   if (!marketData) {
     return (
-      <div className="max-w-md mx-auto px-4 py-12">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+      <div className="max-w-md mx-auto px-4 py-12 bg-[#0B0410] min-h-screen">
+        <div className="bg-[#1C0F2B] rounded-2xl shadow-xl p-8 text-center border border-[#2a1b3d]">
           <div className="text-5xl mb-3">🔍</div>
-          <p className="text-gray-600 font-semibold">Market not found</p>
+          <p className="text-gray-300 font-semibold">Market not found</p>
           <button
             onClick={() => navigate("/matka/markets")}
-            className="mt-3 text-amber-600 hover:text-amber-700 text-sm font-medium"
+            className="mt-3 text-[#B45CFF] hover:text-[#C77AFF] text-sm font-medium"
           >
             ← Back to Markets
           </button>
@@ -1189,11 +1132,11 @@ const PlaceBid = () => {
   // RENDER
   // =========================================================
   return (
-    <div className="min-h-screen bg-gray-50/80 px-4 py-4">
+    <div className="min-h-screen bg-[#0B0410] px-4 py-4">
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigate("/matka/markets")}
-          className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-all text-sm mb-4 group"
+          className="flex items-center gap-2 text-gray-400 hover:text-[#B45CFF] transition-all text-sm mb-4 group"
         >
           <ArrowLeft
             size={16}
@@ -1205,9 +1148,11 @@ const PlaceBid = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
           <div className="lg:col-span-3 space-y-4">
             {/* MARKET HEADER CARD */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] overflow-hidden">
               <div className="flex items-stretch">
-                <div className="relative w-28 flex-shrink-0 bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] flex flex-col items-center justify-center gap-2 py-5 overflow-hidden">
+                <div
+                  className={`relative w-28 flex-shrink-0 ${purpleGradient} flex flex-col items-center justify-center gap-2 py-5 overflow-hidden`}
+                >
                   <div className="w-16 h-16 rounded-2xl flex items-center justify-center">
                     <img
                       src={marketData.image}
@@ -1219,50 +1164,50 @@ const PlaceBid = () => {
                     {marketData.name}
                   </h1>
                   {marketData.isActive && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500/90 text-white flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-white animate-pulse"></span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-[#00E676]/90 text-[#0B0410] flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-[#0B0410] animate-pulse"></span>
                       LIVE
                     </span>
                   )}
                 </div>
 
                 <div className="flex-1 flex flex-col">
-                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2a1b3d]">
                     <div className="flex-1 flex flex-col items-center gap-0.5">
-                      <p className="text-[8px] font-bold text-gray-400 uppercase">
+                      <p className="text-[8px] font-bold text-gray-500 uppercase">
                         Open Time
                       </p>
                       <div className="flex items-center gap-1">
-                        <Clock size={11} className="text-green-500" />
-                        <span className="text-[11px] font-bold text-gray-700">
+                        <Clock size={11} className="text-[#00E676]" />
+                        <span className="text-[11px] font-bold text-gray-200">
                           {marketData.openTime}
                         </span>
                       </div>
                     </div>
 
-                    <div className="w-px h-7 bg-gray-100 flex-shrink-0"></div>
+                    <div className="w-px h-7 bg-[#2a1b3d] flex-shrink-0"></div>
 
                     <div className="flex-1 flex flex-col items-center gap-0.5">
-                      <p className="text-[8px] font-bold text-gray-400 uppercase">
+                      <p className="text-[8px] font-bold text-gray-500 uppercase">
                         Close Time
                       </p>
                       <div className="flex items-center gap-1">
                         <Clock size={11} className="text-red-400" />
-                        <span className="text-[11px] font-bold text-gray-700">
+                        <span className="text-[11px] font-bold text-gray-200">
                           {marketData.closeTime}
                         </span>
                       </div>
                     </div>
 
-                    <div className="w-px h-7 bg-gray-100 flex-shrink-0"></div>
+                    <div className="w-px h-7 bg-[#2a1b3d] flex-shrink-0"></div>
 
                     <div className="flex-1 flex flex-col items-center gap-0.5">
-                      <p className="text-[8px] font-bold text-gray-400 uppercase">
+                      <p className="text-[8px] font-bold text-gray-500 uppercase">
                         Result Time
                       </p>
                       <div className="flex items-center gap-1">
-                        <Clock size={11} className="text-amber-500" />
-                        <span className="text-[11px] font-bold text-gray-700">
+                        <Clock size={11} className="text-[#F1C40F]" />
+                        <span className="text-[11px] font-bold text-gray-200">
                           {marketData.resultTime}
                         </span>
                       </div>
@@ -1271,17 +1216,17 @@ const PlaceBid = () => {
 
                   <div className="flex items-center justify-between px-2 py-3 gap-2">
                     <div className="flex-1 flex flex-col items-center gap-1.5">
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">
+                      <p className="text-[9px] font-bold text-gray-500 uppercase">
                         Today's Result
                       </p>
                       <div className="flex items-center gap-1.5">
                         {resultsLoading && todayResult.length === 0 ? (
-                          <div className="w-7 h-7 rounded-xl bg-gray-100 border border-gray-200 animate-pulse" />
+                          <div className="w-7 h-7 rounded-xl bg-[#12061C] border border-[#2a1b3d] animate-pulse" />
                         ) : todayResult.length > 0 ? (
                           todayResult.map((digit, index) => (
                             <div
                               key={index}
-                              className="w-7 h-7 rounded-xl bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] flex items-center justify-center text-white font-extrabold text-base"
+                              className={`w-7 h-7 rounded-xl ${purpleGradient} flex items-center justify-center text-white font-extrabold text-base`}
                             >
                               {digit}
                             </div>
@@ -1292,63 +1237,63 @@ const PlaceBid = () => {
                             .map((digit, index) => (
                               <div
                                 key={index}
-                                className="w-7 h-7 rounded-xl bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] flex items-center justify-center text-white font-extrabold text-base"
+                                className={`w-7 h-7 rounded-xl ${purpleGradient} flex items-center justify-center text-white font-extrabold text-base`}
                               >
                                 {digit}
                               </div>
                             ))
                         ) : (
-                          <span className="text-xs text-gray-300 font-semibold">
+                          <span className="text-xs text-gray-600 font-semibold">
                             Awaited
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="w-px h-12 bg-gray-100 flex-shrink-0"></div>
+                    <div className="w-px h-12 bg-[#2a1b3d] flex-shrink-0"></div>
 
                     <div className="flex-1 flex flex-col items-center gap-1.5">
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">
+                      <p className="text-[9px] font-bold text-gray-500 uppercase">
                         Last Result
                       </p>
                       <div className="flex items-center gap-1.5">
                         {resultsLoading && lastResult.length === 0 ? (
-                          <div className="w-7 h-7 rounded-xl bg-gray-100 border border-gray-200 animate-pulse" />
+                          <div className="w-7 h-7 rounded-xl bg-[#12061C] border border-[#2a1b3d] animate-pulse" />
                         ) : lastResult.length > 0 ? (
                           lastResult.map((digit, index) => (
                             <div
                               key={index}
-                              className="w-7 h-7 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-extrabold text-base"
+                              className="w-7 h-7 rounded-xl bg-[#12061C] border border-[#2a1b3d] flex items-center justify-center text-gray-200 font-extrabold text-base"
                             >
                               {digit}
                             </div>
                           ))
                         ) : (
-                          <span className="text-xs text-gray-300 font-semibold">
+                          <span className="text-xs text-gray-600 font-semibold">
                             —
                           </span>
                         )}
                       </div>
                       {lastResultDateKey && (
-                        <p className="text-[8px] text-gray-300 font-semibold">
+                        <p className="text-[8px] text-gray-500 font-semibold">
                           {formatShortDate(lastResultDateKey)}
                         </p>
                       )}
                     </div>
 
-                    <div className="w-px h-12 bg-gray-100 flex-shrink-0"></div>
+                    <div className="w-px h-12 bg-[#2a1b3d] flex-shrink-0"></div>
 
                     <div className="flex-1 flex flex-col items-center gap-1.5">
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">
+                      <p className="text-[9px] font-bold text-gray-500 uppercase">
                         Updated
                       </p>
                       <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-amber-600">
+                        <span className="text-xs font-bold text-[#C77AFF]">
                           now
                         </span>
                         <RefreshCw
                           size={10}
-                          className="text-amber-400 animate-spin-slow"
+                          className="text-[#B45CFF] animate-spin-slow"
                         />
                       </div>
                     </div>
@@ -1358,13 +1303,13 @@ const PlaceBid = () => {
             </div>
 
             {/* DIGIT SELECTION CARD */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <div className="bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
               {!marketDigitType ? (
                 <div className="py-10 text-center">
-                  <p className="text-sm font-bold text-red-500">
+                  <p className="text-sm font-bold text-red-400">
                     Market digit type is missing
                   </p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-gray-500">
                     Configure this market as 2-digit or 3-digit from admin.
                   </p>
                 </div>
@@ -1374,7 +1319,7 @@ const PlaceBid = () => {
                     renderDigitSelection()
                   ) : (
                     <div className="py-8 text-center">
-                      <p className="text-sm font-bold text-gray-400">
+                      <p className="text-sm font-bold text-gray-500">
                         Please select a game type above
                       </p>
                     </div>
@@ -1386,18 +1331,18 @@ const PlaceBid = () => {
 
           {/* RIGHT COLUMN — BID FORM */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm sticky top-4">
-              <h2 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <Coins size={18} className="text-amber-500" />
+            <div className="bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.5)] sticky top-4">
+              <h2 className="text-sm font-bold text-gray-200 mb-4 flex items-center gap-2">
+                <Coins size={18} className="text-[#B45CFF]" />
                 STEP 2: SELECT COIN AMOUNT
               </h2>
-              <p className="text-xs text-gray-500 mb-3">
+              <p className="text-xs text-gray-400 mb-3">
                 Choose how many coins you want to play
               </p>
-              <p className="text-[10px] text-gray-400 mb-3">
+              <p className="text-[10px] text-gray-500 mb-3">
                 Range: {formatUserCurrency(minBidUser)} —{" "}
                 {formatUserCurrency(maxBidUser)}{" "}
-                <span className="text-gray-300">
+                <span className="text-gray-600">
                   (₹{marketData.minBid} - ₹{marketData.maxBid} INR)
                 </span>
               </p>
@@ -1414,8 +1359,8 @@ const PlaceBid = () => {
                           py-2.5 rounded-xl text-sm font-bold transition-all border-2
                           ${
                             Number(formData.bidAmount) === Number(amount)
-                              ? "bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)]"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                              ? `${purpleGradient} text-white`
+                              : "bg-[#12061C] text-gray-300 border-[#2a1b3d] hover:border-[#B45CFF]/60 hover:bg-[#2a1b3d]"
                           }
                         `}
                       >
@@ -1433,7 +1378,7 @@ const PlaceBid = () => {
                           setCustomAmountError("");
                           setFormData({ ...formData, bidAmount: "" });
                         }}
-                        className="w-full py-2.5 rounded-xl text-sm font-bold border-2 border-dashed border-amber-300 text-amber-600 hover:bg-amber-50 transition-all flex items-center justify-center gap-1.5"
+                        className="w-full py-2.5 rounded-xl text-sm font-bold border-2 border-dashed border-[#B45CFF]/50 text-[#C77AFF] hover:bg-[#9B59B6]/10 transition-all flex items-center justify-center gap-1.5"
                       >
                         <Coins size={14} />
                         Enter Custom Amount
@@ -1442,7 +1387,7 @@ const PlaceBid = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">
                               {currencySymbol}
                             </span>
                             <input
@@ -1452,10 +1397,10 @@ const PlaceBid = () => {
                               value={formData.bidAmount}
                               onChange={handleCustomAmountChange}
                               placeholder={`${minBidUser.toFixed(2)} - ${maxBidUser.toFixed(2)}`}
-                              className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-bold border-2 outline-none transition-all ${
+                              className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-bold border-2 outline-none transition-all bg-[#12061C] text-white ${
                                 customAmountError
-                                  ? "border-red-300 focus:border-red-400 text-red-600"
-                                  : "border-amber-300 focus:border-amber-500 text-gray-700"
+                                  ? "border-red-500/60 focus:border-red-500 text-red-400"
+                                  : "border-[#B45CFF]/50 focus:border-[#B45CFF]"
                               }`}
                             />
                           </div>
@@ -1466,17 +1411,17 @@ const PlaceBid = () => {
                               setCustomAmountError("");
                               setFormData({ ...formData, bidAmount: "" });
                             }}
-                            className="p-2.5 rounded-xl border-2 border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+                            className="p-2.5 rounded-xl border-2 border-[#2a1b3d] text-gray-400 hover:bg-[#2a1b3d] hover:text-white transition-all"
                           >
                             <X size={16} />
                           </button>
                         </div>
                         {customAmountError ? (
-                          <p className="text-[10px] text-red-500 mt-1.5 flex items-center gap-1">
+                          <p className="text-[10px] text-red-400 mt-1.5 flex items-center gap-1">
                             <AlertCircle size={11} /> {customAmountError}
                           </p>
                         ) : (
-                          <p className="text-[10px] text-gray-400 mt-1.5">
+                          <p className="text-[10px] text-gray-500 mt-1.5">
                             Min {formatUserCurrency(minBidUser)} · Max{" "}
                             {formatUserCurrency(maxBidUser)}
                           </p>
@@ -1488,58 +1433,59 @@ const PlaceBid = () => {
                   {formData.bidAmount &&
                     formData.gameType &&
                     formData.number && (
-                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                        <p className="text-xs font-bold text-gray-600 mb-2">
+                      <div className="bg-[#9B59B6]/10 rounded-xl p-4 border border-[#9B59B6]/40">
+                        <p className="text-xs font-bold text-gray-300 mb-2">
                           POSSIBLE WINNING (APPROX.)
                         </p>
                         <div className="flex justify-between text-sm">
                           <div>
-                            <p className="text-[10px] text-gray-400">
+                            <p className="text-[10px] text-gray-500">
                               BET AMOUNT
                             </p>
-                            <p className="font-bold text-gray-700">
-                              {formatUserCurrency(parseFloat(formData.bidAmount))}
+                            <p className="font-bold text-gray-200">
+                              {formatUserCurrency(
+                                parseFloat(formData.bidAmount),
+                              )}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[10px] text-gray-400">
+                            <p className="text-[10px] text-gray-500">
                               YOU WILL WIN (APPROX.)
                             </p>
-                            <p className="font-extrabold text-green-600 text-lg">
+                            <p className="font-extrabold text-[#00E676] text-lg">
                               {formatUserCurrency(calculateWinAmount())}
-                              <span className="text-[10px] font-bold bg-amber-500 text-white px-1.5 py-0.5 rounded-full ml-1.5 align-middle">
+                              <span className="text-[10px] font-bold bg-[#B45CFF] text-white px-1.5 py-0.5 rounded-full ml-1.5 align-middle">
                                 {getMultiplierDisplay(formData.gameType)}
                               </span>
                             </p>
                           </div>
                         </div>
-                        <p className="text-[9px] text-gray-400 mt-2">
+                        <p className="text-[9px] text-gray-500 mt-2">
                           * Winning coins may vary as per market rules.
                         </p>
                       </div>
                     )}
 
                   {localError && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2">
                       <AlertCircle size={14} /> {localError}
                     </div>
                   )}
 
                   {success && (
-                    <div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <div className="bg-[#00E676]/10 border border-[#00E676]/40 text-[#00E676] px-3 py-2.5 rounded-xl text-xs flex items-center gap-2">
                       <Check size={14} /> {success}
                     </div>
                   )}
 
                   {formData.bidAmount && formData.number && (
-                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                    <div className="bg-[#12061C] rounded-xl p-3 border border-[#2a1b3d]">
                       <div className="flex justify-between text-sm">
                         <div>
-                          <p className="text-[10px] text-gray-400">
+                          <p className="text-[10px] text-gray-500">
                             YOUR BALANCE
                           </p>
-                          <p className="font-bold text-gray-700">
-                            {/* ✅ Balance bhi user currency me hi dikhao */}
+                          <p className="font-bold text-gray-200">
                             {formatUserCurrency(
                               Number(
                                 user?.balance?.local ?? user?.balance ?? 0,
@@ -1548,18 +1494,18 @@ const PlaceBid = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-400">YOUR BET</p>
-                          <p className="font-bold text-amber-600">
+                          <p className="text-[10px] text-gray-500">YOUR BET</p>
+                          <p className="font-bold text-[#C77AFF]">
                             {formatUserCurrency(
                               parseFloat(formData.bidAmount) || 0,
                             )}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-400">
+                          <p className="text-[10px] text-gray-500">
                             POSSIBLE WIN
                           </p>
-                          <p className="font-bold text-green-600">
+                          <p className="font-bold text-[#00E676]">
                             {formatUserCurrency(calculateWinAmount())}
                           </p>
                         </div>
@@ -1572,7 +1518,7 @@ const PlaceBid = () => {
                     disabled={
                       bidLoading || !formData.number || !formData.bidAmount
                     }
-                    className="w-full bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] py-3.5 rounded-xl text-black font-bold text-base shadow-amber-200 hover:shadow-xl hover:scale-[1.01] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className={`w-full ${purpleGradient} py-3.5 rounded-xl text-white font-bold text-base hover:scale-[1.01] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
                   >
                     {bidLoading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -1585,7 +1531,7 @@ const PlaceBid = () => {
                     )}
                   </button>
 
-                  <div className="flex justify-center gap-4 text-[10px] text-gray-400 pt-1">
+                  <div className="flex justify-center gap-4 text-[10px] text-gray-500 pt-1">
                     <span className="flex items-center gap-1">
                       🔒 100% Fair Play
                     </span>

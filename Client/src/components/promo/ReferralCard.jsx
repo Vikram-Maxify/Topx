@@ -6,6 +6,10 @@ const ReferralCard = () => {
   const baseUrl = window.location.origin;
   const referralLink = `${baseUrl}/register/?ref=${user?.referralCode || "alex777"}`;
 
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(referralLink);
@@ -34,37 +38,30 @@ const ReferralCard = () => {
   };
 
   return (
-    <div className="rounded-3xl bg-white border border-gray-200 shadow-sm p-5">
-      <p className="text-sm font-semibold text-gray-800 mb-2">
+    <div className="rounded-3xl bg-[#1C0F2B] border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] p-5 relative overflow-hidden">
+      {/* Decorative purple glow */}
+      <div className="pointer-events-none absolute -top-16 -left-16 w-40 h-40 bg-[#9B59B6]/20 rounded-full blur-3xl" />
+
+      <p className="relative z-10 text-sm font-semibold text-white mb-2">
         Your Referral Link
       </p>
 
-      <div className="rounded-xl bg-gray-50 border border-gray-200 p-1.5 flex items-center gap-2">
+      <div className="relative z-10 rounded-xl bg-[#12061C] border border-[#2a1b3d] p-1.5 flex items-center gap-2">
         <input
           readOnly
           value={referralLink}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-600 font-medium min-w-0 truncate pl-2"
+          className="flex-1 bg-transparent outline-none text-sm text-gray-300 font-medium min-w-0 truncate pl-2"
         />
 
         <button
           id="copyBtn"
           onClick={copyLink}
-          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200]
-border border-[#FFD75A]
-shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] px-4 py-2 text-sm font-bold text-black active:scale-95 transition-all whitespace-nowrap"
+          className={`flex items-center gap-1.5 rounded-lg ${purpleGradient} px-4 py-2 text-sm font-bold text-white active:scale-95 transition-all whitespace-nowrap`}
         >
           Copy
           <Copy size={14} />
         </button>
       </div>
-
-      {/* <div className="my-5 flex items-center gap-3">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs text-gray-400 font-medium">or share via</span>
-        <div className="h-px flex-1 bg-gray-200" />
-      </div> */}
-
-      {/* <SocialShare /> */}
     </div>
   );
 };

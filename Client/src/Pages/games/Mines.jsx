@@ -1,26 +1,21 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  MdPlayCircle,
-  MdInfoOutline,
-  MdGamepad,
-  MdStar,
-} from "react-icons/md";
-import { FaSpinner, FaFire, FaCrown } from "react-icons/fa";
+import { FaCrown, FaSpinner } from "react-icons/fa";
 import { GiMineExplosion } from "react-icons/gi";
+import { MdPlayCircle, MdStar } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
 
 import GamePlayModal from "../../components/GamePlayModal";
 import {
+  clearGameUrl,
   launchGame,
   resetGameState,
-  clearGameUrl,
-} from "../../reducer/gameSlice";
+} from "../../redux/slices/gameSlice";
 
 const Minesgame = () => {
   const dispatch = useDispatch();
 
   const { gameUrl, launchLoading, launchError } = useSelector(
-    (state) => state.game
+    (state) => state.game,
   );
 
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
@@ -57,8 +52,7 @@ const Minesgame = () => {
       min_bet: 10,
       max_bet: 5000,
       is_featured: false,
-      description:
-        "Fast-paced mines action with instant cash-out excitement.",
+      description: "Fast-paced mines action with instant cash-out excitement.",
     },
   ];
 
@@ -73,9 +67,7 @@ const Minesgame = () => {
   const handlePlay = async (game) => {
     try {
       setSelectedGame(game);
-      await dispatch(
-        launchGame({ gameId: game.game_uid })
-      ).unwrap();
+      await dispatch(launchGame({ gameId: game.game_uid })).unwrap();
     } catch {
       alert("Failed to launch Mines");
     }
@@ -96,9 +88,7 @@ const Minesgame = () => {
             <div className="p-3 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-xl">
               <GiMineExplosion className="text-white text-2xl" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">
-              Mines
-            </h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white">Mines</h1>
           </div>
           <p className="text-gray-400">
             Strategic risk-taking with explosive rewards
@@ -168,17 +158,11 @@ const Minesgame = () => {
                   </h3>
                   <div className="flex items-center gap-1">
                     <MdStar className="text-yellow-400" />
-                    <span className="text-white font-bold">
-                      {game.rating}
-                    </span>
+                    <span className="text-white font-bold">{game.rating}</span>
                   </div>
                 </div>
 
-                <p className="text-gray-400 text-sm mb-4">
-                  {game.description}
-                </p>
-
-                
+                <p className="text-gray-400 text-sm mb-4">{game.description}</p>
               </div>
             </div>
           ))}

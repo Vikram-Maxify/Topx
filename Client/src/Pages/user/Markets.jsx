@@ -131,21 +131,21 @@ const getMarketStatus = (openTime, closeTime) => {
 
 const STATUS_STYLES = {
   live: {
-    dot: "bg-amber-500",
-    text: "text-amber-700",
-    bg: "bg-amber-50 border-amber-200",
+    dot: "bg-[#00E676]",
+    text: "text-[#00E676]",
+    bg: "bg-[#00E676]/10 border-[#00E676]/30",
     label: "LIVE",
   },
   upcoming: {
-    dot: "bg-amber-300",
-    text: "text-amber-600",
-    bg: "bg-amber-50/60 border-amber-100",
+    dot: "bg-[#F1C40F]",
+    text: "text-[#F1C40F]",
+    bg: "bg-[#F1C40F]/10 border-[#F1C40F]/30",
     label: "UPCOMING",
   },
   closed: {
-    dot: "bg-gray-300",
+    dot: "bg-gray-500",
     text: "text-gray-400",
-    bg: "bg-gray-50 border-gray-100",
+    bg: "bg-[#2a1b3d] border-[#3a2a4d]",
     label: "CLOSED",
   },
 };
@@ -317,7 +317,7 @@ const SafeImage = ({
   if (!src || imageError) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br from-amber-300 to-yellow-500 ${className}`}
+        className={`flex items-center justify-center bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] ${className}`}
       >
         <FallbackIcon className="text-white" size={28} />
       </div>
@@ -347,6 +347,10 @@ const MatkaMarkets = () => {
   const { user } = useSelector((state) => state.auth);
 
   const walletBalance = user?.balance;
+
+  // TopX Purple gradient (used for all primary buttons/tabs)
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
 
   // Country-wise currency SYMBOL only.
   // Balance value remains exactly as received from backend.
@@ -602,10 +606,10 @@ const MatkaMarkets = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-white">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#0B0410]">
         <div className="relative text-center">
-          <div className="mx-auto h-16 w-16 animate-spin rounded-full border-t-4 border-b-4 border-amber-500" />
-          <p className="mt-4 text-sm font-medium text-gray-500">
+          <div className="mx-auto h-16 w-16 animate-spin rounded-full border-t-4 border-b-4 border-[#B45CFF]" />
+          <p className="mt-4 text-sm font-medium text-gray-400">
             Loading markets...
           </p>
         </div>
@@ -620,7 +624,7 @@ const MatkaMarkets = () => {
   const allowedGameTypes = getAllowedGameTypes(selectedMarket);
 
   return (
-    <div className="scrollbar-hide relative h-screen overflow-y-auto bg-white pb-10">
+    <div className="scrollbar-hide relative h-screen overflow-y-auto bg-[#0B0410] pb-10">
       <style>{`
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -631,13 +635,13 @@ const MatkaMarkets = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 text-amber-600 shadow-sm active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2a1b3d] bg-[#1C0F2B] text-[#B45CFF] shadow-sm active:scale-95 transition hover:bg-[#2a1b3d]"
           >
             <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="h-4 w-1 rounded-full bg-amber-500" />
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-800">
+            <span className="h-4 w-1 rounded-full bg-[#B45CFF]" />
+            <h2 className="text-sm font-extrabold uppercase tracking-wide text-white">
               Choose Market
             </h2>
           </div>
@@ -646,7 +650,7 @@ const MatkaMarkets = () => {
         {/* ================= CHOOSE MARKET ================= */}
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex overflow-hidden rounded-full border border-amber-100 bg-amber-50/40 p-1 text-xs font-bold">
+            <div className="flex overflow-hidden rounded-full border border-[#2a1b3d] bg-[#1C0F2B] p-1 text-xs font-bold">
               {["live", "open", "upcoming"].map((tab) => {
                 const style = STATUS_STYLES[tab === "open" ? "live" : tab];
                 const isActive = activeTab === tab;
@@ -656,8 +660,8 @@ const MatkaMarkets = () => {
                     onClick={() => setActiveTab(tab)}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${
                       isActive
-                        ? "border border-amber-300 bg-white text-amber-700 shadow"
-                        : "text-gray-400"
+                        ? `${purpleGradient} text-white`
+                        : "text-gray-400 hover:text-white"
                     }`}
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
@@ -691,10 +695,10 @@ const MatkaMarkets = () => {
                     onKeyDown={(e) =>
                       e.key === "Enter" && openMarket(market._id)
                     }
-                    className={`relative w-[7rem] flex-shrink-0 cursor-pointer rounded-2xl border bg-white p-2 text-center shadow-sm transition ${
+                    className={`relative w-[7rem] flex-shrink-0 cursor-pointer rounded-2xl border bg-[#1C0F2B] p-2 text-center shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition ${
                       isSelected
-                        ? "border-amber-400 ring-2 ring-amber-200"
-                        : "border-gray-100"
+                        ? "border-[#B45CFF] ring-2 ring-[#B45CFF]/30"
+                        : "border-[#2a1b3d]"
                     }`}
                   >
                     {/* STATUS BADGE */}
@@ -708,7 +712,7 @@ const MatkaMarkets = () => {
                     </span>
 
                     {/* CIRCULAR AVATAR */}
-                    <div className="mx-auto mt-2 h-16 w-16 overflow-hidden rounded-full ring-2 ring-amber-100">
+                    <div className="mx-auto mt-2 h-16 w-16 overflow-hidden rounded-full ring-2 ring-[#B45CFF]/40">
                       <SafeImage
                         src={marketImage}
                         alt={market.name || "Market"}
@@ -718,20 +722,20 @@ const MatkaMarkets = () => {
                     </div>
 
                     <div className="mt-3">
-                      <p className="text-center text-sm font-extrabold text-amber-800">
+                      <p className="text-center text-sm font-extrabold text-white">
                         {market.name}
                       </p>
 
-                      <p className="mt-2 text-center text-[11px] text-gray-500">
+                      <p className="mt-2 text-center text-[11px] text-gray-400">
                         Open{" "}
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-semibold text-gray-200">
                           {formatTime12(market.openTime)}
                         </span>
                       </p>
 
-                      <p className="text-center text-[11px] text-gray-500">
+                      <p className="text-center text-[11px] text-gray-400">
                         Close{" "}
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-semibold text-gray-200">
                           {formatTime12(market.closeTime)}
                         </span>
                       </p>
@@ -741,7 +745,7 @@ const MatkaMarkets = () => {
                           e.stopPropagation();
                           openMarket(market._id);
                         }}
-                        className="mt-3 w-full rounded-lg bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] py-1.5 text-center text-xs font-bold text-black"
+                        className={`mt-3 w-full rounded-lg ${purpleGradient} py-1.5 text-center text-xs font-bold text-white`}
                       >
                         {market.status === "live" ? "PLAY →" : "VIEW →"}
                       </button>
@@ -751,7 +755,7 @@ const MatkaMarkets = () => {
                           e.stopPropagation();
                           openMarket(market._id);
                         }}
-                        className="mt-1 w-full text-center text-[11px] font-semibold text-amber-700"
+                        className="mt-1 w-full text-center text-[11px] font-semibold text-[#B45CFF] hover:text-[#C77AFF] transition"
                       >
                         RESULTS →
                       </button>
@@ -761,7 +765,7 @@ const MatkaMarkets = () => {
               })}
             </div>
           ) : (
-            <div className="rounded-2xl border border-amber-100 bg-amber-50/40 py-10 text-center text-sm text-gray-400">
+            <div className="rounded-2xl border border-[#2a1b3d] bg-[#1C0F2B] py-10 text-center text-sm text-gray-500">
               No markets in this tab right now
             </div>
           )}
@@ -772,7 +776,7 @@ const MatkaMarkets = () => {
           <div
             ref={detailRef}
             className={`relative overflow-hidden rounded-2xl scroll-mt-4 transition-all duration-300 sm:rounded-3xl ${
-              justOpened ? "ring-4 ring-amber-300" : ""
+              justOpened ? "ring-4 ring-[#B45CFF]/50" : ""
             }`}
           >
             <div className="relative w-full aspect-[16/9]">
@@ -784,7 +788,7 @@ const MatkaMarkets = () => {
               />
 
               <div
-                className={`pointer-events-none absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow transition-opacity duration-500 ${
+                className={`pointer-events-none absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full bg-[#B45CFF] px-3 py-1 text-[10px] font-bold text-white shadow transition-opacity duration-500 ${
                   justOpened ? "opacity-100" : "opacity-0"
                 }`}
               >
@@ -885,8 +889,8 @@ const MatkaMarkets = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Grid3x3 size={16} className="text-amber-600" />
-              <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-800">
+              <Grid3x3 size={16} className="text-[#B45CFF]" />
+              <h2 className="text-sm font-extrabold uppercase tracking-wide text-white">
                 Choose Game Type
               </h2>
             </div>
@@ -894,7 +898,7 @@ const MatkaMarkets = () => {
             {allowedGameTypes.length > DEFAULT_VISIBLE_GAME_TYPES && (
               <button
                 onClick={() => setShowAllGameTypes((prev) => !prev)}
-                className="flex items-center gap-0.5 text-xs font-bold text-amber-700"
+                className="flex items-center gap-0.5 text-xs font-bold text-gray-300 bg-[#1C0F2B] border border-[#2a1b3d] px-3 py-1.5 rounded-lg hover:bg-[#2a1b3d] hover:text-white transition"
               >
                 {showAllGameTypes ? "SHOW LESS" : "VIEW ALL"}
                 <ChevronRight
@@ -922,10 +926,10 @@ const MatkaMarkets = () => {
                 return (
                   <div
                     key={gt.key}
-                    className={`overflow-hidden rounded-2xl border bg-white text-center shadow-sm transition ${
+                    className={`overflow-hidden rounded-2xl border bg-[#1C0F2B] text-center shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition ${
                       isSelected
-                        ? "border-amber-400 ring-2 ring-amber-200"
-                        : "border-amber-100"
+                        ? "border-[#B45CFF] ring-2 ring-[#B45CFF]/30"
+                        : "border-[#2a1b3d]"
                     }`}
                   >
                     <div className="relative h-24 w-full overflow-hidden sm:h-32">
@@ -938,7 +942,7 @@ const MatkaMarkets = () => {
                     </div>
 
                     <div className="p-2 sm:p-3">
-                      <p className="mb-2 min-h-[16px] text-[8px] text-gray-400 sm:text-[10px]">
+                      <p className="mb-2 min-h-[16px] text-[8px] text-gray-500 sm:text-[10px]">
                         {gt.sub}
                       </p>
 
@@ -946,7 +950,7 @@ const MatkaMarkets = () => {
                         onClick={() =>
                           selectedMarket && handleSelectGameType(gt.key)
                         }
-                        className="w-full rounded-xl bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200] border border-[#FFD75A] shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] py-1.5 text-[10px] font-bold text-black transition-all hover:shadow-md sm:py-2 sm:text-xs"
+                        className={`w-full rounded-xl ${purpleGradient} py-1.5 text-[10px] font-bold text-white transition-all active:scale-[0.98] sm:py-2 sm:text-xs disabled:opacity-50 disabled:cursor-not-allowed`}
                         disabled={!selectedMarket}
                       >
                         {selectedMarket ? "PLAY →" : "SELECT MARKET"}
@@ -961,8 +965,8 @@ const MatkaMarkets = () => {
         {/* ================= QUICK ACCESS ================= */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-amber-500" />
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-800">
+            <Sparkles size={16} className="text-[#B45CFF]" />
+            <h2 className="text-sm font-extrabold uppercase tracking-wide text-white">
               Quick Access
             </h2>
           </div>
@@ -976,9 +980,9 @@ const MatkaMarkets = () => {
             ].map((item) => (
               <button
                 key={item.label}
-                className="flex items-center justify-center gap-1 rounded-xl border border-amber-100 bg-white py-2 text-[9px] font-medium text-gray-700 shadow-sm"
+                className="flex items-center justify-center gap-1 rounded-xl border border-[#2a1b3d] bg-[#1C0F2B] py-2 text-[9px] font-medium text-gray-300 shadow-sm hover:bg-[#2a1b3d] hover:text-white transition"
               >
-                <item.icon size={10} className="text-amber-500" />
+                <item.icon size={10} className="text-[#B45CFF]" />
                 {item.label}
               </button>
             ))}
@@ -989,13 +993,13 @@ const MatkaMarkets = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-amber-600" />
-              <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-800">
+              <Calendar size={16} className="text-[#B45CFF]" />
+              <h2 className="text-sm font-extrabold uppercase tracking-wide text-white">
                 Recent Results
               </h2>
             </div>
 
-            <button className="flex items-center gap-0.5 text-xs font-bold text-amber-700">
+            <button className="flex items-center gap-0.5 text-xs font-bold text-gray-300 bg-[#1C0F2B] border border-[#2a1b3d] px-3 py-1.5 rounded-lg hover:bg-[#2a1b3d] hover:text-white transition">
               VIEW ALL
               <ChevronRight size={14} />
             </button>
@@ -1032,19 +1036,19 @@ const MatkaMarkets = () => {
               return (
                 <div
                   key={market._id}
-                  className="w-36 flex-shrink-0 overflow-hidden rounded-xl border border-amber-100 bg-white text-center shadow-sm"
+                  className="w-36 flex-shrink-0 overflow-hidden rounded-xl border border-[#2a1b3d] bg-[#1C0F2B] text-center shadow-sm"
                 >
                   <div className="p-2">
-                    <p className="text-[9px] font-semibold text-gray-400">
+                    <p className="text-[9px] font-semibold text-gray-500">
                       {dateLabel}
                     </p>
 
-                    <p className="mb-2 truncate text-[11px] font-extrabold text-amber-800">
+                    <p className="mb-2 truncate text-[11px] font-extrabold text-[#B45CFF]">
                       {market.name?.toUpperCase()}
                     </p>
 
                     <div className="flex justify-center gap-1">
-                      <span className="flex h-6 w-6 items-center justify-center rounded bg-amber-50 text-xs font-bold text-amber-800">
+                      <span className="flex h-6 w-6 items-center justify-center rounded bg-[#B45CFF]/15 text-xs font-bold text-[#C77AFF] border border-[#B45CFF]/30">
                         {result}
                       </span>
                     </div>

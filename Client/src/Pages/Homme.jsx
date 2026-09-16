@@ -7,8 +7,6 @@ import StatsSection2 from "../components/StatsSection2";
 import TopWinners from "../components/TopWinners";
 import Footer from "../Pages/Footer";
 import PopularGamesCards from "./PopularGamesCards";
-import PowerballPublicResult from "./PowerballPublicResult";
-import PublicBidResults from "./PublicBidResults";
 
 const Homme = () => {
   return (
@@ -17,9 +15,9 @@ const Homme = () => {
       {/* <StatsSection /> */}
       <PopularGamesCards />
       <CasinoSlotGames />
-      <PublicBidResults />
+      {/* <PublicBidResults /> */}
       <PopularGames />
-      <PowerballPublicResult />
+      {/* <PowerballPublicResult /> */}
       <FeatureBar />
       <TopWinners />
       <StatsSection2 />

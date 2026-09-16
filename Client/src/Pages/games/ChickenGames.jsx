@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { FaCrown, FaFire, FaSpinner } from "react-icons/fa";
+import { GiChicken } from "react-icons/gi";
 import {
-  MdPlayCircle,
-  MdInfoOutline,
   MdGamepad,
+  MdInfoOutline,
+  MdPlayCircle,
   MdStar,
   MdWarning,
 } from "react-icons/md";
-import { FaSpinner, FaFire, FaCrown } from "react-icons/fa";
-import { GiChicken } from "react-icons/gi";
+import { useDispatch, useSelector } from "react-redux";
 
 import GamePlayModal from "../../components/GamePlayModal";
 import {
+  clearGameUrl,
   launchGame,
   resetGameState,
-  clearGameUrl,
-} from "../../reducer/gameSlice";
+} from "../../redux/slices/gameSlice";
 
 const ChickenGames = () => {
   const dispatch = useDispatch();
@@ -27,7 +27,7 @@ const ChickenGames = () => {
     (state) => state.game,
   );
 
-  const { userprofile, stats } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   /* =======================
      LOCAL STATE
@@ -37,8 +37,8 @@ const ChickenGames = () => {
   const [showRechargeModal, setShowRechargeModal] = useState(false);
 
   const MIN_CREDIT_TO_PLAY = 10;
-  const hasDeposited = (stats?.totalDeposits || 0) > 0;
-  const credit = Number(userprofile?.credit || 0);
+  const hasDeposited = true;
+  const credit = Number(user?.balance || 0);
   const needsRecharge = !hasDeposited || credit < MIN_CREDIT_TO_PLAY;
 
   /* =======================

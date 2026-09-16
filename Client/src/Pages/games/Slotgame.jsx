@@ -1,24 +1,24 @@
-import { useEffect, useState, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { MdPlayCircle, MdWarning } from "react-icons/md";
+import { useEffect, useMemo, useState } from "react";
 import {
-  FaSpinner,
-  FaSearch,
   FaArrowLeft,
   FaChevronLeft,
   FaChevronRight,
+  FaSearch,
+  FaSpinner,
 } from "react-icons/fa";
+import { MdPlayCircle, MdWarning } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import { SlotsGames } from "../../Data/GamesData";
 import GamePlayModal from "../../components/GamePlayModal";
 
 import {
+  clearGameUrl,
   getGamesByGameType,
   launchGame,
   resetGameState,
-  clearGameUrl,
-} from "../../reducer/gameSlice";
+} from "../../redux/slices/gameSlice";
 
 const Slotgame = () => {
   const dispatch = useDispatch();

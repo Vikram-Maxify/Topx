@@ -331,7 +331,7 @@ export default function CasinoSlotGames() {
       </div>
 
       {/* ================= GAMES GRID ================= */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
+      <div className="grid grid-cols-6 gap-3 md:gap-4">
         {currentGames.map((game) => (
           <Link
             key={game.id}

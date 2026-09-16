@@ -52,6 +52,19 @@ const DepositPayment = () => {
     screenshot: "",
   });
 
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
+
+  const inputWrapper = (hasError, hasSuccess) =>
+    `w-full rounded-xl border p-3 text-sm text-white bg-[#12061C] transition focus:outline-none focus:ring-2 ${
+      hasError
+        ? "border-red-500/50 focus:ring-red-500/20 bg-red-500/5"
+        : hasSuccess
+          ? "border-[#00E676]/50 focus:ring-[#00E676]/20 bg-[#00E676]/5"
+          : "border-[#2a1b3d] focus:ring-[#B45CFF]/20 focus:border-[#B45CFF]/50"
+    }`;
+
   // ---------------------------------------------------------
   // Redirect if payment method / amount is missing
   // ---------------------------------------------------------
@@ -354,9 +367,6 @@ const DepositPayment = () => {
 
   // ---------------------------------------------------------
   // Normal payment details
-  //
-  // Hide "qr" because we generate QR ourselves.
-  // Hide "upiId" here because it gets a dedicated section.
   // ---------------------------------------------------------
   const paymentDetails = Object.entries(selectedMethod.details || {}).filter(
     ([key]) => {
@@ -371,13 +381,13 @@ const DepositPayment = () => {
   );
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-amber-50/50 via-white to-white overflow-hidden">
-      {/* Decorative background */}
-      <div className="pointer-events-none absolute -top-24 -left-20 w-72 h-72 bg-amber-200/30 rounded-full blur-3xl" />
+    <div className="relative min-h-screen bg-[#0B0410] overflow-hidden">
+      {/* Decorative purple glows */}
+      <div className="pointer-events-none absolute -top-24 -left-20 w-72 h-72 bg-[#9B59B6]/20 rounded-full blur-3xl" />
 
-      <div className="pointer-events-none absolute top-1/3 -right-24 w-64 h-64 bg-yellow-200/25 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 -right-24 w-64 h-64 bg-[#B45CFF]/15 rounded-full blur-3xl" />
 
-      <div className="pointer-events-none absolute bottom-0 left-0 w-80 h-80 bg-amber-100/40 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 w-80 h-80 bg-[#9B59B6]/10 rounded-full blur-3xl" />
 
       <div className="relative px-4 sm:px-6 py-6">
         <div className="max-w-md w-full mx-auto">
@@ -385,7 +395,7 @@ const DepositPayment = () => {
           <button
             type="button"
             onClick={() => navigate("/deposit")}
-            className="flex items-center gap-1 text-gray-500 text-xs font-medium mb-4 hover:text-amber-600 transition w-fit"
+            className="flex items-center gap-1 text-gray-400 text-xs font-medium mb-4 hover:text-[#B45CFF] transition w-fit"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
@@ -394,11 +404,13 @@ const DepositPayment = () => {
           {/* Header */}
           <div className="mb-6">
             <span className="flex gap-2 items-center">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md shadow-amber-200">
+              <div
+                className={`w-11 h-11 rounded-2xl ${purpleGradient} flex items-center justify-center`}
+              >
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
 
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              <h1 className="text-2xl font-bold text-white tracking-tight">
                 Complete Payment
               </h1>
             </span>
@@ -409,18 +421,20 @@ const DepositPayment = () => {
           </div>
 
           {/* Amount + Method */}
-          <div className="mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-100 px-5 py-4 flex items-center justify-between">
+          <div className="mb-5 bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] px-5 py-4 flex items-center justify-between">
             <div>
               <span className="text-[10px] uppercase tracking-wide text-gray-400 font-medium block">
                 Amount to pay
               </span>
 
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-white">
                 ₹{Number(amount).toLocaleString("en-IN")}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm">
+            <div
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl ${purpleGradient} text-white`}
+            >
               {getMethodIcon(selectedMethod.type)}
 
               <span className="text-xs font-semibold">
@@ -433,26 +447,26 @@ const DepositPayment = () => {
               UPI QR SECTION
           ================================================= */}
           {isUPI && upiId && (
-            <div className="mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-100 p-5">
+            <div className="mb-5 bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                     Scan & Pay
                   </h3>
 
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-500 mt-1">
                     Scan this QR using any UPI app
                   </p>
                 </div>
 
-                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
-                  <QrCode className="w-5 h-5 text-amber-600" />
+                <div className="w-9 h-9 rounded-xl bg-[#B45CFF]/15 border border-[#B45CFF]/30 flex items-center justify-center">
+                  <QrCode className="w-5 h-5 text-[#B45CFF]" />
                 </div>
               </div>
 
               {/* QR */}
               <div className="flex justify-center">
-                <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                <div className="p-4 bg-white rounded-2xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
                   <QRCodeSVG
                     value={upiPaymentUrl}
                     size={220}
@@ -468,20 +482,20 @@ const DepositPayment = () => {
                   Payment Amount
                 </p>
 
-                <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                <p className="text-2xl font-bold text-[#9B59B6] mt-0.5">
                   ₹{Number(amount).toLocaleString("en-IN")}
                 </p>
               </div>
 
               {/* UPI ID */}
-              <div className="mt-4 bg-gray-50/70 rounded-xl border border-gray-100 p-3">
+              <div className="mt-4 bg-[#12061C] rounded-xl border border-[#2a1b3d] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                       UPI ID
                     </p>
 
-                    <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">
+                    <p className="text-sm font-semibold text-white truncate mt-0.5">
                       {upiId}
                     </p>
                   </div>
@@ -489,15 +503,15 @@ const DepositPayment = () => {
                   <button
                     type="button"
                     onClick={copyUpiId}
-                    className="shrink-0 p-2 rounded-lg bg-white border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition"
+                    className="shrink-0 p-2 rounded-lg bg-[#1C0F2B] border border-[#2a1b3d] hover:border-[#B45CFF]/50 hover:bg-[#2a1b3d] transition"
                     title="Copy UPI ID"
                   >
-                    <Copy className="w-3.5 h-3.5 text-gray-500" />
+                    <Copy className="w-3.5 h-3.5 text-gray-400 hover:text-[#B45CFF]" />
                   </button>
                 </div>
               </div>
 
-              <p className="text-[10px] text-gray-400 text-center mt-3">
+              <p className="text-[10px] text-gray-500 text-center mt-3">
                 Open Google Pay, PhonePe, Paytm or another UPI app and scan the
                 QR code.
               </p>
@@ -509,8 +523,8 @@ const DepositPayment = () => {
           ================================================= */}
           {(paymentDetails.length > 0 ||
             (!isUPI && selectedMethod.details)) && (
-            <div className="mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-100 p-5">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3.5">
+            <div className="mb-5 bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] p-5">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3.5">
                 Payment Details
               </h3>
 
@@ -520,7 +534,6 @@ const DepositPayment = () => {
                     return null;
                   }
 
-                  // Don't display objects directly
                   if (typeof value === "object") {
                     return null;
                   }
@@ -528,24 +541,24 @@ const DepositPayment = () => {
                   return (
                     <div
                       key={key}
-                      className="bg-gray-50/70 px-3.5 py-2.5 rounded-xl border border-gray-100 flex items-center gap-2 overflow-hidden"
+                      className="bg-[#12061C] px-3.5 py-2.5 rounded-xl border border-[#2a1b3d] flex items-center gap-2 overflow-hidden"
                     >
-                      <span className="text-[11px] font-medium text-gray-400 capitalize whitespace-nowrap min-w-[64px]">
+                      <span className="text-[11px] font-medium text-gray-500 capitalize whitespace-nowrap min-w-[64px]">
                         {key
                           .replace(/([A-Z])/g, " $1")
                           .replace(/^./, (str) => str.toUpperCase())}
                       </span>
 
-                      <span className="flex-1 text-xs text-gray-800 font-medium truncate">
+                      <span className="flex-1 text-xs text-white font-medium truncate">
                         {String(value)}
                       </span>
 
                       <button
                         type="button"
-                        className="p-1.5 rounded-md bg-white border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition"
+                        className="p-1.5 rounded-md bg-[#1C0F2B] border border-[#2a1b3d] hover:border-[#B45CFF]/50 hover:bg-[#2a1b3d] transition"
                         onClick={() => copyValue(value)}
                       >
-                        <Copy className="w-3 h-3 text-gray-500" />
+                        <Copy className="w-3 h-3 text-gray-400 hover:text-[#B45CFF]" />
                       </button>
                     </div>
                   );
@@ -559,31 +572,28 @@ const DepositPayment = () => {
           ================================================= */}
           <form
             onSubmit={submitHandler}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-gray-100 p-5"
+            className="bg-[#1C0F2B] rounded-2xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] p-5"
           >
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
               Confirm Payment
             </h3>
 
             {/* Transaction ID */}
             <div>
-              <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
-                <FileText className="w-3 h-3 text-amber-500" />
+              <label className="flex items-center gap-1 text-xs font-medium text-gray-300 mb-1.5">
+                <FileText className="w-3 h-3 text-[#B45CFF]" />
                 Transaction ID
               </label>
 
               <div className="relative">
                 <input
                   type="text"
-                  className={`w-full rounded-xl border p-3 text-sm text-gray-800 bg-gray-50/60 transition focus:outline-none focus:ring-2 ${
-                    touched.transactionId && errors.transactionId
-                      ? "border-red-300 focus:ring-red-100 bg-red-50/40"
-                      : touched.transactionId &&
-                          !errors.transactionId &&
-                          transactionId
-                        ? "border-green-300 focus:ring-green-100 bg-green-50/40"
-                        : "border-gray-200 focus:ring-amber-100"
-                  }`}
+                  className={inputWrapper(
+                    touched.transactionId && errors.transactionId,
+                    touched.transactionId &&
+                      !errors.transactionId &&
+                      transactionId,
+                  )}
                   value={transactionId}
                   onChange={handleTransactionIdChange}
                   onBlur={() => handleBlur("transactionId")}
@@ -593,16 +603,16 @@ const DepositPayment = () => {
                 {touched.transactionId &&
                   !errors.transactionId &&
                   transactionId && (
-                    <CheckCircle2 className="w-4 h-4 text-green-500 absolute right-3 top-1/2 -translate-y-1/2" />
+                    <CheckCircle2 className="w-4 h-4 text-[#00E676] absolute right-3 top-1/2 -translate-y-1/2" />
                   )}
 
                 {touched.transactionId && errors.transactionId && (
-                  <XCircle className="w-4 h-4 text-red-500 absolute right-3 top-1/2 -translate-y-1/2" />
+                  <XCircle className="w-4 h-4 text-red-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 )}
               </div>
 
               {touched.transactionId && errors.transactionId && (
-                <p className="mt-1.5 text-[11px] text-red-500 flex items-center gap-1">
+                <p className="mt-1.5 text-[11px] text-red-400 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   {errors.transactionId}
                 </p>
@@ -611,8 +621,8 @@ const DepositPayment = () => {
 
             {/* Screenshot */}
             <div className="mt-5">
-              <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
-                <ImageIcon className="w-3 h-3 text-amber-500" />
+              <label className="flex items-center gap-1 text-xs font-medium text-gray-300 mb-1.5">
+                <ImageIcon className="w-3 h-3 text-[#B45CFF]" />
                 Upload Screenshot
               </label>
 
@@ -620,10 +630,10 @@ const DepositPayment = () => {
                 <div
                   className={`rounded-xl px-4 py-5 text-center border border-dashed transition ${
                     touched.screenshot && errors.screenshot
-                      ? "border-red-300 bg-red-50/30"
+                      ? "border-red-500/50 bg-red-500/5"
                       : touched.screenshot && preview
-                        ? "border-green-300 bg-green-50/30"
-                        : "border-gray-200 hover:border-amber-300 bg-gray-50/40"
+                        ? "border-[#00E676]/50 bg-[#00E676]/5"
+                        : "border-[#2a1b3d] hover:border-[#B45CFF]/50 bg-[#12061C]"
                   }`}
                 >
                   {preview ? (
@@ -631,18 +641,18 @@ const DepositPayment = () => {
                       <img
                         src={preview}
                         alt="Payment screenshot preview"
-                        className="w-14 h-14 object-cover rounded-lg border border-gray-200"
+                        className="w-14 h-14 object-cover rounded-lg border border-[#2a1b3d]"
                       />
 
                       <div className="flex-1 text-left">
-                        <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                        <div className="flex items-center gap-1 text-xs text-[#00E676] font-medium">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Uploaded
                         </div>
 
                         <button
                           type="button"
-                          className="text-[11px] text-amber-600 hover:text-amber-700 font-medium underline mt-0.5"
+                          className="text-[11px] text-[#B45CFF] hover:text-[#C77AFF] font-medium underline mt-0.5"
                           onClick={removeScreenshot}
                         >
                           Remove & re-upload
@@ -651,13 +661,13 @@ const DepositPayment = () => {
                     </div>
                   ) : (
                     <>
-                      <Upload className="w-5 h-5 text-amber-400 mx-auto mb-1.5" />
+                      <Upload className="w-5 h-5 text-[#B45CFF] mx-auto mb-1.5" />
 
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-400">
                         Click to upload or drag & drop
                       </p>
 
-                      <p className="text-[10px] text-gray-400 mt-0.5">
+                      <p className="text-[10px] text-gray-500 mt-0.5">
                         PNG, JPG, JPEG, WEBP · Max 5MB
                       </p>
                     </>
@@ -673,7 +683,7 @@ const DepositPayment = () => {
               </div>
 
               {touched.screenshot && errors.screenshot && (
-                <p className="mt-1.5 text-[11px] text-red-500 flex items-center gap-1">
+                <p className="mt-1.5 text-[11px] text-red-400 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   {errors.screenshot}
                 </p>
@@ -686,8 +696,8 @@ const DepositPayment = () => {
               disabled={loading}
               className={`mt-6 w-full font-semibold py-3.5 px-4 rounded-xl transition-all duration-200 text-sm flex items-center justify-center gap-1.5 ${
                 loading
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md shadow-amber-200 active:scale-[0.98]"
+                  ? "bg-[#2a1b3d] text-gray-500 cursor-not-allowed"
+                  : `${purpleGradient} text-white active:scale-[0.98]`
               }`}
             >
               {loading ? (
@@ -703,7 +713,7 @@ const DepositPayment = () => {
               )}
             </button>
 
-            <p className="text-[10px] text-gray-400 mt-3 text-center">
+            <p className="text-[10px] text-gray-500 mt-3 text-center">
               By submitting you agree to our deposit terms and conditions
             </p>
           </form>

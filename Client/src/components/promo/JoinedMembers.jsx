@@ -8,19 +8,18 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getProfile } from "../../redux/slices/authSlice"; // path apne project ke hisaab se adjust kar lena
+import { getProfile } from "../../redux/slices/authSlice";
 import MemberStatCard from "./MemberStatCard";
 
+// TopX themed level badges
 const levelBadge = {
-  1: "border-amber-400 text-amber-500",
-  2: "border-gray-300 text-gray-500",
-  3: "border-amber-400 text-amber-500",
+  1: "border-[#B45CFF]/60 text-[#C77AFF] bg-[#B45CFF]/10",
+  2: "border-[#3498DB]/60 text-[#3498DB] bg-[#3498DB]/10",
+  3: "border-[#F1C40F]/60 text-[#F1C40F] bg-[#F1C40F]/10",
 };
 
-// ================= DATE FORMAT HELPER =================
 const formatDateTime = (dateString) => {
   const date = new Date(dateString);
-
   return date.toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -48,37 +47,37 @@ const JoinedMembers = () => {
   const stats = [
     {
       icon: Users,
-      iconColor: "text-violet-500",
+      iconColor: "text-[#B45CFF]",
       label: "Total Members\nJoined",
       value: referralStats?.totalMembersJoined ?? 0,
     },
     {
       icon: UserPlus,
-      iconColor: "text-blue-500",
+      iconColor: "text-[#3498DB]",
       label: "Total Members\nFirst Deposit",
       value: referralStats?.totalMembersFirstDeposit ?? 0,
     },
     {
       icon: Users,
-      iconColor: "text-green-500",
+      iconColor: "text-[#00E676]",
       label: "1st Level Members",
       value: referralStats?.level1Count ?? 0,
     },
     {
       icon: Users,
-      iconColor: "text-orange-500",
+      iconColor: "text-[#E67E22]",
       label: "2nd Level Members",
       value: referralStats?.level2Count ?? 0,
     },
     {
       icon: Users,
-      iconColor: "text-pink-500",
+      iconColor: "text-[#E91E63]",
       label: "3rd Level Members",
       value: referralStats?.level3Count ?? 0,
     },
     {
       icon: Trophy,
-      iconColor: "text-amber-500",
+      iconColor: "text-[#F1C40F]",
       label: "Total Betting\nCommission",
       value: formatAmount(referralStats?.totalBettingCommission),
     },
@@ -86,7 +85,7 @@ const JoinedMembers = () => {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-lg font-black text-amber-500 tracking-wide">
+      <h2 className="text-lg font-black text-[#B45CFF] tracking-wide">
         OVERVIEW
       </h2>
 
@@ -97,7 +96,7 @@ const JoinedMembers = () => {
 
         <MemberStatCard
           icon={Wallet}
-          iconColor="text-green-500"
+          iconColor="text-[#00E676]"
           label="Total Recharge Commission"
           value={formatAmount(referralStats?.referralEarning)}
           fullWidth
@@ -105,19 +104,21 @@ const JoinedMembers = () => {
       </div>
 
       {/* Recent Joined Members */}
-      <div className="rounded-3xl bg-white border border-gray-200 shadow-sm p-5">
+      <div className="rounded-3xl bg-[#1C0F2B] border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-black text-amber-500 tracking-wide">
+          <h3 className="text-sm font-black text-[#9B59B6] tracking-wide">
             RECENT JOINED MEMBERS
           </h3>
-          <button className="text-xs font-bold text-amber-500">View All</button>
+          <button className="text-xs font-bold text-gray-300 bg-[#12061C] border border-[#2a1b3d] px-3 py-1.5 rounded-lg hover:bg-[#2a1b3d] hover:text-white transition">
+            View All
+          </button>
         </div>
 
         <div className="space-y-4">
           {recentJoinedMembers?.length ? (
             recentJoinedMembers.map((m) => (
               <div key={m.userId} className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-800">
+                <span className="text-sm font-semibold text-white">
                   ID: {m.userId}
                 </span>
                 <div className="flex items-center gap-3">
@@ -133,48 +134,48 @@ const JoinedMembers = () => {
               </div>
             ))
           ) : (
-            <p className="text-sm text-gray-400">No members joined yet.</p>
+            <p className="text-sm text-gray-500">No members joined yet.</p>
           )}
         </div>
       </div>
 
       {/* Summary */}
-      <div className="rounded-3xl bg-white border border-gray-200 shadow-sm p-5">
-        <h3 className="text-sm font-black text-amber-500 tracking-wide mb-4">
+      <div className="rounded-3xl bg-[#1C0F2B] border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] p-5">
+        <h3 className="text-sm font-black text-[#9B59B6] tracking-wide mb-4">
           SUMMARY
         </h3>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-400">
               Total Betting Commission
             </span>
-            <span className="text-sm font-black text-gray-900">
+            <span className="text-sm font-black text-[#F1C40F]">
               {formatAmount(referralStats?.totalBettingCommission)}
             </span>
           </div>
-          <div className="h-px bg-gray-100" />
+          <div className="h-px bg-[#2a1b3d]" />
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-400">
               Total Recharge Commission
             </span>
-            <span className="text-sm font-black text-gray-900">
+            <span className="text-sm font-black text-[#00E676]">
               {formatAmount(referralStats?.totalRechargeCommission)}
             </span>
           </div>
         </div>
       </div>
 
-      <button className="w-full flex items-center justify-between rounded-2xl bg-amber-50 border border-amber-300 p-4">
+      <button className="w-full flex items-center justify-between rounded-2xl bg-[#9B59B6]/10 border border-[#9B59B6]/40 p-4 hover:bg-[#9B59B6]/20 transition">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-amber-400 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75)] flex items-center justify-center">
             <ClipboardList size={16} className="text-white" />
           </div>
-          <span className="text-sm font-bold text-amber-600">
+          <span className="text-sm font-bold text-[#C77AFF]">
             Promo Terms &amp; Conditions
           </span>
         </div>
-        <ChevronRight size={18} className="text-amber-500" />
+        <ChevronRight size={18} className="text-[#B45CFF]" />
       </button>
     </div>
   );

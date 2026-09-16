@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 
-// ================= PREMIUM TOAST CONTENT (WINZOX THEME) =================
+// ================= PREMIUM TOAST CONTENT (TOPX THEME) =================
 
 const ToastContent = ({ icon: Icon, title, message, accent }) => (
   <div className="flex items-start gap-3">
@@ -18,13 +18,13 @@ const ToastContent = ({ icon: Icon, title, message, accent }) => (
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-1.5">
-        <p className="text-sm font-bold text-gray-900">{title}</p>
+        <p className="text-sm font-bold text-white">{title}</p>
         {accent.showCrown && (
-          <Crown size={12} className="text-amber-500 flex-shrink-0" />
+          <Crown size={12} className="text-[#B45CFF] flex-shrink-0" />
         )}
       </div>
       {message && (
-        <p className="text-xs text-gray-500 mt-0.5 break-words">{message}</p>
+        <p className="text-xs text-gray-400 mt-0.5 break-words">{message}</p>
       )}
     </div>
   </div>
@@ -32,33 +32,33 @@ const ToastContent = ({ icon: Icon, title, message, accent }) => (
 
 const ACCENTS = {
   success: {
-    iconBg: "bg-amber-50",
-    iconBorder: "border-amber-300",
-    iconColor: "text-green-600",
+    iconBg: "bg-[#00E676]/15",
+    iconBorder: "border-[#00E676]/40",
+    iconColor: "text-[#00E676]",
     showCrown: true,
     className: "premium-toast premium-toast--success",
-    progressClassName: "premium-toast-progress",
+    progressClassName: "premium-toast-progress premium-toast-progress--success",
   },
   error: {
-    iconBg: "bg-red-50",
-    iconBorder: "border-red-200",
-    iconColor: "text-red-500",
+    iconBg: "bg-red-500/15",
+    iconBorder: "border-red-500/40",
+    iconColor: "text-red-400",
     showCrown: false,
     className: "premium-toast premium-toast--error",
     progressClassName: "premium-toast-progress premium-toast-progress--error",
   },
   info: {
-    iconBg: "bg-amber-50",
-    iconBorder: "border-amber-300",
-    iconColor: "text-amber-500",
+    iconBg: "bg-[#9B59B6]/15",
+    iconBorder: "border-[#9B59B6]/40",
+    iconColor: "text-[#C77AFF]",
     showCrown: false,
     className: "premium-toast premium-toast--info",
     progressClassName: "premium-toast-progress",
   },
   warning: {
-    iconBg: "bg-orange-50",
-    iconBorder: "border-orange-200",
-    iconColor: "text-orange-500",
+    iconBg: "bg-[#F1C40F]/15",
+    iconBorder: "border-[#F1C40F]/40",
+    iconColor: "text-[#F1C40F]",
     showCrown: false,
     className: "premium-toast premium-toast--warning",
     progressClassName: "premium-toast-progress premium-toast-progress--warning",

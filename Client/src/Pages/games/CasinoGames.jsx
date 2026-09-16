@@ -1,23 +1,23 @@
-import { useEffect, useState, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { MdPlayCircle, MdWarning } from "react-icons/md";
+import { useEffect, useMemo, useState } from "react";
 import {
-  FaSpinner,
-  FaSearch,
   FaArrowLeft,
   FaChevronLeft,
   FaChevronRight,
+  FaSearch,
+  FaSpinner,
 } from "react-icons/fa";
+import { MdPlayCircle, MdWarning } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import { liveCasino } from "../../Data/GamesData";
 import GamePlayModal from "../../components/GamePlayModal";
 import {
+  clearGameUrl,
   getGamesByGameType,
   launchGame,
   resetGameState,
-  clearGameUrl,
-} from "../../reducer/gameSlice";
+} from "../../redux/slices/gameSlice";
 
 const CasinoGames = () => {
   const dispatch = useDispatch();
@@ -30,7 +30,7 @@ const CasinoGames = () => {
     (state) => state.game,
   );
 
-  const { userprofile, stats } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   console.log("Game URL from Redux:", gameUrl);
 
@@ -45,8 +45,8 @@ const CasinoGames = () => {
   const [showRechargeModal, setShowRechargeModal] = useState(false);
 
   const MIN_CREDIT_TO_PLAY = 10;
-  const hasDeposited = (stats?.totalDeposits || 0) > 0;
-  const credit = Number(userprofile?.credit || 0);
+  const hasDeposited = true;
+  const credit = Number(user?.balance || 0);
   const needsRecharge = !hasDeposited || credit < MIN_CREDIT_TO_PLAY;
 
   useEffect(() => {

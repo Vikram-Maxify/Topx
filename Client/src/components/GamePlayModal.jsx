@@ -1,27 +1,27 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 import {
-  MdVolumeUp,
-  MdVolumeOff,
-  MdRefresh,
-  MdArrowBack,
-  MdError,
-  MdWarning,
-  MdMoney,
-} from "react-icons/md";
-import {
-  FaExpand,
-  FaCompress,
   FaCoins,
+  FaCompress,
   FaExchangeAlt,
+  FaExpand,
   FaSpinner,
 } from "react-icons/fa";
+import {
+  MdArrowBack,
+  MdError,
+  MdMoney,
+  MdRefresh,
+  MdVolumeOff,
+  MdVolumeUp,
+  MdWarning,
+} from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   checkGameBalance,
   clearGameUrl,
   resetGameState,
-} from "../reducer/gameSlice";
+} from "../../../Client/src/redux/slices/gameSlice";
 
 const GamePlayModal = ({
   isOpen,

@@ -14,90 +14,37 @@ import { socket } from "../services/socket";
 
 // ============================================================
 // CURRENCY - USER COUNTRY BASED
-// Same currency behavior as Wingo.
-// Backend amounts remain in INR; displayed amounts are converted
-// to the user's local currency using the same currency-rate logic.
 // ============================================================
 const COUNTRY_ALIASES = {
   in: "IN",
   india: "IN",
-
   au: "AU",
   australia: "AU",
-
   np: "NP",
   nepal: "NP",
-
   pk: "PK",
   pakistan: "PK",
-
   bd: "BD",
   bangladesh: "BD",
-
   ae: "AE",
   uae: "AE",
   dubai: "AE",
   "united arab emirates": "AE",
 };
 
-const ALLOWED_GAME_COUNTRIES = new Set([
-  "IN",
-  "AU",
-  "NP",
-  "PK",
-  "BD",
-  "AE",
-]);
+const ALLOWED_GAME_COUNTRIES = new Set(["IN", "AU", "NP", "PK", "BD", "AE"]);
 
-// Game amounts, input, reward, win and cashout are all in the user's
-// own country currency.
 const CURRENCY_CONFIG = {
-  // India -> INR
-  IN: {
-    code: "INR",
-    symbol: "₹",
-    locale: "en-IN",
-  },
-
-  // Australia -> AUD
-  AU: {
-    code: "AUD",
-    symbol: "A$",
-    locale: "en-AU",
-  },
-
-  // Nepal -> NPR
-  NP: {
-    code: "NPR",
-    symbol: "रू",
-    locale: "en-NP",
-  },
-
-  // Pakistan -> PKR
-  PK: {
-    code: "PKR",
-    symbol: "Rs",
-    locale: "en-PK",
-  },
-
-  // Bangladesh -> BDT
-  BD: {
-    code: "BDT",
-    symbol: "৳",
-    locale: "en-BD",
-  },
-
-  // UAE / Dubai -> AED
-  AE: {
-    code: "AED",
-    symbol: "د.إ",
-    locale: "en-AE",
-  },
+  IN: { code: "INR", symbol: "₹", locale: "en-IN" },
+  AU: { code: "AUD", symbol: "A$", locale: "en-AU" },
+  NP: { code: "NPR", symbol: "रू", locale: "en-NP" },
+  PK: { code: "PKR", symbol: "Rs", locale: "en-PK" },
+  BD: { code: "BDT", symbol: "৳", locale: "en-BD" },
+  AE: { code: "AED", symbol: "د.إ", locale: "en-AE" },
 };
 
 const normalizeCountryCode = (country) => {
   if (!country) return "IN";
-
   const key = String(country).trim().toLowerCase();
   return COUNTRY_ALIASES[key] || key.toUpperCase();
 };
@@ -113,8 +60,6 @@ export default function MinesGame() {
     (state) => state.currencyRate?.currencies || [],
   );
 
-  // betAmount is the user's LOCAL currency amount.
-  // The same local amount is sent to the backend.
   const [betAmount, setBetAmount] = useState("50");
   const [betAmountInput, setBetAmountInput] = useState("50");
   const [amountError, setAmountError] = useState("");
@@ -123,12 +68,6 @@ export default function MinesGame() {
 
   const userId = localStorage.getItem("userId");
 
-  // ✅ FIX: Profile ProtectedRoute/AppInitializer se already load ho chuki hoti h.
-  // Isse dobara getProfile() dispatch karna auth.loading ko flip karta h,
-  // jisse ProtectedRoute ka isLoading true ho jaata h aur ye page hi unmount ho jaata h
-  // (kyunki ProtectedRoute isLoading=true pe spinner return karta h, children nahi).
-  // Jab profile call complete hoti h, isLoading fir false, page remount, effect fir chalta h -> infinite loop.
-  // Currency rates ke liye bhi duplicate fetch avoid kiya (agar already loaded h to skip).
   useEffect(() => {
     if (currencyRates.length === 0) {
       dispatch(getCurrencyRates());
@@ -159,7 +98,6 @@ export default function MinesGame() {
 
   useEffect(() => {
     if (game?.status !== "lost") return;
-
     if (explosionCell === null) {
       setExplosion(true);
     }
@@ -178,11 +116,12 @@ export default function MinesGame() {
       return;
     }
 
-    // betAmount is already the user's local-currency amount.
     const amount = Number(betAmount);
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      setAmountError(`Please enter a valid ${currencyConfig.code} game amount.`);
+      setAmountError(
+        `Please enter a valid ${currencyConfig.code} game amount.`,
+      );
       return;
     }
 
@@ -203,12 +142,9 @@ export default function MinesGame() {
   const playMineSound = () => {
     try {
       const audio = new Audio(mineBlastSound);
-
       audio.preload = "auto";
       audio.volume = 1;
-
       const promise = audio.play();
-
       if (promise?.catch) {
         promise.catch((error) => {
           console.warn("Mine sound playback was blocked:", error);
@@ -246,10 +182,7 @@ export default function MinesGame() {
 
   const cashout = () => {
     if (!game || game.status !== "playing") return;
-
-    if (Number(game.safeCells || 0) <= 0) {
-      return;
-    }
+    if (Number(game.safeCells || 0) <= 0) return;
 
     dispatch(
       cashoutMines({
@@ -262,25 +195,11 @@ export default function MinesGame() {
     Number(game?.entryAmount ?? game?.virtualStake ?? 0) *
     Number(game?.multiplier || 1);
 
-  // ✅ FIX: seedha Redux authUser use karo, alag se local userInfo fetch/state
-  // maintain karne ki zaroorat nahi.
   const profileUser = authUser || {};
-
-  // ALWAYS use authUser.country for the player's currency.
-  // Supported currency groups:
-  // IN -> INR
-  // AU -> AUD
-  // NP -> NPR
-  // PK -> PKR
-  // BD -> BDT
-  // AE -> AED
   const currentCountry = profileUser?.country || "india";
   const userCountryCode = normalizeCountryCode(currentCountry);
+  const isGameCountryAllowed = ALLOWED_GAME_COUNTRIES.has(userCountryCode);
 
-  const isGameCountryAllowed =
-    ALLOWED_GAME_COUNTRIES.has(userCountryCode);
-
-  // Each supported country uses its own currency.
   const currencyCountryCode = ALLOWED_GAME_COUNTRIES.has(userCountryCode)
     ? userCountryCode
     : "IN";
@@ -288,33 +207,21 @@ export default function MinesGame() {
   const currencyConfig =
     CURRENCY_CONFIG[currencyCountryCode] || CURRENCY_CONFIG.IN;
 
-  // CurrencyRate is only used to identify the configured currency/rate.
-  // It is NOT used to convert game balance amounts.
   const userCurrencyRate = useMemo(() => {
     if (userCountryCode === "IN") return null;
-
     const rates = Array.isArray(currencyRates) ? currencyRates : [];
-
     return (
       rates.find((item) => {
         const itemCountry = String(
-          item?.countryCode ??
-            item?.country_code ??
-            item?.country ??
-            "",
+          item?.countryCode ?? item?.country_code ?? item?.country ?? "",
         )
           .trim()
           .toUpperCase();
 
         const rateCountryCode =
-          currencyCountryCode === "AE"
-            ? "AE"
-            : currencyCountryCode;
+          currencyCountryCode === "AE" ? "AE" : currencyCountryCode;
 
-        return (
-          itemCountry === rateCountryCode &&
-          item?.status !== false
-        );
+        return itemCountry === rateCountryCode && item?.status !== false;
       }) || null
     );
   }, [currencyRates, userCountryCode, currencyCountryCode]);
@@ -324,36 +231,25 @@ export default function MinesGame() {
     return Number.isFinite(amount) ? amount : 0;
   };
 
-  const convertLocalToBaseAmount = (value) => {
-    const amount = Number(value);
-    return Number.isFinite(amount) ? amount : 0;
-  };
-
   const money = (value, sign = "") => {
     const convertedAmount = convertToLocalAmount(value);
-
     const decimals = currencyConfig.code === "JPY" ? 0 : 2;
-
     const formatted = convertedAmount.toLocaleString(currencyConfig.locale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
-
     return `${sign}${currencyConfig.symbol} ${formatted}`;
   };
 
-  // Value shown inside the amount input is local currency.
   const formatInputAmount = (value) => {
     const convertedAmount = convertToLocalAmount(value);
     const decimals = currencyConfig.code === "JPY" ? 0 : 2;
-
     if (!Number.isFinite(convertedAmount)) return "";
     return convertedAmount.toFixed(decimals);
   };
 
   const currencySymbol = currencyConfig.symbol;
 
-  // Default amount is always 50 in the user's local currency.
   useEffect(() => {
     if (betAmount === "50" && betAmountInput === "50") {
       setBetAmountInput(formatInputAmount(50));
@@ -366,22 +262,25 @@ export default function MinesGame() {
     currencyConfig.code,
   ]);
 
+  // ============================================================
+  // COVERED TILE (Purple Theme)
+  // ============================================================
   const coveredTile =
     "group relative aspect-square overflow-hidden rounded-[13px] " +
-    "border-[2px] border-[#9b6508] " +
-    "bg-gradient-to-br from-[#fff0b4] via-[#dca72e] to-[#8e5a08] " +
-    "shadow-[inset_0_2px_2px_rgba(255,255,255,.8),inset_0_-6px_9px_rgba(76,39,0,.38),0_3px_5px_rgba(0,0,0,.42)] " +
+    "border-[2px] border-[#C77AFF] " +
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] " +
+    "shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] " +
     "transition-all duration-150 " +
-    "hover:-translate-y-[1px] hover:brightness-110 hover:shadow-[inset_0_2px_2px_rgba(255,255,255,.9),inset_0_-5px_8px_rgba(76,39,0,.32),0_5px_9px_rgba(0,0,0,.45)] " +
+    "hover:-translate-y-[1px] hover:brightness-110 " +
     "active:translate-y-[2px]";
 
   const renderCoveredRock = () => (
     <>
-      <span className="absolute inset-[6px] rounded-[9px] bg-[linear-gradient(135deg,rgba(255,248,205,.45),transparent_30%,rgba(92,55,5,.18)_57%,rgba(255,225,126,.28))]" />
+      <span className="absolute inset-[6px] rounded-[9px] bg-[linear-gradient(135deg,rgba(255,255,255,.25),transparent_30%,rgba(58,0,201,.25)_57%,rgba(180,92,255,.35))]" />
       <span className="absolute left-[12%] top-[10%] h-[42%] w-[52%] rounded-[40%] bg-white/20 blur-[7px]" />
-      <span className="absolute -left-[10%] bottom-[8%] h-[45%] w-[70%] rotate-[17deg] rounded-[50%] bg-[#8c5b0d]/15 blur-[3px]" />
-      <span className="absolute right-[7%] top-[27%] h-[24%] w-[28%] rotate-[35deg] bg-[#f6d56f]/30 [clip-path:polygon(50%_0,100%_35%,75%_100%,15%_80%,0_30%)]" />
-      <span className="absolute bottom-[7%] right-[14%] h-[25%] w-[34%] -rotate-[20deg] bg-[#b87d17]/35 [clip-path:polygon(20%_0,100%_30%,75%_100%,0_72%)]" />
+      <span className="absolute -left-[10%] bottom-[8%] h-[45%] w-[70%] rotate-[17deg] rounded-[50%] bg-[#3A00C9]/30 blur-[3px]" />
+      <span className="absolute right-[7%] top-[27%] h-[24%] w-[28%] rotate-[35deg] bg-[#C77AFF]/40 [clip-path:polygon(50%_0,100%_35%,75%_100%,15%_80%,0_30%)]" />
+      <span className="absolute bottom-[7%] right-[14%] h-[25%] w-[34%] -rotate-[20deg] bg-[#B45CFF]/50 [clip-path:polygon(20%_0,100%_30%,75%_100%,0_72%)]" />
     </>
   );
 
@@ -395,7 +294,7 @@ export default function MinesGame() {
             ? "border-[#ff3b16] bg-gradient-to-br from-[#ffb02e] via-[#d93416] to-[#4a0905] shadow-[inset_0_2px_4px_rgba(255,255,255,.55),inset_0_-8px_14px_rgba(45,0,0,.65),0_0_18px_rgba(255,72,20,.65)]"
             : isMine
               ? "border-[#65140d] bg-gradient-to-br from-[#4b1712] via-[#2a0d0a] to-[#130807]"
-              : "border-[#5d461d] bg-gradient-to-br from-[#40371f] via-[#29261b] to-[#171712]"
+              : "border-[#00E676]/50 bg-gradient-to-br from-[#0a2a1a] via-[#0d1f14] to-[#06120a]"
         } shadow-[inset_0_2px_3px_rgba(255,255,255,.12),inset_0_-7px_12px_rgba(0,0,0,.75),0_3px_6px_rgba(0,0,0,.55)]`}
       >
         {isBlastedMine && (
@@ -474,127 +373,66 @@ export default function MinesGame() {
         }
 
         @keyframes blastCore {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(.1);
-          }
-          8% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(.55);
-          }
-          17% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.05);
-          }
-          28% {
-            opacity: .95;
-            transform: translate(-50%, -50%) scale(.9);
-          }
-          100% {
-            opacity: .18;
-            transform: translate(-50%, -50%) scale(1.35);
-          }
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(.1); }
+          8% { opacity: 1; transform: translate(-50%, -50%) scale(.55); }
+          17% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+          28% { opacity: .95; transform: translate(-50%, -50%) scale(.9); }
+          100% { opacity: .18; transform: translate(-50%, -50%) scale(1.35); }
         }
 
         @keyframes blastGlow {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(.1);
-          }
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(.1); }
           15% { opacity: .95; }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(2);
-          }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
         }
 
         @keyframes blastRing {
-          0% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(.2);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(2.2);
-          }
+          0% { opacity: 1; transform: translate(-50%, -50%) scale(.2); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
         }
 
         @keyframes debrisBurst {
-          0% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(.2) rotate(0deg);
-          }
+          0% { opacity: 1; transform: translate(-50%, -50%) scale(.2) rotate(0deg); }
           100% {
             opacity: 0;
             transform:
-              translate(
-                calc(-50% + var(--dx)),
-                calc(-50% + var(--dy))
-              )
+              translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
               scale(var(--scale))
               rotate(var(--rot));
           }
         }
 
         @keyframes smokePuff {
-          0% {
-            opacity: .65;
-            transform: translate(-50%, -50%) scale(.35);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(1.7);
-          }
+          0% { opacity: .65; transform: translate(-50%, -50%) scale(.35); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
         }
 
-        .mines-screen-shake {
-          animation: minesScreenShake 1.15s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        .blast-core {
-          animation: blastCore 1.05s ease-out forwards;
-        }
-
-        .blast-glow {
-          animation: blastGlow 1.2s ease-out forwards;
-        }
-
-        .blast-ring {
-          animation: blastRing 1s ease-out forwards;
-        }
-
-        .debris {
-          animation: debrisBurst 900ms cubic-bezier(.12,.72,.2,1) forwards;
-        }
-
-        .smoke-puff {
-          animation: smokePuff 1.2s ease-out forwards;
-        }
+        .mines-screen-shake { animation: minesScreenShake 1.15s cubic-bezier(.36,.07,.19,.97) both; }
+        .blast-core { animation: blastCore 1.05s ease-out forwards; }
+        .blast-glow { animation: blastGlow 1.2s ease-out forwards; }
+        .blast-ring { animation: blastRing 1s ease-out forwards; }
+        .debris { animation: debrisBurst 900ms cubic-bezier(.12,.72,.2,1) forwards; }
+        .smoke-puff { animation: smokePuff 1.2s ease-out forwards; }
 
         @media (prefers-reduced-motion: reduce) {
-          .mines-screen-shake,
-          .blast-core,
-          .blast-glow,
-          .blast-ring,
-          .debris,
-          .smoke-puff {
+          .mines-screen-shake, .blast-core, .blast-glow, .blast-ring, .debris, .smoke-puff {
             animation: none !important;
           }
         }
       `}</style>
 
       <div
-        className={`min-h-screen bg-[#f8f3e7] text-[#30230e] px-3 py-4 sm:px-5 ${
+        className={`min-h-screen bg-[#0B0410] text-white px-3 py-4 sm:px-5 ${
           explosion ? "mines-screen-shake" : ""
         }`}
       >
         <div className="mx-auto w-full max-w-5xl">
           {/* Title */}
           <div className="relative mb-5 flex items-center justify-center">
-            <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-[#c89528] to-transparent" />
-            <div className="relative flex items-center gap-2 rounded-full border border-[#b97d0c] bg-gradient-to-r from-[#fff7d8] via-[#e6b842] to-[#fff7d8] px-6 py-2 shadow-[0_3px_9px_rgba(123,78,4,.2)]">
+            <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-[#9B59B6] to-transparent" />
+            <div className="relative flex items-center gap-2 rounded-full border border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] px-6 py-2 shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75)]">
               <span>⛏️</span>
-              <h1 className="text-xl font-black tracking-wide text-[#4b3109] sm:text-2xl">
+              <h1 className="text-xl font-black tracking-wide text-white sm:text-2xl">
                 MINING GAME
               </h1>
               <span>⛏️</span>
@@ -605,27 +443,27 @@ export default function MinesGame() {
             <>
               {/* Stats */}
               <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="rounded-xl border border-[#d9b35e] bg-white/90 p-3 text-center shadow-sm">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#8a744e]">
+                <div className="rounded-xl border border-[#2a1b3d] bg-[#1C0F2B] p-3 text-center shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
                     Total Mines
                   </p>
-                  <p className="mt-1 text-xl font-black text-[#8f5c07]">
+                  <p className="mt-1 text-xl font-black text-[#9B59B6]">
                     {game.minesCount || 15}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#d9b35e] bg-white/90 p-3 text-center shadow-sm">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#8a744e]">
+                <div className="rounded-xl border border-[#2a1b3d] bg-[#1C0F2B] p-3 text-center shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
                     Current Reward
                   </p>
-                  <p className="mt-1 text-xl font-black text-[#9a6a08]">
+                  <p className="mt-1 text-xl font-black text-[#F1C40F]">
                     {money(currentWin)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#d9b35e] bg-white/90 p-3 text-center shadow-sm">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#8a744e]">
+                <div className="rounded-xl border border-[#2a1b3d] bg-[#1C0F2B] p-3 text-center shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
                     Safe Cells
                   </p>
-                  <p className="mt-1 text-xl font-black text-[#3d7950]">
+                  <p className="mt-1 text-xl font-black text-[#00E676]">
                     {game.safeCells || 0}/
                     {TOTAL_CELLS - Number(game.minesCount || 0)}
                   </p>
@@ -633,40 +471,40 @@ export default function MinesGame() {
               </div>
 
               {/* Game info */}
-              <div className="mb-3 flex items-center justify-between rounded-xl border border-[#d8b158] bg-[#fffaf0] px-3 py-2 shadow-sm sm:px-5">
+              <div className="mb-3 flex items-center justify-between rounded-xl border border-[#2a1b3d] bg-[#12061C] px-3 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.5)] sm:px-5">
                 <div>
-                  <span className="text-[9px] uppercase tracking-wider text-[#8b7754]">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500">
                     Entry
                   </span>
-                  <p className="font-black text-[#5d3e08]">
+                  <p className="font-black text-gray-200">
                     {money(game.entryAmount ?? game.virtualStake)}
                   </p>
                 </div>
                 <div className="text-center">
-                  <span className="text-[9px] uppercase tracking-wider text-[#8b7754]">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500">
                     Multiplier
                   </span>
-                  <p className="font-black text-[#a66d08]">
+                  <p className="font-black text-[#F1C40F]">
                     {Number(game.multiplier || 1).toFixed(2)}x
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-[9px] uppercase tracking-wider text-[#8b7754]">
+                  <span className="text-[9px] uppercase tracking-wider text-gray-500">
                     Win
                   </span>
-                  <p className="font-black text-[#3d7950]">
+                  <p className="font-black text-[#00E676]">
                     {money(currentWin)}
                   </p>
                 </div>
               </div>
 
               {/* 6 x 6 board */}
-              <section className="relative rounded-[22px] border border-[#b27b12] bg-gradient-to-b from-[#fffaf0] to-[#eee2c7] p-2.5 shadow-[0_8px_24px_rgba(96,60,5,.18)] sm:p-4">
-                <div className="mb-3 flex items-center justify-between rounded-xl border border-[#d1a643] bg-[#241b0e] px-3 py-2 text-[#f9d979]">
+              <section className="relative rounded-[22px] border border-[#2a1b3d] bg-[#1C0F2B] p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.6)] sm:p-4">
+                <div className="mb-3 flex items-center justify-between rounded-xl border border-[#2a1b3d] bg-[#0B0410] px-3 py-2 text-[#9B59B6]">
                   <span className="text-[10px] font-bold uppercase tracking-[.18em]">
                     6 × 6 Mine Field
                   </span>
-                  <span className="text-[10px] text-[#e8d8b2]">
+                  <span className="text-[10px] text-gray-400">
                     Find gold • avoid mines
                   </span>
                 </div>
@@ -695,12 +533,11 @@ export default function MinesGame() {
                     );
                   })}
 
-                  {/* Explosion overlay - only visual effects, no pointer-events-none on parent */}
+                  {/* Explosion overlay */}
                   {explosion &&
                     explosionCell !== null &&
                     game?.status === "lost" && (
                       <>
-                        {/* Blast effects - pointer-events-none */}
                         <div
                           className="pointer-events-none absolute inset-0 z-[60]"
                           aria-live="assertive"
@@ -710,10 +547,7 @@ export default function MinesGame() {
 
                           <div
                             className="absolute grid grid-cols-6 grid-rows-6 gap-1.5 sm:gap-2.5"
-                            style={{
-                              inset: "0",
-                              padding: "0",
-                            }}
+                            style={{ inset: "0", padding: "0" }}
                           >
                             <div
                               className="relative flex items-center justify-center"
@@ -779,9 +613,7 @@ export default function MinesGame() {
                           </div>
                         </div>
 
-                        {/* MINE HIT Popup and Button - Outside pointer-events-none */}
                         <div className="absolute left-1/2 top-1/2 z-[70] flex w-[min(82%,320px)] -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-                          {/* Popup */}
                           <div className="mb-3 w-full rounded-2xl border-2 border-[#ffb62b] bg-gradient-to-r from-[#1a0d08] via-[#3d1a0e] to-[#1a0d08] px-6 py-2.5 text-center shadow-[0_8px_30px_rgba(0,0,0,.5),0_0_40px_rgba(255,120,0,.2)] animate-pulse">
                             <div className="flex items-center justify-center gap-2">
                               <span className="h-2 w-2 animate-pulse rounded-full bg-[#ff4a2f] shadow-[0_0_10px_#ff4a2f]" />
@@ -795,7 +627,6 @@ export default function MinesGame() {
                             </p>
                           </div>
 
-                          {/* New Game Button - Clean and Clickable */}
                           <button
                             type="button"
                             onClick={() => {
@@ -803,10 +634,9 @@ export default function MinesGame() {
                               setExplosionCell(null);
                               dispatch(resetMinesGame());
                             }}
-                            className="group relative w-full overflow-hidden rounded-2xl border-2 border-[#b78a32] bg-gradient-to-r from-[#2d2416] via-[#4a3518] to-[#2d2416] px-6 py-3.5 font-bold text-[#ffe39a] shadow-[0_4px_20px_rgba(0,0,0,.3)] transition-all duration-300 hover:scale-[1.02] hover:border-[#dba444] hover:shadow-[0_8px_35px_rgba(183,138,50,.4)] active:scale-[0.97] cursor-pointer"
+                            className="group relative w-full overflow-hidden rounded-2xl border border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] px-6 py-3.5 font-bold text-white shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
                           >
-                            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#b78a32]/20 via-[#dba444]/10 to-[#b78a32]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
                             <div className="relative flex items-center justify-center gap-3">
                               <span className="text-lg group-hover:rotate-180 transition-transform duration-500">
@@ -819,8 +649,6 @@ export default function MinesGame() {
                                 →
                               </span>
                             </div>
-
-                            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#dba444] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           </button>
                         </div>
                       </>
@@ -838,7 +666,7 @@ export default function MinesGame() {
                     Number(game.safeCells || 0) <= 0 ||
                     loading
                   }
-                  className="rounded-2xl border-2 border-[#9c6708] bg-gradient-to-b from-[#ffe58a] via-[#d99d1c] to-[#a86c08] px-4 py-3 text-lg font-black text-[#392304] shadow-[inset_0_2px_2px_rgba(255,255,255,.7),0_5px_10px_rgba(92,57,3,.25)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-2xl border border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] px-4 py-3 text-lg font-black text-white shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] transition hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {loading
                     ? "PROCESSING..."
@@ -847,11 +675,11 @@ export default function MinesGame() {
               </div>
 
               {game.status !== "playing" && !explosion && (
-                <div className="mt-4 rounded-2xl border border-[#d6ad58] bg-white/90 p-5 text-center shadow-sm">
+                <div className="mt-4 rounded-2xl border border-[#2a1b3d] bg-[#1C0F2B] p-5 text-center shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
                   {game.status === "lost" && (
                     <>
                       <div className="text-4xl">💣</div>
-                      <div className="mt-1 font-black text-[#b63224]">
+                      <div className="mt-1 font-black text-red-400">
                         GAME LOST
                       </div>
                     </>
@@ -860,10 +688,10 @@ export default function MinesGame() {
                   {game.status === "won" && (
                     <>
                       <div className="text-4xl">🏆</div>
-                      <div className="mt-1 font-black text-[#3d7950]">
+                      <div className="mt-1 font-black text-[#00E676]">
                         YOU WON!
                       </div>
-                      <div className="mt-1 text-2xl font-black text-[#9a6808]">
+                      <div className="mt-1 text-2xl font-black text-[#F1C40F]">
                         {money(game.virtualWin)}
                       </div>
                     </>
@@ -872,10 +700,10 @@ export default function MinesGame() {
                   {game.status === "cashout" && (
                     <>
                       <div className="text-4xl">💰</div>
-                      <div className="mt-1 font-black text-[#3d7950]">
+                      <div className="mt-1 font-black text-[#00E676]">
                         CASHOUT SUCCESSFUL
                       </div>
-                      <div className="mt-1 text-2xl font-black text-[#9a6808]">
+                      <div className="mt-1 text-2xl font-black text-[#F1C40F]">
                         {money(game.virtualWin)}
                       </div>
                     </>
@@ -883,7 +711,6 @@ export default function MinesGame() {
                 </div>
               )}
 
-              {/* Extra New Game button when not explosion state */}
               {game.status !== "playing" && !explosion && (
                 <button
                   type="button"
@@ -892,14 +719,14 @@ export default function MinesGame() {
                     setExplosionCell(null);
                     dispatch(resetMinesGame());
                   }}
-                  className="mt-3 w-full rounded-xl border border-[#b78a32] bg-[#2d2416] py-3 font-bold text-[#ffe39a] transition hover:bg-[#40331f]"
+                  className="mt-3 w-full rounded-xl border border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] py-3 font-bold text-white shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] transition hover:scale-[1.02] active:scale-[0.98]"
                 >
                   🔄 NEW GAME
                 </button>
               )}
 
               {message && (
-                <p className="mt-4 text-center text-sm font-semibold text-[#9a6808]">
+                <p className="mt-4 text-center text-sm font-semibold text-[#9B59B6]">
                   {message}
                 </p>
               )}
@@ -908,9 +735,9 @@ export default function MinesGame() {
 
           {/* Start screen */}
           {!game && (
-            <section className="overflow-hidden rounded-[24px] border border-[#c99a37] bg-white/90 shadow-[0_10px_35px_rgba(103,68,9,.15)]">
-              <div className="bg-gradient-to-r from-[#2c2111] via-[#4b350f] to-[#2c2111] px-5 py-4 text-center">
-                <p className="text-xs font-bold uppercase tracking-[.3em] text-[#f2d47d]">
+            <section className="overflow-hidden rounded-[24px] border border-[#2a1b3d] bg-[#1C0F2B] shadow-[0_10px_35px_rgba(0,0,0,0.6)]">
+              <div className="bg-gradient-to-r from-[#B45CFF] via-[#7418F5] to-[#3A00C9] px-5 py-4 text-center">
+                <p className="text-xs font-bold uppercase tracking-[.3em] text-white/90">
                   TREASURE HUNT
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-white">
@@ -920,33 +747,34 @@ export default function MinesGame() {
 
               <div className="p-5">
                 <div className="mb-5 grid grid-cols-3 gap-2">
-                  <div className="rounded-xl border border-[#dfc078] bg-[#fff9ea] p-3 text-center">
+                  <div className="rounded-xl border border-[#2a1b3d] bg-[#12061C] p-3 text-center">
                     <div className="text-2xl">💎</div>
-                    <p className="mt-1 text-[10px] font-bold text-[#765f35]">
+                    <p className="mt-1 text-[10px] font-bold text-gray-400">
                       FIND Diamond
                     </p>
                   </div>
-                  <div className="rounded-xl border border-[#dfc078] bg-[#fff9ea] p-3 text-center">
+                  <div className="rounded-xl border border-[#2a1b3d] bg-[#12061C] p-3 text-center">
                     <div className="text-2xl">⛏️</div>
-                    <p className="mt-1 text-[10px] font-bold text-[#765f35]">
+                    <p className="mt-1 text-[10px] font-bold text-gray-400">
                       MINE TILES
                     </p>
                   </div>
-                  <div className="rounded-xl border border-[#dfc078] bg-[#fff9ea] p-3 text-center">
+                  <div className="rounded-xl border border-[#2a1b3d] bg-[#12061C] p-3 text-center">
                     <div className="text-2xl">💣</div>
-                    <p className="mt-1 text-[10px] font-bold text-[#765f35]">
+                    <p className="mt-1 text-[10px] font-bold text-gray-400">
                       AVOID MINES
                     </p>
                   </div>
                 </div>
 
                 {!isGameCountryAllowed && (
-                  <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-center text-xs font-bold text-red-700">
-                    Mines Game is available only in India, Australia, Nepal, Pakistan, Bangladesh and UAE (Dubai).
+                  <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-xs font-bold text-red-400">
+                    Mines Game is available only in India, Australia, Nepal,
+                    Pakistan, Bangladesh and UAE (Dubai).
                   </div>
                 )}
 
-                <p className="mb-2 text-[10px] font-semibold text-[#8b7754]">
+                <p className="mb-2 text-[10px] font-semibold text-gray-400">
                   Enter amount in your local currency or choose a quick amount
                 </p>
 
@@ -962,8 +790,8 @@ export default function MinesGame() {
                       }}
                       className={`rounded-xl border py-2.5 text-sm font-black transition ${
                         Number(betAmount) === amount
-                          ? "border-[#9a6609] bg-gradient-to-b from-[#ffe18a] to-[#c88d15] text-[#3d2804] shadow-sm"
-                          : "border-[#d7bf8a] bg-[#fffaf0] text-[#6b5837] hover:border-[#b78a32]"
+                          ? "border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] text-white shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75)]"
+                          : "border-[#2a1b3d] bg-[#12061C] text-gray-300 hover:border-[#9B59B6]/50"
                       }`}
                     >
                       {money(amount)}
@@ -971,12 +799,12 @@ export default function MinesGame() {
                   ))}
                 </div>
 
-                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-[#7b6848]">
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
                   Game Amount
                 </label>
 
-                <div className="mb-3 flex items-center overflow-hidden rounded-xl border-2 border-[#c79532] bg-[#fffdf7] shadow-inner">
-                  <span className="px-4 text-lg font-black text-[#a36b08]">
+                <div className="mb-3 flex items-center overflow-hidden rounded-xl border-2 border-[#9B59B6]/50 bg-[#12061C] shadow-inner">
+                  <span className="px-4 text-lg font-black text-[#9B59B6]">
                     {currencySymbol}
                   </span>
                   <input
@@ -985,8 +813,6 @@ export default function MinesGame() {
                     step="0.01"
                     value={betAmountInput}
                     onChange={(e) => {
-                      // User enters LOCAL currency.
-                      // Store and send the same local amount.
                       const value = e.target.value;
                       setBetAmountInput(value);
 
@@ -1010,8 +836,6 @@ export default function MinesGame() {
                       }
                     }}
                     onBlur={() => {
-                      // Keep an intentionally empty field empty.
-                      // Start Mining handles the required-field validation.
                       if (
                         betAmountInput !== "" &&
                         (!Number.isFinite(Number(betAmountInput)) ||
@@ -1021,13 +845,13 @@ export default function MinesGame() {
                         setBetAmountInput("");
                       }
                     }}
-                    className="min-w-0 flex-1 bg-transparent py-3 pr-3 text-lg font-black text-[#4f3507] outline-none"
+                    className="min-w-0 flex-1 bg-transparent py-3 pr-3 text-lg font-black text-white outline-none"
                     aria-label={`Game amount in ${currencyConfig.code}`}
                   />
                 </div>
 
                 {amountError && (
-                  <p className="mb-3 text-center text-xs font-bold text-[#c73525]">
+                  <p className="mb-3 text-center text-xs font-bold text-red-400">
                     {amountError}
                   </p>
                 )}
@@ -1036,13 +860,13 @@ export default function MinesGame() {
                   type="button"
                   onClick={startGame}
                   disabled={loading}
-                  className="w-full rounded-2xl border-2 border-[#9c6708] bg-gradient-to-b from-[#ffe58a] via-[#d99d1c] to-[#a86c08] py-4 text-lg font-black text-[#392304] shadow-[inset_0_2px_2px_rgba(255,255,255,.7),0_6px_12px_rgba(92,57,3,.25)] transition hover:brightness-105 disabled:opacity-50"
+                  className="w-full rounded-2xl border border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] py-4 text-lg font-black text-white shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                 >
                   {loading ? "STARTING..." : "⛏️ START MINING"}
                 </button>
 
                 {message && (
-                  <p className="mt-4 text-center text-sm font-semibold text-[#9a6808]">
+                  <p className="mt-4 text-center text-sm font-semibold text-[#9B59B6]">
                     {message}
                   </p>
                 )}

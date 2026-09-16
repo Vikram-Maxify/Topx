@@ -277,11 +277,11 @@ export default function WalletDashboard() {
         <div className="relative overflow-hidden rounded-2xl border border-[#9B59B6]/40 bg-gradient-to-br from-[#1C0F2B] to-[#2a1b3d] px-5 py-5 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm text-gray-400 mb-1.5">
+              <p className="text-sm text-white mb-1.5">
                 Current Wallet Balance
               </p>
               <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-[28px] leading-none font-bold text-[#9B59B6] tracking-tight">
+                <h2 className="text-[28px] leading-none font-bold text-gray-300 tracking-tight">
                   {showBalance ? formatBalance(walletBalance) : "••••••••"}
                 </h2>
                 <button onClick={() => setShowBalance(!showBalance)}>
@@ -299,7 +299,7 @@ export default function WalletDashboard() {
                 <span className="text-sm text-gray-400">
                   Available Balance{" "}
                 </span>
-                <span className="text-sm font-semibold text-[#9B59B6] ml-1">
+                <span className="text-sm font-semibold text-white ml-1">
                   {formatBalance(walletBalance)}
                 </span>
               </div>

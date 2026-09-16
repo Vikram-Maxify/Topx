@@ -1,21 +1,13 @@
 import {
   Activity,
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Circle,
-  ClipboardList,
   Dice5,
-  Gift,
-  History,
   Home as HomeIcon,
-  Key,
   LogIn,
   LogOut,
-  MessageCircle,
   Plus,
-  PlusCircle,
   PlusIcon,
   PowerIcon,
   Sparkles,
@@ -24,6 +16,9 @@ import {
   Wallet,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { FaPlaneDeparture } from "react-icons/fa";
+import { GiChicken } from "react-icons/gi";
+import { MdCasino, MdLocalActivity } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout } from "../redux/slices/authSlice";
@@ -35,8 +30,8 @@ const Navbar = ({ children }) => {
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [isMobileAccountMenuOpen, setIsMobileAccountMenuOpen] = useState(false);
+  // Sidebar collapse state
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -74,73 +69,18 @@ const Navbar = ({ children }) => {
     };
   }, [isSidebarOpen]);
 
-  // Menu items matching the design
   const menuItems = [
     { icon: HomeIcon, label: "Home", path: "/" },
     { icon: Dice5, label: "Matka", path: "/matka/markets" },
     { icon: Activity, label: "Activity", path: "/activity" },
     { icon: PowerIcon, label: "Powerhit", path: "/powerhit" },
     { icon: Wallet, label: "Wallet", path: "/wallet" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ];
-
-  // Account menu items
-  const accountMenuItems = [
-    { icon: User, label: "Profile", path: "/profile", color: "text-blue-400" },
-    {
-      icon: PlusCircle,
-      label: "Deposit",
-      path: "/deposit",
-      color: "text-green-400",
-    },
-    {
-      icon: History,
-      label: "Deposit History",
-      path: "/deposit-history",
-      color: "text-purple-400",
-    },
-    {
-      icon: ArrowUpRight,
-      label: "Withdrawal",
-      path: "/withdrawal",
-      color: "text-orange-400",
-    },
-    {
-      icon: ArrowDownLeft,
-      label: "Withdrawal History",
-      path: "/withdrawal-history",
-      color: "text-red-400",
-    },
-    {
-      icon: Gift,
-      label: "Refer & Earn",
-      path: "/promo",
-      color: "text-pink-400",
-    },
-    {
-      icon: ClipboardList,
-      label: "All Bet History",
-      path: "/bet-history",
-      color: "text-indigo-400",
-    },
-    {
-      icon: ClipboardList,
-      label: "PowerHit History",
-      path: "/powerhit/history",
-      color: "text-indigo-400",
-    },
-    {
-      icon: Key,
-      label: "Change Password",
-      path: "/change-password",
-      color: "text-yellow-400",
-    },
-    {
-      icon: MessageCircle,
-      label: "Support Chat",
-      path: "/support-chat",
-      color: "text-cyan-400",
-    },
+    { icon: User, label: "Account", path: "/account" },
+    { icon: FaPlaneDeparture, label: "Aviator", path: "/aviator" },
+    { icon: GiChicken, label: "Chicken Game", path: "/chicken" },
+    { icon: MdLocalActivity, label: "Mines", path: "/minis" },
+    { icon: MdCasino, label: "Live Casino", path: "/casino" },
+    { icon: MdCasino, label: "Slot", path: "/slots" },
   ];
 
   const handleLogout = async () => {
@@ -168,7 +108,6 @@ const Navbar = ({ children }) => {
   const walletBalance = user?.balance;
 
   // Country-wise currency SYMBOL only.
-  // Balance value remains exactly as received from backend.
   const getCurrencySymbol = () => {
     const country = String(user?.country || "")
       .trim()
@@ -276,36 +215,14 @@ const Navbar = ({ children }) => {
     return currencyMap[countryCode] || "₹";
   };
 
-  const getUserSubtitle = () => {
-    if (!user) return "";
-    return user.email || user.mobile || "";
-  };
-
-  const getInitial = () => {
-    return getUserDisplayName().charAt(0).toUpperCase();
-  };
-
   const getAvatar = () => {
     const name = getUserDisplayName();
-
     return (
       user?.profilePic ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(
         name,
       )}&background=FBBF24&color=fff&size=128`
     );
-  };
-
-  const getAvatarGradient = () => {
-    const gradients = [
-      "from-yellow-400 to-orange-500",
-      "from-blue-400 to-purple-500",
-      "from-green-400 to-teal-500",
-      "from-pink-400 to-rose-500",
-      "from-indigo-400 to-blue-500",
-    ];
-    const index = getUserDisplayName().length % gradients.length;
-    return gradients[index];
   };
 
   // WINZOX Logo Component
@@ -319,44 +236,86 @@ const Navbar = ({ children }) => {
 
   return (
     <>
-      {/* ================= DESKTOP SIDEBAR ================= */}
-      <div className="hidden md:flex md:flex-col md:w-72 md:fixed md:inset-y-0 md:bg-[#0B0410] md:backdrop-blur-xl md:z-50 shadow-2xl shadow-black/50 border-r border-[#2a1b3d] perspective-1000">
-        <div className="flex flex-col h-full">
+      {/* ================= DESKTOP SIDEBAR (Collapsible) ================= */}
+      <div
+        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:bg-[#0B0410] md:backdrop-blur-xl md:z-50 shadow-2xl shadow-black/50 border-r border-[#2a1b3d] perspective-1000 transition-all duration-300 ${
+          isCollapsed ? "md:w-20" : "md:w-72"
+        }`}
+      >
+        <div className="flex flex-col h-full relative">
+          {/* Collapse Toggle Button — exact center */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="absolute -right-3.5 top-1/2 z-[60] w-7 h-7 rounded-full bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border-2 border-[#0B0410] shadow-[0_0_12px_#B45CFF,0_0_24px_rgba(139,43,255,0.75)] flex items-center justify-center text-white hover:scale-110 transition-all duration-300"
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? (
+              <ChevronRight size={16} />
+            ) : (
+              <ChevronLeft size={16} />
+            )}
+          </button>
+
           {/* Brand with WINZOX Logo */}
-          <div className="flex items-center justify-center h-32 px-6">
+          <div
+            className={`flex items-center justify-center ${
+              isCollapsed ? "h-20 px-2" : "h-32 px-6"
+            } transition-all duration-300`}
+          >
             <Link to="/" className="flex items-center group">
               <div className="relative">
-                <div className="relative">
+                {isCollapsed ? (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75)] flex items-center justify-center">
+                    <span className="text-white font-black text-lg">T</span>
+                  </div>
+                ) : (
                   <WinzoxLogo className="h-52" />
-                </div>
+                )}
               </div>
             </Link>
           </div>
 
-          {/* Tagline */}
-          <div className="px-6 py-3 bg-[#1C0F2B] mx-4 mt-3 rounded-2xl border border-[#2a1b3d] shadow-[0_4px_12px_rgba(0,0,0,0.5)] transform-gpu hover:translate-z-6 hover:scale-105 transition-all duration-500 [transform-style:preserve-3d]">
-            <div className="flex items-center justify-center gap-2 text-xs font-bold tracking-widest">
-              <Sparkles size={14} className="text-[#9B59B6] animate-sparkle" />
-              <span className="text-gray-300">PLAY • WIN • REPEAT</span>
-              <Sparkles size={14} className="text-[#9B59B6] animate-sparkle" />
+          {/* Tagline (hide when collapsed) */}
+          {!isCollapsed && (
+            <div className="px-6 py-3 bg-[#1C0F2B] mx-4 mt-3 rounded-2xl border border-[#2a1b3d] shadow-[0_4px_12px_rgba(0,0,0,0.5)] transform-gpu hover:translate-z-6 hover:scale-105 transition-all duration-500 [transform-style:preserve-3d]">
+              <div className="flex items-center justify-center gap-2 text-xs font-bold tracking-widest">
+                <Sparkles
+                  size={14}
+                  className="text-[#9B59B6] animate-sparkle"
+                />
+                <span className="text-gray-300">PLAY • WIN • REPEAT</span>
+                <Sparkles
+                  size={14}
+                  className="text-[#9B59B6] animate-sparkle"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Navigation Menu */}
-          <nav className="flex-1 px-4 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#2a1b3d] scrollbar-track-transparent relative z-10">
+          <nav
+            className={`flex-1 ${
+              isCollapsed ? "px-2" : "px-4"
+            } py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#2a1b3d] scrollbar-track-transparent relative z-10 transition-all duration-300`}
+          >
             <div className="space-y-1.5">
               {menuItems.map((item, index) => (
                 <Link
                   key={index}
                   to={item.path}
-                  className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-500 group relative cursor-pointer ${
+                  title={isCollapsed ? item.label : ""}
+                  className={`flex items-center ${
+                    isCollapsed ? "justify-center" : "gap-3"
+                  } rounded-2xl ${
+                    isCollapsed ? "px-2 py-3" : "px-4 py-3.5"
+                  } transition-all duration-500 group relative cursor-pointer ${
                     isActiveRoute(item.path)
                       ? "bg-gradient-to-r from-[#9B59B6]/20 to-[#8E44AD]/10 text-[#9B59B6] shadow-xl shadow-[#9B59B6]/15 border border-[#9B59B6]/40 transform-gpu hover:translate-x-3 hover:scale-105 hover:shadow-2xl hover:shadow-[#9B59B6]/25 [transform-style:preserve-3d]"
                       : "text-gray-400 hover:text-white hover:bg-[#1C0F2B] transform-gpu hover:translate-x-3 hover:scale-105 hover:shadow-xl [transform-style:preserve-3d]"
                   }`}
                   style={{ pointerEvents: "auto" }}
                 >
-                  {isActiveRoute(item.path) && (
+                  {isActiveRoute(item.path) && !isCollapsed && (
                     <div className="absolute left-0 top-[9%] -translate-y-1/2 w-1.5 h-10 bg-gradient-to-b from-[#9B59B6] to-[#8E44AD] rounded-r-full shadow-lg shadow-[#9B59B6]/50 animate-pulse-slow pointer-events-none"></div>
                   )}
                   <div className="relative pointer-events-none">
@@ -372,146 +331,88 @@ const Navbar = ({ children }) => {
                       <div className="absolute inset-0 bg-[#9B59B6]/20 blur-xl rounded-full animate-pulse-slow pointer-events-none"></div>
                     )}
                   </div>
-                  <span
-                    className={`text-sm font-bold pointer-events-none ${
-                      isActiveRoute(item.path)
-                        ? "text-white"
-                        : "text-gray-400 group-hover:text-gray-200"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                  {isActiveRoute(item.path) && (
-                    <ChevronRight
-                      size={18}
-                      className="ml-auto text-[#9B59B6] transform-gpu group-hover:translate-x-2 transition-transform duration-300 pointer-events-none"
-                    />
+                  {!isCollapsed && (
+                    <>
+                      <span
+                        className={`text-sm font-bold pointer-events-none ${
+                          isActiveRoute(item.path)
+                            ? "text-white"
+                            : "text-gray-400 group-hover:text-gray-200"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                      {isActiveRoute(item.path) && (
+                        <ChevronRight
+                          size={18}
+                          className="ml-auto text-[#9B59B6] transform-gpu group-hover:translate-x-2 transition-transform duration-300 pointer-events-none"
+                        />
+                      )}
+                    </>
                   )}
                 </Link>
               ))}
             </div>
-            {/* Account Section */}
-            {isAuthenticated && (
-              <div className="mt-6 pt-6 border-t border-[#2a1b3d] relative z-10">
-                <button
-                  onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 text-gray-400 hover:text-white hover:bg-[#1C0F2B] rounded-2xl transition-all duration-500 group transform-gpu hover:translate-x-2 hover:scale-105 [transform-style:preserve-3d] cursor-pointer relative z-10"
-                  type="button"
-                >
-                  <span className="flex items-center gap-3 pointer-events-none">
-                    <User
-                      size={20}
-                      className="text-gray-500 group-hover:text-gray-300 transition-colors duration-300 pointer-events-none"
-                    />
-                    <span className="text-sm font-bold pointer-events-none">
-                      Account
-                    </span>
-                  </span>
-                  <ChevronDown
-                    size={18}
-                    className={`transition-all duration-500 text-gray-500 pointer-events-none ${
-                      isAccountMenuOpen ? "rotate-180 text-[#9B59B6]" : ""
-                    }`}
-                  />
-                </button>
-
-                <div
-                  className={`overflow-hidden transition-all duration-500 ${
-                    isAccountMenuOpen
-                      ? "max-h-[600px] opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
-                >
-                  <div className="px-2 py-2 space-y-1.5">
-                    {accountMenuItems.map((item, index) => {
-                      const isActive =
-                        location.pathname === item.path ||
-                        location.pathname.startsWith(`${item.path}/`);
-
-                      return (
-                        <Link
-                          key={index}
-                          to={item.path}
-                          className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-300 group transform-gpu hover:translate-x-2 hover:scale-105 [transform-style:preserve-3d] cursor-pointer relative z-10 ${
-                            isActive
-                              ? "bg-[#9B59B6]/15 text-[#9B59B6] font-semibold shadow-lg shadow-[#9B59B6]/10 border border-[#9B59B6]/40"
-                              : "text-gray-400 hover:text-white hover:bg-[#1C0F2B]"
-                          }`}
-                          style={{ pointerEvents: "auto" }}
-                        >
-                          {isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-[#9B59B6] to-[#8E44AD] rounded-r-full shadow-lg shadow-[#9B59B6]/50"></div>
-                          )}
-                          <item.icon
-                            size={18}
-                            className={`transition-all duration-300 group-hover:scale-110 group-hover:rotate-y-3 [transform-style:preserve-3d] pointer-events-none ${
-                              isActive
-                                ? "text-[#9B59B6] scale-110"
-                                : item.color || "text-gray-500"
-                            }`}
-                          />
-                          <span
-                            className={`pointer-events-none ${isActive ? "text-[#9B59B6]" : ""}`}
-                          >
-                            {item.label}
-                          </span>
-                          {isActive && (
-                            <ChevronRight
-                              size={14}
-                              className="ml-auto text-[#9B59B6] pointer-events-none"
-                            />
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
           </nav>
 
           {/* Footer with Logout */}
-          <div className="border-t border-[#2a1b3d] p-4">
+          <div
+            className={`border-t border-[#2a1b3d] ${
+              isCollapsed ? "p-2" : "p-4"
+            } transition-all duration-300`}
+          >
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
                 disabled={loading}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 w-full transition-all duration-500 group disabled:opacity-50 transform-gpu hover:scale-105 hover:shadow-xl [transform-style:preserve-3d]"
+                title={isCollapsed ? "Logout" : ""}
+                className={`flex items-center ${
+                  isCollapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3.5"
+                } text-gray-400 hover:text-red-400 hover:bg-red-500/10 w-full rounded-2xl transition-all duration-500 group disabled:opacity-50 transform-gpu hover:scale-105 hover:shadow-xl [transform-style:preserve-3d]`}
               >
                 <LogOut
                   size={20}
                   className="text-gray-500 group-hover:text-red-400 transition-colors duration-300 group-hover:rotate-y-6 [transform-style:preserve-3d]"
                 />
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Circle className="animate-spin" size={16} />
-                    Logging out...
-                  </span>
-                ) : (
-                  "Logout"
-                )}
+                {!isCollapsed &&
+                  (loading ? (
+                    <span className="flex items-center gap-2">
+                      <Circle className="animate-spin" size={16} />
+                      Logging out...
+                    </span>
+                  ) : (
+                    "Logout"
+                  ))}
               </button>
             ) : (
               <div className="space-y-2.5">
                 <Link
                   to="/login"
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3.5 text-gray-400 hover:text-white hover:bg-[#1C0F2B] transition-all duration-500 group transform-gpu hover:translate-x-2 hover:scale-105 [transform-style:preserve-3d]"
+                  title={isCollapsed ? "Login" : ""}
+                  className={`flex items-center ${
+                    isCollapsed
+                      ? "justify-center px-2 py-3"
+                      : "gap-3 px-4 py-3.5"
+                  } text-gray-400 hover:text-white hover:bg-[#1C0F2B] rounded-2xl transition-all duration-500 group transform-gpu hover:translate-x-2 hover:scale-105 [transform-style:preserve-3d]`}
                 >
                   <LogIn
                     size={20}
                     className="text-gray-500 group-hover:text-gray-300 transition-colors duration-300 group-hover:rotate-y-6 [transform-style:preserve-3d]"
                   />
-                  Login
+                  {!isCollapsed && "Login"}
                 </Link>
                 <Link
                   to="/register"
-                  className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3.5 bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] text-white font-bold transition-all duration-500 group transform-gpu hover:scale-105 hover:-translate-y-1 hover:rotate-y-3 [transform-style:preserve-3d]"
+                  title={isCollapsed ? "Register" : ""}
+                  className={`flex items-center justify-center ${
+                    isCollapsed ? "gap-0 px-2 py-3" : "gap-2 px-4 py-3.5"
+                  } rounded-2xl bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] text-white font-bold transition-all duration-500 group transform-gpu hover:scale-105 hover:-translate-y-1 hover:rotate-y-3 [transform-style:preserve-3d]`}
                 >
                   <UserPlus
                     size={20}
                     className="group-hover:scale-110 group-hover:rotate-y-6 transition-all duration-500 [transform-style:preserve-3d]"
                   />
-                  Register Now
+                  {!isCollapsed && "Register Now"}
                 </Link>
               </div>
             )}
@@ -520,9 +421,17 @@ const Navbar = ({ children }) => {
       </div>
 
       {/* ================= MAIN CONTENT ================= */}
-      <div className="md:ml-72 flex flex-col min-h-screen bg-[#0B0410]">
-        {/* ================= TOP NAVBAR ================= */}
-        <div className="h-16 border-b border-[#2a1b3d] bg-[#0B0410] backdrop-blur-xl sticky top-0 z-40 shadow-lg shadow-black/30 transform-gpu">
+      <div
+        className={`${
+          isCollapsed ? "md:ml-20" : "md:ml-72"
+        } flex flex-col min-h-screen bg-[#0B0410] transition-all duration-300`}
+      >
+        {/* ================= TOP NAVBAR (Fixed & Full Width) ================= */}
+        <div
+          className={`h-16 border-b border-[#2a1b3d] bg-[#0B0410]/95 backdrop-blur-xl fixed top-0 right-0 z-40 shadow-lg shadow-black/30 transition-all duration-300 ${
+            isCollapsed ? "left-0 md:left-20" : "left-0 md:left-72"
+          }`}
+        >
           <div className="h-full flex items-center justify-between px-4 sm:px-6">
             {/* ================= LEFT - LOGO ================= */}
             <div className="flex items-center gap-2 md:gap-4">
@@ -606,9 +515,7 @@ const Navbar = ({ children }) => {
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-[#2a1b3d] bg-[#1C0F2B] text-gray-300 text-sm hover:text-white hover:border-[#9B59B6]/50 transition-all duration-300"
                   >
                     <LogIn size={16} />
-
                     <span className="hidden sm:inline">LOGIN</span>
-
                     <span className="sm:hidden">Login</span>
                   </Link>
 
@@ -618,9 +525,7 @@ const Navbar = ({ children }) => {
                     className="flex ml-3 items-center gap-1.5 px-2 py-1.5 rounded-lg bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] text-white text-sm font-bold transition-all duration-300"
                   >
                     <UserPlus size={16} />
-
                     <span className="hidden sm:inline">REGISTER</span>
-
                     <span className="sm:hidden">Register</span>
                   </Link>
                 </>
@@ -629,8 +534,8 @@ const Navbar = ({ children }) => {
           </div>
         </div>
 
-        {/* ================= PAGE CONTENT ================= */}
-        <div className="flex-1 pb-[4rem] md:pb-6">{children}</div>
+        {/* ================= PAGE CONTENT (pt-16 for fixed navbar) ================= */}
+        <div className="flex-1 pt-16 pb-[4rem] md:pb-6">{children}</div>
       </div>
 
       {/* ================= MOBILE BOTTOM NAV ================= */}
@@ -748,8 +653,7 @@ const Navbar = ({ children }) => {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#B45CFF] to-[#7418F5] blur-2xl opacity-30 group-hover:opacity-70 transition-all duration-700 animate-pulse-slow"></div>
                 <div className="w-[78px] h-[78px] rounded-full bg-[#1C0F2B] shadow-2xl relative border border-[#2a1b3d]">
                   <div className="w-full h-full rounded-full bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] flex flex-col items-center justify-center group-hover:scale-105 transition-all duration-500">
-                    {/* <Gift size={22} className="text-white" strokeWidth={2.3} /> */}
-                    <span className=" text-3xl font-bold text-white leading-none mt-0.5">
+                    <span className="text-3xl font-bold text-white leading-none mt-0.5">
                       <PlusIcon
                         size={42}
                         className="text-white text-3xl"
@@ -760,8 +664,7 @@ const Navbar = ({ children }) => {
                 </div>
               </div>
               <span className="text-white text-sm font-medium flex justify-center items-center z-30">
-                {" "}
-                Deposite{" "}
+                Deposite
               </span>
             </Link>
           </div>
@@ -771,98 +674,42 @@ const Navbar = ({ children }) => {
       {/* ================= MOBILE SIDEBAR ================= */}
 
       <style>{`
-        .bg-surface {
-          background-color: #0B0410;
-        }
-        .animate-slideDown {
-          animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
+        .bg-surface { background-color: #0B0410; }
+        .animate-slideDown { animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px) rotateX(-15deg) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) rotateX(0) scale(1);
-          }
+          from { opacity: 0; transform: translateY(-10px) rotateX(-15deg) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
         }
-        .scrollbar-thin::-webkit-scrollbar {
-          width: 4px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-          background: #2a1b3d;
-          border-radius: 9999px;
-        }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #2a1b3d; border-radius: 9999px; }
         @keyframes pulse-slow {
           0%, 100% { opacity: 0.5; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.08); }
         }
-        .animate-pulse-slow {
-          animation: pulse-slow 3s ease-in-out infinite;
-        }
+        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
         @keyframes sparkle {
           0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
           50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
         }
-        .animate-sparkle {
-          animation: sparkle 2.5s ease-in-out infinite;
-        }
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-        .transform-gpu {
-          transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
-        }
-        [transform-style="preserve-3d"] {
-          transform-style: preserve-3d;
-        }
-        .hover\\:translate-x-2:hover {
-          transform: translateX(0.5rem);
-        }
-        .hover\\:translate-x-3:hover {
-          transform: translateX(0.75rem);
-        }
-        .hover\\:translate-z-6:hover {
-          transform: translateZ(1.5rem);
-        }
-        .hover\\:translate-z-8:hover {
-          transform: translateZ(2rem);
-        }
-        .hover\\:rotate-y-2:hover {
-          transform: rotateY(2deg);
-        }
-        .hover\\:rotate-y-3:hover {
-          transform: rotateY(3deg);
-        }
-        .hover\\:rotate-y-6:hover {
-          transform: rotateY(6deg);
-        }
-        .hover\\:rotate-y-12:hover {
-          transform: rotateY(12deg);
-        }
-        .hover\\:scale-105 {
-          transform: scale(1.05);
-        }
-        .hover\\:scale-110 {
-          transform: scale(1.1);
-        }
-        .hover\\:-translate-y-1:hover {
-          transform: translateY(-0.25rem);
-        }
-        .hover\\:-translate-y-2:hover {
-          transform: translateY(-0.5rem);
-        }
-        .hover\\:-translate-y-3:hover {
-          transform: translateY(-0.75rem);
-        }
-        .hover\\:shadow-2xl:hover {
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
+        .animate-sparkle { animation: sparkle 2.5s ease-in-out infinite; }
+        .perspective-1000 { perspective: 1000px; }
+        .transform-gpu { transform: translate3d(0, 0, 0); backface-visibility: hidden; }
+        [transform-style="preserve-3d"] { transform-style: preserve-3d; }
+        .hover\\:translate-x-2:hover { transform: translateX(0.5rem); }
+        .hover\\:translate-x-3:hover { transform: translateX(0.75rem); }
+        .hover\\:translate-z-6:hover { transform: translateZ(1.5rem); }
+        .hover\\:translate-z-8:hover { transform: translateZ(2rem); }
+        .hover\\:rotate-y-2:hover { transform: rotateY(2deg); }
+        .hover\\:rotate-y-3:hover { transform: rotateY(3deg); }
+        .hover\\:rotate-y-6:hover { transform: rotateY(6deg); }
+        .hover\\:rotate-y-12:hover { transform: rotateY(12deg); }
+        .hover\\:scale-105 { transform: scale(1.05); }
+        .hover\\:scale-110 { transform: scale(1.1); }
+        .hover\\:-translate-y-1:hover { transform: translateY(-0.25rem); }
+        .hover\\:-translate-y-2:hover { transform: translateY(-0.5rem); }
+        .hover\\:-translate-y-3:hover { transform: translateY(-0.75rem); }
+        .hover\\:shadow-2xl:hover { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
       `}</style>
     </>
   );

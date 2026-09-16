@@ -44,12 +44,12 @@ const getNextISTMidnight = () => {
   );
 };
 
-// Which icon each day shows (matches reference: coin/coins on even days + day1, gift on odd days after day1)
+// Which icon each day shows
 const getDayIcon = (day) =>
   day === 3 || day === 5 || day === 7 ? Gift : Coins;
 
 // =======================
-// RewardCard Component - Mobile First with Navigation
+// RewardCard Component
 // =======================
 const RewardCard = ({ title, subtitle, button, image, navigateTo }) => {
   const navigate = useNavigate();
@@ -65,20 +65,18 @@ const RewardCard = ({ title, subtitle, button, image, navigateTo }) => {
       className="relative rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.5)] border border-[#2a1b3d] group active:scale-[0.98] transition-transform duration-150 cursor-pointer"
       onClick={handleClick}
     >
-      {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img src={image} alt={title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0410]/90 via-[#0B0410]/40 to-transparent"></div>
       </div>
 
-      {/* Content */}
       <div className="relative z-10 p-5 min-h-[190px] flex flex-col justify-between"></div>
     </div>
   );
 };
 
 // =======================
-// Main Activity Component - Mobile First
+// Main Activity Component
 // =======================
 const Activity = () => {
   const dispatch = useDispatch();
@@ -98,6 +96,10 @@ const Activity = () => {
     error,
     reward,
   } = useSelector((state) => state.dailyClaim);
+
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
 
   // Countdown ticker
   const updateTimeRemaining = useCallback(() => {
@@ -123,7 +125,6 @@ const Activity = () => {
     }
   }, [dispatch]);
 
-  // Lifecycle effects
   useEffect(() => {
     fetchStatus();
     updateTimeRemaining();
@@ -200,7 +201,7 @@ const Activity = () => {
         <div className="relative overflow-hidden bg-[#1C0F2B] rounded-3xl shadow-2xl p-8 max-w-sm mx-auto border border-[#2a1b3d]">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#9B59B6]/10 to-transparent animate-shimmer"></div>
           <div className="relative z-10 text-center">
-            <div className="inline-block animate-spin rounded-full h-14 w-14 border-4 border-[#9B59B6] border-t-transparent"></div>
+            <div className="inline-block animate-spin rounded-full h-14 w-14 border-4 border-[#B45CFF] border-t-transparent"></div>
             <p className="mt-4 text-gray-400 font-medium text-sm">
               Loading daily rewards...
             </p>
@@ -212,7 +213,7 @@ const Activity = () => {
 
   return (
     <div className="min-h-screen bg-[#0B0410] py-4 px-4 pb-20">
-      {/* Header - Mobile Optimized */}
+      {/* Header */}
       <div className="text-center mb-4 px-6">
         <div className="flex items-center justify-center gap-1.5">
           <span className="text-[#9B59B6] text-xs">✦</span>
@@ -228,10 +229,7 @@ const Activity = () => {
         </p>
       </div>
 
-      {/* ============================================= */}
-      {/* Daily Claim Card - TopX Dark/Purple Theme */}
-      {/* ============================================= */}
-
+      {/* Daily Claim Card */}
       <div className="relative bg-[#1C0F2B] rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.5)] border border-[#2a1b3d] overflow-hidden mb-4 px-3 sm:px-4 pt-4 pb-4 w-full">
         {/* Refresh button */}
         <button
@@ -241,11 +239,11 @@ const Activity = () => {
         >
           <RefreshCw
             size={14}
-            className={`${loading ? "animate-spin" : ""} text-[#9B59B6]`}
+            className={`${loading ? "animate-spin" : ""} text-[#B45CFF]`}
           />
         </button>
 
-        {/* Days Row - Horizontal scroll on small screens */}
+        {/* Days Row */}
         <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
           <div className="flex items-end gap-2 min-w-[560px] sm:min-w-0">
             {rewardList.map((item) => {
@@ -260,9 +258,9 @@ const Activity = () => {
                   key={item.day}
                   className={`flex-1 min-w-[72px] flex flex-col items-center rounded-xl border transition-all duration-300 ${
                     isCurrent
-                      ? "bg-gradient-to-b from-[#9B59B6] to-[#8E44AD] border-[#9B59B6] shadow-[0_4px_12px_rgba(155,89,182,0.4)] py-4"
+                      ? `${purpleGradient} py-4`
                       : isCompleted
-                        ? "bg-[#12061C] border-[#9B59B6]/50 py-2.5"
+                        ? "bg-[#12061C] border-[#B45CFF]/50 py-2.5"
                         : "bg-[#12061C] border-dashed border-[#3a2a4d] py-2.5"
                   }`}
                 >
@@ -272,7 +270,7 @@ const Activity = () => {
                       isCurrent
                         ? "text-white"
                         : isCompleted
-                          ? "text-[#9B59B6]"
+                          ? "text-[#B45CFF]"
                           : "text-gray-500"
                     }`}
                   >
@@ -282,7 +280,7 @@ const Activity = () => {
                   {/* Icon */}
                   <div className="mb-1">
                     {isCompleted ? (
-                      <CheckCircle size={16} className="text-[#9B59B6]" />
+                      <CheckCircle size={16} className="text-[#B45CFF]" />
                     ) : (
                       <Icon
                         size={16}
@@ -291,7 +289,7 @@ const Activity = () => {
                             ? "text-white"
                             : isLocked
                               ? "text-gray-600"
-                              : "text-[#9B59B6]"
+                              : "text-[#B45CFF]"
                         }
                       />
                     )}
@@ -315,12 +313,12 @@ const Activity = () => {
                     <button
                       onClick={handleClaim}
                       disabled={claimLoading}
-                      className="w-[85%] bg-[#0B0410] hover:bg-black text-white text-[8px] font-bold py-1 rounded-full transition-colors disabled:opacity-70 border border-[#2a1b3d]"
+                      className="w-[85%] bg-[#0B0410]/70 backdrop-blur-sm hover:bg-black text-white text-[8px] font-bold py-1 rounded-full transition-colors disabled:opacity-70 border border-white/30"
                     >
                       {claimLoading ? "..." : "Claim"}
                     </button>
                   ) : isCompleted ? (
-                    <span className="w-[85%] text-center bg-[#9B59B6]/20 text-[#9B59B6] text-[8px] font-bold py-1 rounded-full border border-[#9B59B6]/30">
+                    <span className="w-[85%] text-center bg-[#B45CFF]/20 text-[#C77AFF] text-[8px] font-bold py-1 rounded-full border border-[#B45CFF]/40">
                       Claimed
                     </span>
                   ) : (
@@ -336,19 +334,21 @@ const Activity = () => {
 
         {/* Reset timer */}
         {!canClaim && !loading && (
-          <p className="mt-3 text-center text-[10px] text-[#9B59B6] flex items-center justify-center gap-1">
+          <p className="mt-3 text-center text-[10px] text-[#B45CFF] flex items-center justify-center gap-1">
             <Clock size={11} /> Resets in {timeUntilReset}
           </p>
         )}
 
         {/* Success Banner */}
         {claimSuccess && (
-          <div className="mt-3 p-3 bg-[#9B59B6]/10 border border-[#9B59B6]/40 rounded-xl animate-slideDown">
+          <div className="mt-3 p-3 bg-[#B45CFF]/10 border border-[#B45CFF]/40 rounded-xl animate-slideDown">
             <div className="flex items-center justify-center gap-2">
-              <div className="p-1.5 bg-gradient-to-r from-[#9B59B6] to-[#8E44AD] rounded-full animate-bounce">
+              <div
+                className={`p-1.5 ${purpleGradient} rounded-full animate-bounce`}
+              >
                 <Zap size={14} className="text-white" />
               </div>
-              <p className="font-bold text-[#9B59B6] text-xs">
+              <p className="font-bold text-[#C77AFF] text-xs">
                 ₹{reward} claimed for Day {claimedDay}!
               </p>
             </div>
@@ -378,7 +378,7 @@ const Activity = () => {
         )}
       </div>
 
-      {/* Reward Cards - Mobile Optimized with Navigation */}
+      {/* Reward Cards */}
       <div className="space-y-3">
         <RewardCard
           title="FIRST RECHARGE"
@@ -405,7 +405,7 @@ const Activity = () => {
         />
       </div>
 
-      {/* Custom CSS for animations */}
+      {/* Custom CSS */}
       <style jsx>{`
         @keyframes shimmer {
           0% {

@@ -23,6 +23,10 @@ const Login = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/", { replace: true });
@@ -100,10 +104,14 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-white flex justify-center items-start md:items-center p-3 md:p-6">
-      <div className="w-full max-w-md bg-white rounded-3xl border border-gray-100">
+    <div className="bg-[#0B0410] flex justify-center items-start md:items-center p-3 md:p-6">
+      <div className="w-full max-w-md bg-[#1C0F2B] rounded-3xl border border-[#2a1b3d] shadow-[0_4px_16px_rgba(0,0,0,0.5)] relative overflow-hidden">
+        {/* Decorative purple glow */}
+        <div className="pointer-events-none absolute -top-20 -right-20 w-48 h-48 bg-[#9B59B6]/20 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 w-48 h-48 bg-[#B45CFF]/15 rounded-full blur-3xl" />
+
         {/* Hero */}
-        <div className="text-center">
+        <div className="relative z-10 text-center pt-2">
           <img
             src={HERO_IMAGE}
             alt="WINZOX"
@@ -113,24 +121,22 @@ const Login = () => {
             }}
           />
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-3">
-            Welcome Back!
-          </h2>
+          <h2 className="text-2xl font-bold text-white mt-3">Welcome Back!</h2>
 
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-400 mt-0.5">
             Login to continue your winning journey
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="mt-6 rounded-2xl border border-gray-100 p-5">
+        <div className="relative z-10 mt-6 rounded-2xl border border-[#2a1b3d] bg-[#12061C] p-5">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-full border border-amber-200 flex items-center justify-center flex-shrink-0">
-              <Lock size={18} className="text-amber-500" />
+            <div className="w-11 h-11 rounded-full border border-[#B45CFF]/40 bg-[#B45CFF]/10 flex items-center justify-center flex-shrink-0">
+              <Lock size={18} className="text-[#B45CFF]" />
             </div>
 
             <div>
-              <h3 className="font-bold text-base text-gray-900">
+              <h3 className="font-bold text-base text-white">
                 Login to your account
               </h3>
 
@@ -141,16 +147,18 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Mobile Number */}
             <div>
-              <label className="text-sm font-bold block mb-1.5 text-gray-800">
+              <label className="text-sm font-bold block mb-1.5 text-gray-300">
                 Mobile Number
               </label>
 
               <div
                 className={`flex items-center border ${
-                  formErrors.mobile ? "border-red-400" : "border-gray-200"
-                } rounded-full px-4 h-12 bg-white`}
+                  formErrors.mobile
+                    ? "border-red-500/60"
+                    : "border-[#2a1b3d] focus-within:border-[#B45CFF]/60"
+                } rounded-full px-4 h-12 bg-[#0B0410] transition-colors`}
               >
-                <Phone size={16} className="text-gray-400 flex-shrink-0" />
+                <Phone size={16} className="text-gray-500 flex-shrink-0" />
 
                 <input
                   type="tel"
@@ -162,12 +170,12 @@ const Login = () => {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   autoComplete="tel"
-                  className="bg-transparent flex-1 outline-none px-2.5 text-sm text-gray-900 placeholder-gray-400"
+                  className="bg-transparent flex-1 outline-none px-2.5 text-sm text-white placeholder-gray-500"
                 />
               </div>
 
               {formErrors.mobile && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
+                <p className="text-red-400 text-xs mt-1 ml-1">
                   {formErrors.mobile}
                 </p>
               )}
@@ -175,16 +183,18 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label className="text-sm font-bold block mb-1.5 text-gray-800">
+              <label className="text-sm font-bold block mb-1.5 text-gray-300">
                 Password
               </label>
 
               <div
                 className={`flex items-center border ${
-                  formErrors.password ? "border-red-400" : "border-gray-200"
-                } rounded-full px-4 h-12 bg-white`}
+                  formErrors.password
+                    ? "border-red-500/60"
+                    : "border-[#2a1b3d] focus-within:border-[#B45CFF]/60"
+                } rounded-full px-4 h-12 bg-[#0B0410] transition-colors`}
               >
-                <Lock size={16} className="text-gray-400 flex-shrink-0" />
+                <Lock size={16} className="text-gray-500 flex-shrink-0" />
 
                 <input
                   type={showPassword ? "text" : "password"}
@@ -192,20 +202,20 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className="bg-transparent flex-1 outline-none px-2.5 text-sm text-gray-900 placeholder-gray-400"
+                  className="bg-transparent flex-1 outline-none px-2.5 text-sm text-white placeholder-gray-500"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                  className="text-gray-500 hover:text-[#B45CFF] transition-colors flex-shrink-0"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 
               {formErrors.password && (
-                <p className="text-red-500 text-xs mt-1 ml-1">
+                <p className="text-red-400 text-xs mt-1 ml-1">
                   {formErrors.password}
                 </p>
               )}
@@ -215,7 +225,7 @@ const Login = () => {
             <div className="text-right">
               <Link
                 to="/forgot-password"
-                className="text-amber-500 text-sm font-semibold hover:underline"
+                className="text-[#B45CFF] text-sm font-semibold hover:text-[#C77AFF] hover:underline transition-colors"
               >
                 Forgot Password?
               </Link>
@@ -225,30 +235,27 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`h-12 rounded-full w-full bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200]
-              border border-[#FFD75A]
-              shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)]
-              text-black font-bold text-base tracking-wide transition-all duration-300 ${
+              className={`h-12 rounded-full w-full ${purpleGradient} text-white font-bold text-base tracking-wide transition-all duration-300 ${
                 loading
                   ? "opacity-70 cursor-not-allowed"
-                  : "hover:from-amber-500 hover:to-amber-600"
+                  : "hover:scale-[1.02] active:scale-[0.98]"
               }`}
             >
               {loading ? "LOGGING IN..." : "LOGIN"}
             </button>
 
             {/* Secure Login */}
-            <div className="rounded-2xl border border-gray-100 p-4 flex gap-3 items-center">
-              <div className="w-11 h-11 rounded-full border border-amber-200 flex items-center justify-center flex-shrink-0">
-                <ShieldCheck size={20} className="text-amber-500" />
+            <div className="rounded-2xl border border-[#2a1b3d] bg-[#0B0410] p-4 flex gap-3 items-center">
+              <div className="w-11 h-11 rounded-full border border-[#B45CFF]/40 bg-[#B45CFF]/10 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck size={20} className="text-[#B45CFF]" />
               </div>
 
               <div>
-                <h4 className="font-bold text-sm text-gray-900">
+                <h4 className="font-bold text-sm text-white">
                   100% Secure Login
                 </h4>
 
-                <p className="text-gray-500 text-xs">
+                <p className="text-gray-400 text-xs">
                   Your data is encrypted and always protected with us.
                 </p>
               </div>

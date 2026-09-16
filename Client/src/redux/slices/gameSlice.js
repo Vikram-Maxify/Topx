@@ -1,5 +1,5 @@
 // redux/slices/gameSlice.js
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "./api";
 
 /* ===========================
@@ -9,17 +9,16 @@ export const checkGameBalance = createAsyncThunk(
   "game/checkBalance",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await api.get(
-        "/game/balance/transfer",
-        { withCredentials: true }
-      );
+      const { data } = await api.get("/game/balance/transfer", {
+        withCredentials: true,
+      });
       return data; // ✅ FIXED
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || { message: "Balance check failed" }
+        error.response?.data || { message: "Balance check failed" },
       );
     }
-  }
+  },
 );
 
 /* ===========================
@@ -33,10 +32,10 @@ export const transferFromGame = createAsyncThunk(
       return data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data || { message: "Balance transfer failed" }
+        err.response?.data || { message: "Balance transfer failed" },
       );
     }
-  }
+  },
 );
 
 /* ===========================
@@ -50,10 +49,10 @@ export const launchGame = createAsyncThunk(
       return data.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Game launch failed"
+        err.response?.data?.message || "Game launch failed",
       );
     }
-  }
+  },
 );
 
 /* ===========================
@@ -64,7 +63,7 @@ export const getAllGames = createAsyncThunk(
   async ({ page, limit, game_type } = {}, { rejectWithValue }) => {
     try {
       const { data } = await api.get(
-        `/game/docs/all?page=${page}&size=${limit}`
+        `/game/docs/all?page=${page}&size=${limit}`,
       );
 
       console.log("API response for all games:", data); // Debug log to check the API response
@@ -72,14 +71,14 @@ export const getAllGames = createAsyncThunk(
     } catch {
       return rejectWithValue("Failed to fetch games");
     }
-  }
+  },
 );
 export const getGamesByGameType = createAsyncThunk(
   "game/getGamesByGameType",
   async ({ page, limit, game_type } = {}, { rejectWithValue }) => {
     try {
       const { data } = await api.get(
-        `/game/docs/gameType?page=${page}&size=${limit}&game_type=${game_type || ""}`
+        `/game/docs/gameType?page=${page}&size=${limit}&game_type=${game_type || ""}`,
       );
 
       // console.log("API response for live casino games:", data); // Debug log to check the API response
@@ -87,7 +86,7 @@ export const getGamesByGameType = createAsyncThunk(
     } catch {
       return rejectWithValue("Failed to fetch games");
     }
-  }
+  },
 );
 
 export const getGameHistory = createAsyncThunk(
@@ -95,13 +94,13 @@ export const getGameHistory = createAsyncThunk(
   async ({ page, limit, from_date, to_date } = {}, { rejectWithValue }) => {
     try {
       const { data } = await api.post(
-        `/game/history?page=${page}&size=${limit}&from_date=${from_date || ""}&to_date=${to_date || ""}`
+        `/game/history?page=${page}&size=${limit}&from_date=${from_date || ""}&to_date=${to_date || ""}`,
       );
       return data.data;
     } catch {
       return rejectWithValue("Failed to fetch game history");
     }
-  }
+  },
 );
 
 /* ===========================
@@ -184,8 +183,7 @@ const gameSlice = createSlice({
       .addCase(transferFromGame.rejected, (state, action) => {
         state.transferLoading = false;
         state.balanceStatus = false;
-        state.balanceMessage =
-          action.payload?.message || "Transfer failed";
+        state.balanceMessage = action.payload?.message || "Transfer failed";
       })
 
       /* ===== LAUNCH GAME ===== */
@@ -213,7 +211,6 @@ const gameSlice = createSlice({
         state.allGames = games;
         state.allGamesdata = { data: games };
         state.filteredGames = games;
-      
       })
       .addCase(getAllGames.rejected, (state, action) => {
         state.loading = false;
@@ -228,7 +225,6 @@ const gameSlice = createSlice({
         const games = action.payload || [];
         state.loading = false;
         state.gamesByGameType = games;
-      
       })
       .addCase(getGamesByGameType.rejected, (state, action) => {
         state.loading = false;

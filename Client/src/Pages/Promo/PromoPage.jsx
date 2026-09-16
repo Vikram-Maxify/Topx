@@ -13,7 +13,7 @@ const PromoPage = () => {
   const [activeTab, setActiveTab] = useState("link");
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#0B0410] text-white">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4 md:py-6 pb-24">
         <PromoTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 

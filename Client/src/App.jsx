@@ -59,13 +59,20 @@ import MatkaResults from "./Pages/user/Results.jsx";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ChangePassword from "./components/ChangePassword.jsx";
+import GamePlayModal from "./components/GamePlayModal.jsx";
+import AviatorGames from "./Pages/games/AviatorGames.jsx";
+import CasinoSlotGames from "./Pages/games/CasinoGames.jsx";
+import ChickenGames from "./Pages/games/ChickenGames.jsx";
+import MinesPage from "./Pages/games/Mines.jsx";
+import Slotgame from "./Pages/games/Slotgame.jsx";
 import MarketDetailedResults from "./Pages/MarketDetailedResults.jsx";
 import MinesGame from "./Pages/MinesGame.jsx";
+
 import PowerballpublickResults from "./Pages/PowerballpublickResults.jsx";
 import Wingo from "./Pages/wingo/Wingo.jsx";
 import { getProfile, logout } from "./redux/slices/authSlice.js";
 import "./styles/premium-toast.css";
-import ChangePassword from "./components/ChangePassword.jsx";
 
 // ========================================
 // Scroll To Top
@@ -368,7 +375,7 @@ function App() {
               path="/casino"
               element={
                 <ProtectedRoute>
-                  <CasinoGames />
+                  <CasinoSlotGames />
                 </ProtectedRoute>
               }
             />
@@ -420,7 +427,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
 
             {/* AUSTRALIA */}
             <Route

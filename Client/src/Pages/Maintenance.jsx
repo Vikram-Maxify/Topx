@@ -11,20 +11,24 @@ const Maintenance = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // TopX Purple gradient
+  const purpleGradient =
+    "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
+
   const glowShadow =
-    "shadow-[0_4px_20px_-4px_rgba(251,191,36,0.25),0_2px_8px_-2px_rgba(251,146,60,0.15)]";
+    "shadow-[0_4px_20px_-4px_rgba(155,89,182,0.35),0_2px_8px_-2px_rgba(139,43,255,0.25)]";
   const glowShadowSoft =
-    "shadow-[0_2px_12px_-2px_rgba(251,191,36,0.18),0_1px_4px_-1px_rgba(251,146,60,0.10)]";
+    "shadow-[0_2px_12px_-2px_rgba(155,89,182,0.25),0_1px_4px_-1px_rgba(139,43,255,0.15)]";
 
   return (
-    <div className=" bg-gradient-to-b from-amber-50/40 via-orange-50/20 to-amber-50/40 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-[#0B0410] flex items-center justify-center px-4 py-10">
       <div className="max-w-md w-full text-center">
         {/* WINZOX Brand */}
         <div className="mb-8">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-black text-white tracking-tight">
             WINZOX
           </h1>
-          <p className="text-[10px] text-gray-400 font-medium tracking-widest">
+          <p className="text-[10px] text-gray-500 font-medium tracking-widest">
             PLAY • WIN • REPEAT
           </p>
         </div>
@@ -32,17 +36,15 @@ const Maintenance = () => {
         {/* Signature: spinning coin inside a glowing ring */}
         <div className="relative w-36 h-36 mx-auto mb-8">
           {/* pulsing outer glow ring */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-300/40 to-orange-400/40 blur-xl animate-pulse-slow" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#B45CFF]/40 to-[#7418F5]/40 blur-xl animate-pulse-slow" />
           {/* static ring */}
           <div
-            className={`absolute inset-2 rounded-full bg-white border border-amber-200/60 ${glowShadow}`}
+            className={`absolute inset-2 rounded-full bg-[#1C0F2B] border border-[#9B59B6]/40 ${glowShadow}`}
           />
           {/* spinning coin */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div
-              className="w-16 h-16 rounded-full bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200]
-border border-[#FFD75A]
-shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] flex items-center justify-center"
+              className={`w-16 h-16 rounded-full ${purpleGradient} flex items-center justify-center`}
               style={{
                 animation: "spin-coin 2.4s linear infinite",
                 transformStyle: "preserve-3d",
@@ -52,44 +54,44 @@ shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] f
             </div>
           </div>
           {/* wrench badge */}
-          <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-2 border border-amber-200/60 shadow-[0_2px_8px_-2px_rgba(251,191,36,0.3)]">
-            <Wrench size={16} className="text-orange-600" strokeWidth={2.3} />
+          <div className="absolute -bottom-1 -right-1 bg-[#1C0F2B] rounded-full p-2 border border-[#9B59B6]/40 shadow-[0_2px_8px_-2px_rgba(155,89,182,0.4)]">
+            <Wrench size={16} className="text-[#C77AFF]" strokeWidth={2.3} />
           </div>
         </div>
 
         {/* Headline */}
-        <h2 className="text-xl font-black text-gray-900 mb-2">
+        <h2 className="text-xl font-black text-white mb-2">
           We're topping up the tables{dots}
         </h2>
-        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+        <p className="text-sm text-gray-400 mb-6 leading-relaxed">
           WINZOX is under scheduled maintenance. Your balance and bet history
           are safe — we'll be back shortly.
         </p>
 
         {/* Status card */}
         <div
-          className={`bg-white rounded-2xl ${glowShadowSoft} border border-amber-200/40 p-4 mb-4 text-left`}
+          className={`bg-[#1C0F2B] rounded-2xl ${glowShadowSoft} border border-[#2a1b3d] p-4 mb-4 text-left`}
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="bg-amber-50 p-1.5 rounded-lg border border-amber-200/60">
-                <Clock size={14} className="text-yellow-700" />
+              <div className="bg-[#9B59B6]/15 p-1.5 rounded-lg border border-[#9B59B6]/40">
+                <Clock size={14} className="text-[#C77AFF]" />
               </div>
-              <span className="text-xs font-bold text-gray-700">
+              <span className="text-xs font-bold text-gray-300">
                 Estimated time
               </span>
             </div>
-            <span className="text-xs font-bold text-yellow-700">~45 mins</span>
+            <span className="text-xs font-bold text-[#C77AFF]">~45 mins</span>
           </div>
 
           {/* progress bar */}
-          <div className="w-full h-2 bg-amber-50 rounded-full overflow-hidden border border-amber-200/40">
+          <div className="w-full h-2 bg-[#12061C] rounded-full overflow-hidden border border-[#2a1b3d]">
             <div
-              className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+              className="h-full bg-gradient-to-r from-[#B45CFF] via-[#7418F5] to-[#3A00C9] rounded-full shadow-[0_0_8px_#B45CFF]"
               style={{ width: "68%" }}
             />
           </div>
-          <p className="text-[9px] text-gray-400 mt-1.5 font-medium tracking-wide">
+          <p className="text-[9px] text-gray-500 mt-1.5 font-medium tracking-wide">
             68% COMPLETE
           </p>
         </div>
@@ -98,16 +100,14 @@ shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] f
         <div className="flex items-center gap-2">
           <a
             href="/"
-            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-yellow-50 rounded-xl border border-yellow-200/60 text-yellow-700 font-bold text-sm shadow-[0_2px_8px_-2px_rgba(251,191,36,0.25)] hover:shadow-[0_4px_14px_-2px_rgba(251,191,36,0.4)] hover:bg-yellow-100 transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#12061C] rounded-xl border border-[#2a1b3d] text-gray-300 font-bold text-sm shadow-[0_2px_8px_-2px_rgba(155,89,182,0.25)] hover:bg-[#2a1b3d] hover:text-white hover:border-[#9B59B6]/50 transition-all"
           >
             <Home size={15} />
             Back to Home
           </a>
           <a
             href="/support-chat"
-            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-b from-[#FFF19A] via-[#FFC928] to-[#D99200]
-border border-[#FFD75A]
-shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] rounded-xl text-black font-bold text-sm"
+            className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 ${purpleGradient} rounded-xl text-white font-bold text-sm active:scale-[0.98] transition-all`}
           >
             <MessageCircle size={15} />
             Support
@@ -115,7 +115,7 @@ shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_7px_rgba(210,145,0,0.45)] r
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-[10px] text-gray-400">
+        <p className="mt-6 text-[10px] text-gray-500">
           Thanks for your patience — good things are worth the wait.
         </p>
       </div>
