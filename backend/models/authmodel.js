@@ -38,10 +38,12 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    money: {
+
+    exposure: {
       type: Number,
-      default: 0,
+      default: 0
     },
+
     country: {
       type: String,
       default: null,

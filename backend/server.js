@@ -261,6 +261,9 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/currency", currencyRateRoutes);
 
+app.use("/api", require("./routes/allgameroute/allGameRoute"));
+
+
 // =====================================================
 // USER TICKET TYPES
 // =====================================================

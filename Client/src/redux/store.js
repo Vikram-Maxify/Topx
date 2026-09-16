@@ -9,6 +9,7 @@ import dailyClaimReducer from "./slices/dailyClaimSlice";
 import depositReducer from "./slices/depositSlice";
 import ticketTypeReducer from "./slices/ticketTypeSlice";
 import withdrawalReducer from "./slices/withdrawalSlice";
+import gameReducer from './slices/gameSlice'
 
 // ========================================
 // AUSTRALIA
@@ -122,6 +123,8 @@ export const store = configureStore({
     result: resultReducer,
     publicBid: publicBidReducer,
     powerballResult: powerballResultReducer,
+    game: gameReducer,
+
   },
 });
 

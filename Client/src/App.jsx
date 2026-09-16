@@ -364,6 +364,64 @@ function App() {
               }
             />
 
+            <Route
+              path="/casino"
+              element={
+                <ProtectedRoute>
+                  <CasinoGames />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/aviator"
+              element={
+                <ProtectedRoute>
+                  <AviatorGames />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/chicken"
+              element={
+                <ProtectedRoute>
+                  <ChickenGames />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Game Play - PRIVATE */}
+            <Route
+              path="/game/:gameId"
+              element={
+                <ProtectedRoute>
+                  <GamePlayModal />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Slot Games - PRIVATE */}
+            <Route
+              path="/slots"
+              element={
+                <ProtectedRoute>
+                  <Slotgame />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Mines - PRIVATE */}
+            <Route
+              path="/minis"
+              element={
+                <ProtectedRoute>
+                  <MinesPage />
+                </ProtectedRoute>
+              }
+            />
+
+
             {/* AUSTRALIA */}
             <Route
               path="/australia/powerhit/history"
