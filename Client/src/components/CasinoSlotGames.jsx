@@ -1,73 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-// 👇 Yahan apne separate components import karo
-import AviatorGames from "../Pages/games/AviatorGames";
-import CasinoGames from "../Pages/games/CasinoGames";
-import Slotgame from "../Pages/games/Slotgame";
-
-// ======================================================
-// GAME DATA - 6 games per tab
-// ======================================================
-
-const gamesData = {
-  all: [
-    {
-      id: 1,
-      name: "Fortune Tiger",
-      provider: "PG",
-      image: "https://i.ibb.co/C3tnDWSJ/trx.png",
-      link: "/game/fortune-tiger",
-      badge: "HOT",
-      badgeColor: "bg-[#E74C3C]",
-    },
-    {
-      id: 2,
-      name: "Aviator",
-      provider: "SPRIBE",
-      image: "https://i.ibb.co/k6YjJZ0/aviator.png",
-      link: "/game/aviator",
-      badge: "HOT",
-      badgeColor: "bg-[#E74C3C]",
-    },
-    {
-      id: 3,
-      name: "Gates of Olympus",
-      provider: "PRAGMATIC PLAY",
-      image: "https://i.ibb.co/6R0jJZ0/gates-of-olympus.png",
-      link: "/game/gates-of-olympus",
-      badge: "HOT",
-      badgeColor: "bg-[#E74C3C]",
-    },
-    {
-      id: 4,
-      name: "Sweet Bonanza",
-      provider: "PRAGMATIC PLAY",
-      image: "https://i.ibb.co/k6YjJZ0/sweet-bonanza.png",
-      link: "/game/sweet-bonanza",
-      badge: "NEW",
-      badgeColor: "bg-[#00E676]",
-    },
-    {
-      id: 5,
-      name: "Mighty Buffalo",
-      provider: "PLAYSON",
-      image: "https://i.ibb.co/6R0jJZ0/mighty-buffalo.png",
-      link: "/game/mighty-buffalo",
-      badge: null,
-      badgeColor: "",
-    },
-    {
-      id: 6,
-      name: "Joker's Jewels",
-      provider: "BRAGMATIC PLAY",
-      image: "https://i.ibb.co/k6YjJZ0/jokers-jewels.png",
-      link: "/game/jokers-jewels",
-      badge: "NEW",
-      badgeColor: "bg-[#00E676]",
-    },
-  ],
-};
+// 👇 Data imports — component calls ki jagah
+import { AllData, liveCasino, SlotsGames, TableGames } from "../Data/GamesData";
 
 // ======================================================
 // TABS
@@ -81,7 +16,75 @@ const tabs = [
 ];
 
 // ======================================================
-// COMPONENT
+// REUSABLE GAME GRID (same card design as your "all" tab)
+// ======================================================
+
+function GameGrid({ games = [], mobileLimit = 6, desktopLimit = 12 }) {
+  const displayGames = games.slice(0, desktopLimit);
+
+  if (displayGames.length === 0) {
+    return (
+      <div className="text-center py-16 bg-[#1C0F2B] rounded-2xl border border-dashed border-[#2a1b3d]">
+        <p className="text-gray-400 text-sm">No games available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid md:grid-cols-6 grid-cols-3 gap-3 md:gap-4">
+      {displayGames.map((game, index) => {
+        const hideOnMobile = index >= mobileLimit;
+
+        return (
+          <Link
+            key={game.game_uid || game.id || index}
+            to={`/game/${game.game_uid || game.id}`}
+            className={`group relative rounded-2xl overflow-hidden bg-[#1C0F2B] border border-[#2a1b3d] shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition duration-300 hover:border-[#9B59B6]/50 hover:shadow-[0_6px_18px_rgba(155,89,182,0.2)] ${
+              hideOnMobile ? "hidden md:block" : ""
+            }`}
+          >
+            {/* Game Image */}
+            <div className="relative aspect-square w-full overflow-hidden">
+              <img
+                src={game.img || game.icon}
+                alt={game.game_name}
+                className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                loading="lazy"
+              />
+
+              {/* Badge */}
+              {game.badge && (
+                <span
+                  className={`absolute top-2 right-2 ${
+                    game.badge === "HOT" ? "bg-[#E74C3C]" : "bg-[#00E676]"
+                  } text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md`}
+                >
+                  {game.badge}
+                </span>
+              )}
+
+              {/* Gradient Overlay at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0B0410] via-[#0B0410]/70 to-transparent"></div>
+
+              {/* Game Name + Provider over image */}
+              <div className="absolute bottom-0 left-0 right-0 p-2">
+                <h3 className="text-sm font-bold text-white leading-tight truncate">
+                  {game.game_name}
+                </h3>
+                <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">
+                  {game.provider || "Casino"}
+                </p>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+// ======================================================
+// MAIN COMPONENT
 // ======================================================
 
 export default function CasinoSlotGames() {
@@ -91,7 +94,25 @@ export default function CasinoSlotGames() {
   const tabsWrapRef = useRef(null);
   const tabRefs = useRef({});
 
-  // Measure & move the sliding pill to sit exactly under the active tab
+  // Deduplicate helper
+  const dedupe = (arr) =>
+    arr.filter(
+      (game, index, self) =>
+        index === self.findIndex((g) => g.game_name === game.game_name),
+    );
+
+  // ============================================================
+  // GAMES PER TAB (from data files)
+  // ============================================================
+
+  const gamesByTab = {
+    all: dedupe([...AllData]).slice(0, 12),
+    slots: dedupe([...SlotsGames]).slice(0, 12),
+    live: dedupe([...liveCasino]).slice(0, 12),
+    table: dedupe([...TableGames]).slice(0, 12),
+  };
+
+  // Measure & move the sliding pill
   const updateSlider = () => {
     const activeEl = tabRefs.current[activeTab];
     const wrapEl = tabsWrapRef.current;
@@ -103,13 +124,13 @@ export default function CasinoSlotGames() {
     });
   };
 
-  // Reposition whenever the active tab changes
+  // Reposition whenever active tab changes
   useLayoutEffect(() => {
     updateSlider();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Reposition on window resize (labels can wrap/reflow on smaller screens)
+  // Reposition on window resize
   useEffect(() => {
     window.addEventListener("resize", updateSlider);
     return () => window.removeEventListener("resize", updateSlider);
@@ -135,12 +156,11 @@ export default function CasinoSlotGames() {
         </Link>
       </div>
 
-      {/* ================= TABS (sliding toggle) ================= */}
+      {/* ================= TABS ================= */}
       <div
         ref={tabsWrapRef}
         className="relative mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1"
       >
-        {/* Sliding gradient pill — glides to whichever tab is active */}
         <div
           className="absolute top-0 h-[38px] rounded-full border border-[#C77AFF] bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] transition-all duration-300 ease-out"
           style={{
@@ -167,60 +187,24 @@ export default function CasinoSlotGames() {
 
       {/* ================= TAB CONTENT ================= */}
 
-      {/* ALL TAB — default grid */}
+      {/* ALL TAB */}
       {activeTab === "all" && (
-        <div className="grid md:grid-cols-6 grid-cols-4 gap-3 md:gap-4">
-          {(gamesData.all || []).map((game) => (
-            <Link
-              key={game.id}
-              to={game.link}
-              className="group relative rounded-2xl overflow-hidden bg-[#1C0F2B] border border-[#2a1b3d] shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition duration-300 hover:border-[#9B59B6]/50 hover:shadow-[0_6px_18px_rgba(155,89,182,0.2)]"
-            >
-              {/* Game Image */}
-              <div className="relative aspect-square w-full overflow-hidden">
-                <img
-                  src={game.image}
-                  alt={game.name}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                  loading="lazy"
-                />
-
-                {/* Badge (HOT / NEW) */}
-                {game.badge && (
-                  <span
-                    className={`absolute top-2 right-2 ${game.badgeColor} text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md`}
-                  >
-                    {game.badge}
-                  </span>
-                )}
-
-                {/* Gradient Overlay at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0B0410] via-[#0B0410]/70 to-transparent"></div>
-
-                {/* Game Name + Provider over image */}
-                <div className="absolute bottom-0 left-0 right-0 p-2">
-                  <h3 className="text-sm font-bold text-white leading-tight truncate">
-                    {game.name}
-                  </h3>
-                  <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">
-                    {game.provider}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <GameGrid games={gamesByTab.all} mobileLimit={6} desktopLimit={12} />
       )}
 
-      {/* SLOTS TAB — separate component */}
-      {activeTab === "slots" && <Slotgame />}
+      {/* SLOTS TAB — data se */}
+      {activeTab === "slots" && (
+        <GameGrid games={gamesByTab.slots} mobileLimit={6} desktopLimit={12} />
+      )}
 
-      {/* LIVE CASINO TAB — separate component */}
-      {activeTab === "live" && <AviatorGames />}
+      {/* LIVE CASINO TAB — data se */}
+      {activeTab === "live" && (
+        <GameGrid games={gamesByTab.live} mobileLimit={6} desktopLimit={12} />
+      )}
 
-      {/* TABLE GAMES TAB — component with limit + view all, no search on home */}
+      {/* TABLE GAMES TAB — data se */}
       {activeTab === "table" && (
-        <CasinoGames limit={6} showViewAll={true} showSearch={false} />
+        <GameGrid games={gamesByTab.table} mobileLimit={6} desktopLimit={12} />
       )}
     </section>
   );

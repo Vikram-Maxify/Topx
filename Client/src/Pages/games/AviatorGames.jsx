@@ -14,18 +14,12 @@ import {
 const AviatorGames = () => {
   const dispatch = useDispatch();
 
-  /* ===========================
-     REDUX STATE
-  =========================== */
   const { gameUrl, launchLoading, launchError } = useSelector(
     (state) => state.game,
   );
 
   const { user } = useSelector((state) => state.auth);
 
-  /* ===========================
-     LOCAL STATE
-  =========================== */
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
   const [hovered, setHovered] = useState(false);
@@ -40,9 +34,6 @@ const AviatorGames = () => {
   const purpleGradient =
     "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
 
-  /* ===========================
-     AVIATOR GAME DATA
-  =========================== */
   const aviatorGame = {
     game_name: "Aviator",
     game_uid: "a04d1f3eb8ccec8a4823bdf18e3f0e84",
@@ -60,25 +51,15 @@ const AviatorGames = () => {
       "The legendary crash game where timing is everything. Cash out before the plane flies away!",
   };
 
-  /* ===========================
-     RESET ON LOAD
-  =========================== */
   useEffect(() => {
     dispatch(resetGameState());
   }, [dispatch]);
 
-  /* ===========================
-     AUTO OPEN MODAL
-  =========================== */
   useEffect(() => {
     if (gameUrl) setIsGameModalOpen(true);
   }, [gameUrl]);
 
-  /* ===========================
-     PLAY HANDLER
-  =========================== */
   const handlePlay = async () => {
-    // Block game launch if user has no deposit or insufficient balance
     if (needsRecharge) {
       setSelectedGame(aviatorGame);
       setShowRechargeModal(true);
@@ -93,147 +74,142 @@ const AviatorGames = () => {
     }
   };
 
-  /* ===========================
-     CLOSE MODAL
-  =========================== */
   const closeGameModal = () => {
     setIsGameModalOpen(false);
     setSelectedGame(null);
     dispatch(clearGameUrl());
   };
 
-  /* ===========================
-     UI
-  =========================== */
   return (
     <>
-      <div className="bg-[#0B0410] p-4 sm:p-6">
-        {/* HEADER (Same as Chicken) */}
-        <div className="mx-auto mb-8">
+      <div className="bg-[#0B0410] p-3 sm:p-0">
+        {/* HEADER */}
+        <div className="mx-auto max-w-6xl mb-5 sm:mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className={`p-3 rounded-xl ${purpleGradient}`}>
-              <GiAirplane className="text-white text-2xl" />
+            <div className={`p-2.5 sm:p-3 rounded-xl ${purpleGradient}`}>
+              <GiAirplane className="text-white text-xl sm:text-2xl" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
               Aviator
             </h1>
           </div>
-          <p className="text-gray-400">
+          <p className="text-gray-400 text-sm sm:text-base">
             High-risk, high-reward crash game loved by millions
           </p>
         </div>
 
-        {/* GRID (Same layout – single card centered) */}
-        <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-start-1">
-            <div
-              onClick={handlePlay}
-              onMouseEnter={() => setHovered(true)}
-              onMouseLeave={() => setHovered(false)}
-              className="group relative cursor-pointer
-                         bg-[#1C0F2B]
-                         rounded-2xl overflow-hidden
-                         border border-[#2a1b3d]
-                         hover:border-[#B45CFF]/60
-                         hover:shadow-[0_6px_18px_rgba(155,89,182,0.25)]
-                         hover:scale-[1.02]
-                         transition-all duration-300"
-            >
-              {/* IMAGE */}
-              <div className="relative aspect-[16/9] overflow-hidden">
-                <img
-                  src={aviatorGame.icon}
-                  alt="Aviator"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+        {/* GRID — full width on mobile, 3-col on desktop */}
+        <div className="mx-auto max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            onClick={handlePlay}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            className="group relative cursor-pointer
+                       bg-[#1C0F2B]
+                       rounded-2xl overflow-hidden
+                       border border-[#2a1b3d]
+                       hover:border-[#B45CFF]/60
+                       hover:shadow-[0_6px_18px_rgba(155,89,182,0.25)]
+                       hover:scale-[1.02]
+                       transition-all duration-300"
+          >
+            {/* IMAGE */}
+            <div className="relative w-full aspect-[16/9] overflow-hidden bg-[#12061C]">
+              <img
+                src={aviatorGame.icon}
+                alt="Aviator"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0410] via-[#0B0410]/50 to-transparent" />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B0410] via-[#0B0410]/40 to-transparent pointer-events-none" />
 
-                {/* BADGES */}
-                <div className="absolute top-3 left-3 flex gap-2">
-                  {aviatorGame.is_featured && (
+              {/* BADGES — stacked properly with small size */}
+              <div className="absolute top-2 left-2 right-2 flex flex-wrap items-center gap-1.5">
+                {aviatorGame.is_featured && (
+                  <div
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full ${purpleGradient}`}
+                  >
+                    <FaCrown className="text-white text-[10px]" />
+                    <span className="text-white text-[10px] font-bold leading-none">
+                      FEATURED
+                    </span>
+                  </div>
+                )}
+                <div className="px-2 py-1 bg-[#0B0410]/80 backdrop-blur-sm rounded-full border border-[#2a1b3d]">
+                  <span className="text-white text-[10px] font-bold leading-none">
+                    {aviatorGame.game_type}
+                  </span>
+                </div>
+              </div>
+
+              {/* PLAY OVERLAY */}
+              <div
+                className={`
+                  absolute inset-0 flex items-center justify-center
+                  transition-all duration-300
+                  ${
+                    hovered
+                      ? "bg-black/70 opacity-100"
+                      : "bg-black/40 opacity-100 sm:opacity-0"
+                  }
+                `}
+              >
+                {launchLoading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <FaSpinner className="animate-spin text-4xl text-white" />
+                    <span className="text-white text-sm">Launching...</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
                     <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full ${purpleGradient}`}
+                      className={`p-3 sm:p-4 rounded-full ${purpleGradient}`}
                     >
-                      <FaCrown className="text-white text-xs" />
-                      <span className="text-white text-xs font-bold">
-                        FEATURED
-                      </span>
+                      <MdPlayCircle className="text-3xl sm:text-4xl text-white" />
                     </div>
-                  )}
-                  <div className="px-2 py-1 bg-[#0B0410]/80 rounded-full border border-[#2a1b3d]">
-                    <span className="text-white text-xs font-bold">
-                      {aviatorGame.game_type}
+                    <span className="text-white text-xs sm:text-sm font-bold bg-black/50 px-3 py-1.5 rounded-full">
+                      PLAY NOW
                     </span>
                   </div>
-                </div>
-
-                {/* PLAY OVERLAY */}
-                <div
-                  className={`
-                    absolute inset-0 flex items-center justify-center
-                    transition-all duration-300
-                    ${
-                      hovered
-                        ? "bg-black/70 opacity-100"
-                        : "bg-black/40 opacity-100 sm:opacity-0"
-                    }
-                  `}
-                >
-                  {launchLoading ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <FaSpinner className="animate-spin text-4xl text-white" />
-                      <span className="text-white text-sm">Launching...</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className={`p-4 rounded-full ${purpleGradient}`}>
-                        <MdPlayCircle className="text-4xl text-white" />
-                      </div>
-                      <span className="text-white text-sm font-bold bg-black/50 px-4 py-2 rounded-full">
-                        PLAY NOW
-                      </span>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-
-              {/* INFO */}
-              <div className="p-4 sm:p-5">
-                <div className="flex justify-between mb-2">
-                  <h3 className="text-white font-bold text-xl">
-                    {aviatorGame.game_name}
-                  </h3>
-                  <div className="flex items-center gap-1">
-                    <MdStar className="text-[#F1C40F]" />
-                    <span className="text-white font-bold">
-                      {aviatorGame.rating}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-gray-400 text-sm line-clamp-2 mb-4">
-                  {aviatorGame.description}
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <MdGamepad className="text-gray-500" />
-                    <span className="text-gray-300 text-sm">
-                      {aviatorGame.players} players
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaFire className="text-[#B45CFF]" />
-                    <span className="text-gray-300 text-sm">
-                      {aviatorGame.volatility}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#B45CFF]/40 rounded-2xl pointer-events-none" />
             </div>
+
+            {/* INFO */}
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-white font-bold text-lg sm:text-xl">
+                  {aviatorGame.game_name}
+                </h3>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <MdStar className="text-[#F1C40F]" />
+                  <span className="text-white font-bold text-sm sm:text-base">
+                    {aviatorGame.rating}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-gray-400 text-xs sm:text-sm line-clamp-2 mb-3 sm:mb-4">
+                {aviatorGame.description}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MdGamepad className="text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-300 text-xs sm:text-sm truncate">
+                    {aviatorGame.players} players
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <FaFire className="text-[#B45CFF] flex-shrink-0" />
+                  <span className="text-gray-300 text-xs sm:text-sm truncate">
+                    {aviatorGame.volatility}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute inset-0 border-2 border-transparent group-hover:border-[#B45CFF]/40 rounded-2xl pointer-events-none" />
           </div>
         </div>
       </div>

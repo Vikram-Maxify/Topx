@@ -69,6 +69,14 @@ import Slotgame from "./Pages/games/Slotgame.jsx";
 import MarketDetailedResults from "./Pages/MarketDetailedResults.jsx";
 import MinesGame from "./Pages/MinesGame.jsx";
 
+import AviatorPage from "./Pages/games/GamesPages/AviatorPage.jsx";
+import BingoPage from "./Pages/games/GamesPages/BingoPage.jsx";
+import ChickenGamesPage from "./Pages/games/GamesPages/ChickenGamesPage.jsx";
+import CrashGamesPage from "./Pages/games/GamesPages/CrashGamesPage.jsx";
+import DesiKhelPage from "./Pages/games/GamesPages/DesiKhelPage.jsx";
+import RecommendedPage from "./Pages/games/GamesPages/RecommendedPage.jsx";
+import TopGamesPage from "./Pages/games/GamesPages/TopGamesPage.jsx";
+import TrendingPage from "./Pages/games/GamesPages/TrendingPage.jsx";
 import PowerballpublickResults from "./Pages/PowerballpublickResults.jsx";
 import Wingo from "./Pages/wingo/Wingo.jsx";
 import { getProfile, logout } from "./redux/slices/authSlice.js";
@@ -397,6 +405,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Game Category Pages */}
+            <Route path="/games/recommended" element={<RecommendedPage />} />
+            <Route path="/games/trending" element={<TrendingPage />} />
+            <Route path="/games/desi-khel" element={<DesiKhelPage />} />
+            <Route path="/games/top" element={<TopGamesPage />} />
+            <Route path="/games/crash" element={<CrashGamesPage />} />
+            <Route path="/games/chicken" element={<ChickenGamesPage />} />
+            <Route path="/games/aviator" element={<AviatorPage />} />
+            <Route path="/games/bingo" element={<BingoPage />} />
 
             {/* Game Play - PRIVATE */}
             <Route

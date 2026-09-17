@@ -3697,3 +3697,19 @@ export const providerarray = [
     path: "inout",
   },
 ];
+
+// ============================================================
+// CASINO GAMES — 12 unique games for CasinoSection
+// (6 shown on mobile, 12 on desktop via CSS)
+// ============================================================
+
+export const CasinoFeaturedGames = [
+  ...OriginalsGames,
+  ...SlotsGames,
+  ...liveCasino,
+]
+  .filter(
+    (game, index, self) =>
+      index === self.findIndex((g) => g.game_name === game.game_name),
+  )
+  .slice(0, 12); // top 12 unique games

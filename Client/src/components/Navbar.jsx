@@ -4,16 +4,22 @@ import {
   ChevronRight,
   Circle,
   Dice5,
+  Egg,
+  Gift,
   Home as HomeIcon,
   LogIn,
   LogOut,
+  Plane,
   Plus,
   PlusIcon,
   PowerIcon,
+  Rocket,
   Sparkles,
+  Trophy,
   User,
   UserPlus,
   Wallet,
+  Zap,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { FaPlaneDeparture } from "react-icons/fa";
@@ -81,6 +87,15 @@ const Navbar = ({ children }) => {
     { icon: MdLocalActivity, label: "Mines", path: "/minis" },
     { icon: MdCasino, label: "Live Casino", path: "/casino" },
     { icon: MdCasino, label: "Slot", path: "/slots" },
+    // 👇 Game categories add karo
+    { icon: Sparkles, label: "Recommended", path: "/games/recommended" },
+    { icon: Zap, label: "Trending", path: "/games/trending" },
+    { icon: Gift, label: "Desi Khel", path: "/games/desi-khel" },
+    { icon: Trophy, label: "Top Games", path: "/games/top" },
+    { icon: Rocket, label: "Crash", path: "/games/crash" },
+    { icon: Egg, label: "Chicken", path: "/games/chicken" },
+    { icon: Plane, label: "Aviator", path: "/games/aviator" },
+    { icon: Circle, label: "Bingo", path: "/games/bingo" },
   ];
 
   const handleLogout = async () => {

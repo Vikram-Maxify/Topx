@@ -6,6 +6,15 @@ import PopularGames from "../components/PopularGames";
 import StatsSection2 from "../components/StatsSection2";
 import TopWinners from "../components/TopWinners";
 import Footer from "../Pages/Footer";
+import AviatorSection from "./games/AviatorSection";
+import CasinoSection from "./games/CasinoSection";
+// import ChickenGamesSection from "./games/ChickenGamesSection";
+import BingoSection from "./games/BingoSection";
+import CrashGames from "./games/CrashGames";
+import DesiKhel from "./games/DesiKhel";
+import RecommendedGames from "./games/RecommendedGames";
+import TopGames from "./games/TopGames";
+import TrendingGames from "./games/TrendingGames";
 import PopularGamesCards from "./PopularGamesCards";
 
 const Homme = () => {
@@ -15,6 +24,15 @@ const Homme = () => {
       {/* <StatsSection /> */}
       <PopularGamesCards />
       <CasinoSlotGames />
+      <RecommendedGames />
+      <AviatorSection />
+      <BingoSection />
+      <TrendingGames />
+      <DesiKhel />
+      <TopGames />
+      <CrashGames />
+      {/* <ChickenGamesSection /> */}
+      <CasinoSection />
       {/* <PublicBidResults /> */}
       <PopularGames />
       {/* <PowerballPublicResult /> */}
