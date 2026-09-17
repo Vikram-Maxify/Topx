@@ -263,8 +263,7 @@ app.use("/api/currency", currencyRateRoutes);
 
 app.use("/api", require("./routes/allgameroute/allGameRoute"));
 
-app.use('/api',require('./routes/gameRoutes'))
-
+app.use("/api", require("./routes/gameRoutes"));
 
 // =====================================================
 // USER TICKET TYPES
@@ -379,7 +378,7 @@ app.get("/api/health", (req, res) => {
 // Build files must physically exist at these paths on production.
 // =====================================================
 
-const userDistPath = path.resolve(__dirname, "../client/dist");
+const userDistPath = path.resolve(__dirname, "../Client/dist");
 const adminDistPath = path.resolve(__dirname, "../ADMIN/dist");
 
 console.log("======================================");
