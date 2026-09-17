@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 
 // 👇 Yahan apne separate components import karo
 import AviatorGames from "../Pages/games/AviatorGames";
-import TableGamesComponent from "./TableGamesComponent"; // path apne hisaab se
+import CasinoGames from "../Pages/games/CasinoGames";
+import Slotgame from "../Pages/games/Slotgame";
 
 // ======================================================
 // GAME DATA - 6 games per tab
@@ -168,7 +169,7 @@ export default function CasinoSlotGames() {
 
       {/* ALL TAB — default grid */}
       {activeTab === "all" && (
-        <div className="grid grid-cols-6 gap-3 md:gap-4">
+        <div className="grid md:grid-cols-6 grid-cols-4 gap-3 md:gap-4">
           {(gamesData.all || []).map((game) => (
             <Link
               key={game.id}
@@ -212,13 +213,15 @@ export default function CasinoSlotGames() {
       )}
 
       {/* SLOTS TAB — separate component */}
-      {activeTab === "slots" && <CasinoSlotGames />}
+      {activeTab === "slots" && <Slotgame />}
 
       {/* LIVE CASINO TAB — separate component */}
       {activeTab === "live" && <AviatorGames />}
 
-      {/* TABLE GAMES TAB — separate component */}
-      {activeTab === "table" && <TableGamesComponent />}
+      {/* TABLE GAMES TAB — component with limit + view all, no search on home */}
+      {activeTab === "table" && (
+        <CasinoGames limit={6} showViewAll={true} showSearch={false} />
+      )}
     </section>
   );
 }
