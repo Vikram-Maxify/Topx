@@ -8,7 +8,7 @@ const AuthModel = require("../../models/authmodel");
 const apiUrl = "https://www.api-doc.space/api";
 const launchUrl = "https://www.api-doc.space/api/launch-game";
 // const launchUrl = "http://localhost:8000/api/launch-game";
-const key = "k0B2cXsGPZwzaxALE2IJ";
+const key = "5HXuVkACXHtu04Y7SgBL";
 // const key = "3aqSD5NzX8sKj2MG2CkNS6mqerzJywUW";
 
 /* =========================
@@ -70,7 +70,7 @@ const transferBalance = async (req, res) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "x-domain": "matchadda.vip",
+          "x-domain": "topxbet.live",
         },
       },
     );
@@ -102,7 +102,7 @@ const transferBalance = async (req, res) => {
         {
           headers: {
             "Content-Type": "application/json",
-            "x-domain": "matchadda.vip",
+            "x-domain": "topxbet.live",
           },
         },
       );
@@ -201,12 +201,12 @@ const launchGame = async (req, res) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "x-domain": "matchadda.vip",
+          "x-domain": "topxbet.live",
         },
       },
     );
 
-    // console.log("LAUNCH GAME RESPONSE 👉", response);
+    console.log("LAUNCH GAME RESPONSE 👉", response);
 
     if (response.data?.status === true) {
       await AuthModel.updateOne({ _id: user._id }, { $set: { credit: 0 } });
@@ -326,7 +326,7 @@ const gameHistory = async (req, res) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "x-domain": "matchadda.vip",
+          "x-domain": "topxbet.live",
         },
       },
     );

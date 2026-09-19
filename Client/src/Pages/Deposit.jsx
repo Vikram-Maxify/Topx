@@ -390,7 +390,7 @@ const Deposit = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              {methods.map((item) => (
+              {methods?.map((item) => (
                 <button
                   type="button"
                   key={item.title}
