@@ -16,6 +16,11 @@ const userSchema = new mongoose.Schema(
       index: true,
     },
 
+    exposure: {
+      type: Number,
+      default: 0,
+    },
+
     email: {
       type: String,
       required: true,
