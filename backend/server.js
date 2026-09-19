@@ -670,9 +670,9 @@ async function processResultImmediately(gameName, typeId) {
         time: new Date().toISOString(),
       });
 
-      console.log(`[${gameName}] New period created: ${newPeriod}`);
+      // console.log(`[${gameName}] New period created: ${newPeriod}`);
     } else {
-      console.log(`[${gameName}] Next period ${newPeriod} already exists`);
+      // console.log(`[${gameName}] Next period ${newPeriod} already exists`);
     }
 
     // -------------------------------------------------
@@ -714,11 +714,11 @@ async function processResultImmediately(gameName, typeId) {
       data: [resultData],
     });
 
-    console.log(
-      `[${gameName}] RESULT EMITTED ONCE: ${period} -> ${finalResult}`,
-    );
+    // console.log(
+    //   `[${gameName}] RESULT EMITTED ONCE: ${period} -> ${finalResult}`,
+    // );
   } catch (error) {
-    console.error(`[${gameName}] processResultImmediately ERROR:`, error);
+    // console.error(`[${gameName}] processResultImmediately ERROR:`, error);
   }
 }
 
