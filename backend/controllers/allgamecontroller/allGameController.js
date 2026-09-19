@@ -187,13 +187,16 @@ const launchGame = async (req, res) => {
     console.log("GAME UID:", gameId);
     console.log("OPENING BALANCE:", opening_balance);
     console.log("DOMAIN:", "topxbet.live");
-    console.log("SERVER IP SHOULD BE:", "65.20.77.50");
+    console.log("SERVER IP:", "65.20.77.50");
+    console.log("API KEY PRESENT:", !!key);
+    console.log("API KEY LENGTH:", key?.length);
     console.log("=========================================");
 
     const response = await axios.post(
       `${launchUrl}?key=${encodeURIComponent(key)}`,
       {
         uid: String(gameId),
+        key: key,
         playerid: playerid,
         opening_balance: opening_balance,
       },
@@ -249,6 +252,7 @@ const launchGame = async (req, res) => {
     console.error("MESSAGE:", error.message);
     console.error("STATUS:", error.response?.status);
     console.error("DATA:", JSON.stringify(error.response?.data, null, 2));
+    console.error("URL:", error.config?.url);
     console.error("=======================================");
 
     return res.status(500).json({
