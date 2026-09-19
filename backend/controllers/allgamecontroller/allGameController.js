@@ -160,70 +160,97 @@ const transferBalance = async (req, res) => {
 const launchGame = async (req, res) => {
   try {
     const { gameId } = req.body;
-    // console.log("LAUNCH GAME REQUEST 👉", { gameId });
+
     if (!gameId) {
-      return res
-        .status(400)
-        .json({ status: false, message: "gameId required" });
+      return res.status(400).json({
+        status: false,
+        message: "gameId required",
+      });
     }
 
     const user = await AuthModel.findById(req.user._id);
-    // console.log("USER FOUND 👉", user);
+
     if (!user) {
-      return res.status(400).json({ status: false, message: "Invalid user" });
+      return res.status(400).json({
+        status: false,
+        message: "Invalid user",
+      });
     }
 
     const playerid = String(user.mobile).trim();
 
-    // console.log("USER BALANCE BEFORE LAUNCH 👉",playerid);
+    const opening_balance =
+      Number(user.balance || 0) - Number(user.exposure || 0);
 
-    // auto-create safety
-    // const userbalnace = await axios.post(`${apiUrl}/Userbalance?key=${key}`, {
-    //   playerid,
-    //   key,
-    // },{
-    //   headers: {
-    //   "Content-Type": "application/json",
-    //   "x-domain": "matchadda.vip"
-    //  }
-    // });
-
-    // console.log("USER BALANCE RESPONSE 👉", userbalnace);
+    console.log("========== GAME LAUNCH REQUEST ==========");
+    console.log("PLAYER ID:", playerid);
+    console.log("GAME UID:", gameId);
+    console.log("OPENING BALANCE:", opening_balance);
+    console.log("DOMAIN:", "topxbet.live");
+    console.log("SERVER IP SHOULD BE:", "65.20.77.50");
+    console.log("=========================================");
 
     const response = await axios.post(
-      launchUrl,
+      `${launchUrl}?key=${encodeURIComponent(key)}`,
       {
-        playerid,
-        uid: gameId,
-        opening_balance: user.balance - user.exposure,
-        key,
+        uid: String(gameId),
+        playerid: playerid,
+        opening_balance: opening_balance,
       },
       {
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
           "x-domain": "topxbet.live",
         },
+        timeout: 15000,
+        validateStatus: () => true,
       },
     );
 
-    console.log("LAUNCH GAME RESPONSE 👉", response);
+    console.log("========== GAME LAUNCH RESPONSE ==========");
+    console.log("STATUS:", response.status);
+    console.log("DATA:", JSON.stringify(response.data, null, 2));
+    console.log("==========================================");
 
-    if (response.data?.status === true) {
-      await AuthModel.updateOne({ _id: user._id }, { $set: { credit: 0 } });
+    if (response.status >= 200 && response.status < 300) {
+      if (response.data?.status === true) {
+        await AuthModel.updateOne(
+          { _id: user._id },
+          {
+            $set: {
+              credit: 0,
+            },
+          },
+        );
 
-      return res.json({
-        status: true,
-        message: "Game launched successfully",
+        return res.status(200).json({
+          status: true,
+          message: "Game launched successfully",
+          data: response.data,
+        });
+      }
+
+      return res.status(400).json({
+        status: false,
+        message: "Game launch failed",
         data: response.data,
       });
     }
 
-    return res.status(500).json({
+    return res.status(response.status).json({
       status: false,
-      message: "Game launch failed",
-      data: response.data,
+      message: "Game provider rejected launch request",
+      providerStatus: response.status,
+      providerResponse: response.data,
     });
   } catch (error) {
+    console.error("========== GAME LAUNCH ERROR ==========");
+    console.error("MESSAGE:", error.message);
+    console.error("STATUS:", error.response?.status);
+    console.error("DATA:", JSON.stringify(error.response?.data, null, 2));
+    console.error("=======================================");
+
     return res.status(500).json({
       status: false,
       message: "Launch error",
