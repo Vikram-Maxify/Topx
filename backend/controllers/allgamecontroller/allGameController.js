@@ -6,25 +6,21 @@ const AuthModel = require("../../models/authmodel");
  */
 // const apiUrl = "http://localhost:8000/api";
 const apiUrl = "https://www.api-doc.space/api";
-
 const launchUrl = "https://www.api-doc.space/api/launch-game";
 // const launchUrl = "http://localhost:8000/api/launch-game";
-
-const key = "5HXuVkACXHtu04Y7SgBL";
+const key = "k0B2cXsGPZwzaxALE2IJ";
 // const key = "3aqSD5NzX8sKj2MG2CkNS6mqerzJywUW";
 
 /* =========================
-   CHECK BALANCE
+   CHECK BALANCE (AUTO CREATE USER)
 ========================= */
 const checkBalance = async (req, res) => {
   try {
     const playerid = String(req.body.playerid || "").trim();
-
     if (!playerid) {
-      return res.status(400).json({
-        status: false,
-        message: "playerid required",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "playerid required" });
     }
 
     const response = await axios.post(`${apiUrl}/Userbalance`, {
@@ -55,7 +51,6 @@ const transferBalance = async (req, res) => {
   try {
     /* 1️⃣ Find user */
     const user = await AuthModel.findById(req.user._id);
-
     if (!user) {
       return res.status(400).json({
         status: false,
@@ -80,25 +75,21 @@ const transferBalance = async (req, res) => {
       },
     );
 
-    const zapBalance = Number(balRes.data?.Balance || 0);
+    // console.log("ZAPCORE BALANCE RESPONSE 👉", balRes.data);
 
-    /* 3️⃣ Check balance */
+    const zapBalance = Number(balRes.data?.Balance || 0);
+    // console.log("ZAPCORE BALANCE 👉", zapBalance);
+
+    /* 3️⃣ IF–ELSE CONDITION */
     if (!isNaN(zapBalance) && zapBalance > 0) {
-      /* 4️⃣ Add balance to LOCAL wallet
-         ✅ credit removed
-         ✅ balance used
-      */
+      /* 4️⃣ Add balance to local wallet */
       const updatedUser = await AuthModel.findByIdAndUpdate(
         user._id,
-        {
-          $inc: {
-            balance: zapBalance + Number(user.exposure || 0),
-          },
-        },
-        {
-          new: true,
-        },
+        { $inc: { credit: zapBalance + user.exposure } },
+        { new: true },
       );
+
+      // console.log("LOCAL WALLET UPDATED 👉", updatedUser);
 
       /* 5️⃣ Reset Zapcore balance */
       const resetRes = await axios.post(
@@ -116,19 +107,17 @@ const transferBalance = async (req, res) => {
         },
       );
 
+      // console.log("ZAPCORE BALANCE RESET RESPONSE 👉", resetRes.data);
+
       /* 6️⃣ Rollback if reset fails */
       if (resetRes.data?.status !== true) {
         await AuthModel.updateOne({ _id: user._id }, [
           {
             $set: {
-              balance: {
+              credit: {
                 $cond: [
-                  {
-                    $gte: ["$balance", zapBalance],
-                  },
-                  {
-                    $subtract: ["$balance", zapBalance],
-                  },
+                  { $gte: ["$credit", zapBalance] },
+                  { $subtract: ["$credit", zapBalance] },
                   0,
                 ],
               },
@@ -147,7 +136,7 @@ const transferBalance = async (req, res) => {
         status: true,
         message: "Balance transferred successfully",
         transferredAmount: zapBalance,
-        currentBalance: updatedUser.balance,
+        currentBalance: updateduser.balance,
       });
     } else {
       /* ❌ NO BALANCE */
@@ -157,8 +146,6 @@ const transferBalance = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("TRANSFER BALANCE ERROR 👉", error);
-
     return res.status(500).json({
       status: false,
       message: "Transfer error",
@@ -173,42 +160,42 @@ const transferBalance = async (req, res) => {
 const launchGame = async (req, res) => {
   try {
     const { gameId } = req.body;
-
+    // console.log("LAUNCH GAME REQUEST 👉", { gameId });
     if (!gameId) {
-      return res.status(400).json({
-        status: false,
-        message: "gameId required",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "gameId required" });
     }
 
     const user = await AuthModel.findById(req.user._id);
-
+    // console.log("USER FOUND 👉", user);
     if (!user) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid user",
-      });
+      return res.status(400).json({ status: false, message: "Invalid user" });
     }
 
     const playerid = String(user.mobile).trim();
 
-    /*
-     * Local available balance
-     *
-     * balance = total wallet balance
-     * exposure = locked/exposed amount
-     *
-     * Amount sent to game = balance - exposure
-     */
-    const openingBalance =
-      Number(user.balance || 0) - Number(user.exposure || 0);
+    // console.log("USER BALANCE BEFORE LAUNCH 👉",playerid);
+
+    // auto-create safety
+    // const userbalnace = await axios.post(`${apiUrl}/Userbalance?key=${key}`, {
+    //   playerid,
+    //   key,
+    // },{
+    //   headers: {
+    //   "Content-Type": "application/json",
+    //   "x-domain": "matchadda.vip"
+    //  }
+    // });
+
+    // console.log("USER BALANCE RESPONSE 👉", userbalnace);
 
     const response = await axios.post(
       launchUrl,
       {
         playerid,
         uid: gameId,
-        opening_balance: openingBalance,
+        opening_balance: user.balance - user.exposure,
         key,
       },
       {
@@ -219,19 +206,10 @@ const launchGame = async (req, res) => {
       },
     );
 
+    // console.log("LAUNCH GAME RESPONSE 👉", response);
+
     if (response.data?.status === true) {
-      /*
-       * ✅ credit removed
-       * ✅ balance reset
-       */
-      await AuthModel.updateOne(
-        { _id: user._id },
-        {
-          $set: {
-            balance: 0,
-          },
-        },
-      );
+      await AuthModel.updateOne({ _id: user._id }, { $set: { credit: 0 } });
 
       return res.json({
         status: true,
@@ -246,8 +224,6 @@ const launchGame = async (req, res) => {
       data: response.data,
     });
   } catch (error) {
-    console.error("LAUNCH GAME ERROR 👉", error);
-
     return res.status(500).json({
       status: false,
       message: "Launch error",
@@ -259,21 +235,15 @@ const launchGame = async (req, res) => {
 /* =========================
    GAME META & LISTING
 ========================= */
-
 const getgamedetails = async (req, res) => {
   try {
     const { page = 1, size = 2000 } = req.query;
-
     const response = await axios.get(
       `${apiUrl}/getgamedetails?page=${page}&size=${size}`,
     );
-
     return res.json(response.data);
   } catch (err) {
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
@@ -282,13 +252,9 @@ const gameProvider = async (req, res) => {
     const response = await axios.get(
       `${apiUrl}/getgamedetails?provider_list=1`,
     );
-
     return res.json(response.data);
   } catch (err) {
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
@@ -297,77 +263,56 @@ const gameType = async (req, res) => {
     const response = await axios.get(
       `${apiUrl}/getgamedetails?gametype_list=1`,
     );
-
     return res.json(response.data);
   } catch (err) {
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
 const gameListByProvider = async (req, res) => {
   try {
     const { provider, page = 1, size = 20 } = req.query;
-
     const response = await axios.get(
       `${apiUrl}/getgamedetails?provider=${provider}&page=${page}&size=${size}`,
     );
-
     return res.json(response.data);
   } catch (err) {
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
 const gameListByGameType = async (req, res) => {
   try {
     const { game_type, page = 1, size = 20 } = req.query;
-
     const response = await axios.get(
       `${apiUrl}/getgamedetails?game_type=${game_type}&page=${page}&size=${size}`,
     );
-
     return res.json(response.data);
   } catch (err) {
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
 const gameListByGameTypeAndProvider = async (req, res) => {
   try {
     const { provider, game_type, page = 1, size = 20 } = req.query;
-
     const response = await axios.get(
       `${apiUrl}/getgamedetails?provider=${provider}&game_type=${game_type}&page=${page}&size=${size}`,
     );
-
     return res.json(response.data);
   } catch (err) {
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
 /* =========================
    GAME HISTORY
 ========================= */
-
 const gameHistory = async (req, res) => {
   try {
     const playerid = String(req.user.mobile).trim();
 
     const { page = 1, size = 2000, from_date, to_date } = req.query;
-
     const response = await axios.post(
       `${apiUrl}/history?page=${page}&size=${size}`,
       {
@@ -393,18 +338,13 @@ const gameHistory = async (req, res) => {
     });
   } catch (err) {
     console.error("GAME HISTORY ERROR 👉", err);
-
-    return res.status(500).json({
-      status: false,
-      error: err.message,
-    });
+    return res.status(500).json({ status: false, error: err.message });
   }
 };
 
 /* =========================
    EXPORTS
 ========================= */
-
 module.exports = {
   checkBalance,
   transferBalance,

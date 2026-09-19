@@ -1,5 +1,5 @@
 // models/User.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+
+    credit: {
+      type: Number,
+      default: 0,
+    },
     // ================= PROFILE =================
     profilePic: {
       type: String,
@@ -41,7 +46,7 @@ const userSchema = new mongoose.Schema(
 
     exposure: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     country: {
@@ -54,8 +59,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'user'],
-      default: 'user',
+      enum: ["admin", "user"],
+      default: "user",
     },
     password: {
       type: String,
@@ -67,8 +72,8 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'blocked'],
-      default: 'active',
+      enum: ["active", "blocked"],
+      default: "active",
     },
     isDemo: {
       type: Boolean,
@@ -150,7 +155,7 @@ const userSchema = new mongoose.Schema(
     },
     referredByUser: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'users',
+      ref: "users",
       default: null,
     },
     totalReferrals: {
@@ -164,7 +169,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model('users', userSchema);
+module.exports = mongoose.model("users", userSchema);
