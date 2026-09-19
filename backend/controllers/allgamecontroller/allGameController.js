@@ -26,7 +26,7 @@ const apiUrl = "https://www.api-doc.space/api";
 
 const launchUrl = "https://www.api-doc.space/api/launch-game";
 
-const key = "k0B2cXsGPZwzaxALE2IJ";
+const key = "5HXuVkACXHtu04Y7SgBL";
 
 /**
  * Common headers required by provider
@@ -34,7 +34,7 @@ const key = "k0B2cXsGPZwzaxALE2IJ";
 const requestConfig = {
   headers: {
     "Content-Type": "application/json",
-    "x-domain": "matchadda.vip",
+    "x-domain": "topxbet.live",
   },
 };
 
