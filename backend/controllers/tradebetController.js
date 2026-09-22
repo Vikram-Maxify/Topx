@@ -529,7 +529,7 @@ exports.placeBet = async (req, res) => {
     }
 
     // ----------------------------------------------------------
-    // Deduct balance using numeric userId
+    // Deduct credit using numeric userId
     // ----------------------------------------------------------
 
     const user =
@@ -537,13 +537,13 @@ exports.placeBet = async (req, res) => {
         {
           userId: userId,
 
-          balance: {
+          credit: {
             $gte: a,
           },
         },
         {
           $inc: {
-            balance: -a,
+            credit: -a,
           },
         },
         {
@@ -566,7 +566,7 @@ exports.placeBet = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        message: "Insufficient balance",
+        message: "Insufficient credit",
       });
     }
 
@@ -610,11 +610,11 @@ exports.placeBet = async (req, res) => {
 
         trade: b,
 
-        balance: user.balance,
+        credit: user.credit,
       });
     } catch (e) {
       // --------------------------------------------------------
-      // Rollback balance
+      // Rollback credit
       // --------------------------------------------------------
 
       await User.updateOne(
@@ -623,7 +623,7 @@ exports.placeBet = async (req, res) => {
         },
         {
           $inc: {
-            balance: a,
+            credit: a,
           },
         }
       );
@@ -743,7 +743,7 @@ exports.checkwhichUserIsWinner = async (
             }
           );
 
-        // Only credit balance if bet was
+        // Only credit credit if bet was
         // actually changed from pending -> winner.
         if (updated.modifiedCount > 0) {
           await User.updateOne(
@@ -752,7 +752,7 @@ exports.checkwhichUserIsWinner = async (
             },
             {
               $inc: {
-                balance: getAmount,
+                credit: getAmount,
               },
             }
           );

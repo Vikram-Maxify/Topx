@@ -204,7 +204,7 @@ const TradeChart = () => {
         dispatch(getProfile());
         dispatch(betHistory());
       } else {
-        toast.error("Insufficient balance");
+        toast.error("Insufficient credit");
       }
     });
   };

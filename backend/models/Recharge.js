@@ -384,7 +384,7 @@ rechargeSchema.statics.approveRecharge = async function(rechargeId, adminName) {
   
   await recharge.save();
   
-  // Update user balance
+  // Update user credit
   const User = mongoose.model('users');
   await User.updateOne(
     { phone: recharge.phone },
@@ -396,7 +396,7 @@ rechargeSchema.statics.approveRecharge = async function(rechargeId, adminName) {
   await Transaction.create({
     phone: recharge.phone,
     detail: 'Recharge',
-    balance: recharge.money,
+    credit: recharge.money,
     time: recharge.rechargeDate,
   });
   

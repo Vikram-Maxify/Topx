@@ -135,7 +135,7 @@ const minesSlice = createSlice({
 
         state.game = {
           ...data.game,
-          balance: Number(data.balance || 0),
+          credit: Number(data.credit || 0),
           entryAmount: Number(
             data.game?.entryAmount || data.game?.virtualStake || 0,
           ),
@@ -172,7 +172,7 @@ const minesSlice = createSlice({
           state.game = {
             ...state.game,
             ...result,
-            balance: result.balance ?? state.game.balance,
+            credit: result.credit ?? state.game.credit,
           };
         }
 
@@ -211,7 +211,7 @@ const minesSlice = createSlice({
           state.game = {
             ...state.game,
             ...data,
-            balance: Number(data.balance ?? state.game.balance ?? 0),
+            credit: Number(data.credit ?? state.game.credit ?? 0),
             entryAmount: Number(
               data.entryAmount ??
                 state.game.entryAmount ??

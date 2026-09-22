@@ -28,7 +28,7 @@ export default function WalletDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const [showBalance, setShowBalance] = useState(true);
+  const [showcredit, setShowcredit] = useState(true);
 
   // ======================================================
   // CURRENCY SYMBOL
@@ -155,7 +155,7 @@ export default function WalletDashboard() {
   const isDepositLoading = depositState?.loading || false;
   const isWithdrawalLoading = withdrawalState?.loading || false;
 
-  const walletBalance = user?.balance;
+  const walletcredit = user?.credit;
 
   // ======================================================
   // EFFECTS
@@ -206,7 +206,7 @@ export default function WalletDashboard() {
   const formatAmount = (amount) =>
     `${currencySymbol}${Number(amount).toLocaleString("en-IN")}`;
 
-  const formatBalance = (amount) =>
+  const formatcredit = (amount) =>
     `${currencySymbol}${Number(amount).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -273,19 +273,19 @@ export default function WalletDashboard() {
           </button>
         </div>
 
-        {/* Balance Card */}
+        {/* credit Card */}
         <div className="relative overflow-hidden rounded-2xl border border-[#9B59B6]/40 bg-gradient-to-br from-[#1C0F2B] to-[#2a1b3d] px-5 py-5 mb-4 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-sm text-white mb-1.5">
-                Current Wallet Balance
+                Current Wallet credit
               </p>
               <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-[28px] leading-none font-bold text-gray-300 tracking-tight">
-                  {showBalance ? formatBalance(walletBalance) : "••••••••"}
+                  {showcredit ? formatcredit(walletcredit) : "••••••••"}
                 </h2>
-                <button onClick={() => setShowBalance(!showBalance)}>
-                  {showBalance ? (
+                <button onClick={() => setShowcredit(!showcredit)}>
+                  {showcredit ? (
                     <Eye className="w-4 h-4 text-gray-400" strokeWidth={1.8} />
                   ) : (
                     <EyeOff
@@ -297,10 +297,10 @@ export default function WalletDashboard() {
               </div>
               <div className="border-t border-[#9B59B6]/30 pt-3">
                 <span className="text-sm text-gray-400">
-                  Available Balance{" "}
+                  Available credit{" "}
                 </span>
                 <span className="text-sm font-semibold text-white ml-1">
-                  {formatBalance(walletBalance)}
+                  {formatcredit(walletcredit)}
                 </span>
               </div>
             </div>

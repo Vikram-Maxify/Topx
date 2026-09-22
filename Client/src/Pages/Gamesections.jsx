@@ -20,7 +20,7 @@ import {
 import {
   getAllGames,
   launchGame,
-  checkGameBalance,
+  checkGamecredit,
   resetGameState,
   clearGameUrl,
 } from "../../reducer/gameSlice";
@@ -46,7 +46,7 @@ const Gamesections = () => {
   // Fetch all games
   useEffect(() => {
     dispatch(getAllGames());
-    dispatch(checkGameBalance());
+    dispatch(checkGamecredit());
     dispatch(resetGameState());
   }, [dispatch]);
 

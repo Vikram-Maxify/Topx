@@ -246,8 +246,8 @@ const AllWithdrawal = () => {
       errors.amount = `Minimum withdrawal amount is ${currencySymbol}${settings?.minWithdrawal}`;
     } else if (parseFloat(formData.amount) > settings?.maxWithdrawal) {
       errors.amount = `Maximum withdrawal amount is ${currencySymbol}${settings?.maxWithdrawal}`;
-    } else if (parseFloat(formData.amount) > user?.balance) {
-      errors.amount = `Insufficient balance. Available: ${formatCurrency(user?.balance)}`;
+    } else if (parseFloat(formData.amount) > user?.credit) {
+      errors.amount = `Insufficient credit. Available: ${formatCurrency(user?.credit)}`;
     }
     
     if (!formData.paymentMethod) {
@@ -437,9 +437,9 @@ const AllWithdrawal = () => {
             <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-lg border border-yellow-200">
               <Wallet className="text-yellow-500" size={20} />
               <div>
-                <p className="text-xs text-gray-500">Available Balance</p>
+                <p className="text-xs text-gray-500">Available credit</p>
                 <p className="text-lg font-bold text-yellow-600">
-                  {formatCurrency(user?.balance || 0)}
+                  {formatCurrency(user?.credit || 0)}
                 </p>
               </div>
             </div>

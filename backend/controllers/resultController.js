@@ -1413,8 +1413,8 @@ exports.declareResult = async (req, res) => {
         const user = await User.findById(bid.userId).session(session);
 
         if (user) {
-          user.balance =
-            (Number(user.balance) || 0) + (Number(bid.possibleWinAmount) || 0);
+          user.credit =
+            (Number(user.credit) || 0) + (Number(bid.possibleWinAmount) || 0);
 
           await user.save({
             session,

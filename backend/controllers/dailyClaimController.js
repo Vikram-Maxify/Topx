@@ -130,7 +130,7 @@ const claimDailyBonus = async (req, res) => {
     }
 
     // Add reward
-    user.balance = Number(user.balance || 0) + reward;
+    user.credit = Number(user.credit || 0) + reward;
     await user.save();
 
     const claimedDay = claim.currentDay;
@@ -167,7 +167,7 @@ const claimDailyBonus = async (req, res) => {
       reward,
       nextDay: claim.currentDay,
 
-      totalCredit: user.balance,
+      totalCredit: user.credit,
       totalClaims: claim.totalClaims,
 
       lastClaimDate: claim.lastClaimDate,

@@ -41,8 +41,8 @@ router.get(
 );
 
 router.get(
-    "/user/:userId/balance",
-    controller.getUserBalance
+    "/user/:userId/credit",
+    controller.getUsercredit
 );
 
 // IMPORTANT:

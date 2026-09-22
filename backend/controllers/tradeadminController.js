@@ -670,7 +670,7 @@ exports.approveWithdrawal = async (req, res) => {
         },
         {
           $inc: {
-            balance: num(w.amount),
+            credit: num(w.amount),
           },
         }
       );
@@ -766,7 +766,7 @@ exports.approveRecharge = async (req, res) => {
         },
         {
           $inc: {
-            balance: amount,
+            credit: amount,
             recharge: amount,
           },
         }
@@ -923,7 +923,7 @@ exports.adminget = async (req, res) => {
 };
 
 // =====================================================
-// INCREASE / DECREASE USER BALANCE
+// INCREASE / DECREASE USER credit
 // =====================================================
 
 exports.increaseMoney = async (req, res) => {
@@ -969,7 +969,7 @@ exports.increaseMoney = async (req, res) => {
         filter,
         {
           $inc: {
-            balance: amount,
+            credit: amount,
           },
         }
       );
@@ -978,13 +978,13 @@ exports.increaseMoney = async (req, res) => {
         await User.findOneAndUpdate(
           {
             ...filter,
-            balance: {
+            credit: {
               $gte: amount,
             },
           },
           {
             $inc: {
-              balance: -amount,
+              credit: -amount,
             },
           },
           {
@@ -995,7 +995,7 @@ exports.increaseMoney = async (req, res) => {
       if (!updated) {
         return res.status(400).json({
           success: false,
-          message: "Insufficient balance",
+          message: "Insufficient credit",
         });
       }
     } else {
@@ -1012,7 +1012,7 @@ exports.increaseMoney = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Balance updated successfully.",
+      message: "credit updated successfully.",
       data: updatedUser,
     });
   } catch (e) {
@@ -1163,7 +1163,7 @@ exports.createAgent = async (req, res) => {
       country: "INDIA",
       currency: "USD",
       role: 2,
-      balance: 0,
+      credit: 0,
       deposit: 0,
       recharge: 0,
     });
@@ -1243,7 +1243,7 @@ exports.allAdminData = async (req, res) => {
 
     const [
       totalActiveUser,
-      totalUserBalance,
+      totalUsercredit,
       todayUser,
       totalBlockUser,
       totalBetLoss,
@@ -1259,7 +1259,7 @@ exports.allAdminData = async (req, res) => {
 
       User.countDocuments({
         status: 0,
-        balance: {
+        credit: {
           $exists: true,
         },
       }),
@@ -1310,7 +1310,7 @@ exports.allAdminData = async (req, res) => {
       success: true,
       message: "Admin data retrieved successfully.",
       totalActiveUser,
-      totalUserBalance,
+      totalUsercredit,
       todayUser,
       totalBlockUser,
       totalBetLoss,

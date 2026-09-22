@@ -466,7 +466,7 @@ exports.getAllDeposits = async (
             await Deposit.find(filter)
                 .populate(
                     "user",
-                    "name email mobile country balance"
+                    "name email mobile country credit"
                 )
                 .sort({
                     createdAt: -1,
@@ -635,12 +635,12 @@ exports.approveDeposit = async (
             }).session(session);
 
         // ==========================================
-        // CREDIT USER BALANCE (SAME CURRENCY)
+        // CREDIT USER credit (SAME CURRENCY)
         // ==========================================
 
-        user.balance =
+        user.credit =
             Number(
-                user.balance || 0
+                user.credit || 0
             ) + amountInINR;
 
         await user.save({
@@ -759,12 +759,12 @@ exports.approveDeposit = async (
 
             if (commission > 0) {
                 // ==================================
-                // ADD BALANCE
+                // ADD credit
                 // ==================================
 
-                referrer.balance =
+                referrer.credit =
                     Number(
-                        referrer.balance ||
+                        referrer.credit ||
                             0
                     ) + commission;
 
@@ -921,8 +921,8 @@ exports.approveDeposit = async (
 
             deposit,
 
-            userBalance:
-                user.balance,
+            usercredit:
+                user.credit,
 
             amountInINR,
 

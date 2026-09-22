@@ -80,7 +80,7 @@ const HeaderInfo = ({ money, handleRefersh,handleVoice,activeVoice }) => {
             </div>
             <div className="flex items-center">
               <img src={Wallet} alt="" className="w-4 mr-2 mb-[2px]" />
-              <p className="fs-sm text-whites">Wallet balance</p>
+              <p className="fs-sm text-whites">Wallet credit</p>
             </div>
             <div className="flex w-full justify-around items-center mt-3">
               <button

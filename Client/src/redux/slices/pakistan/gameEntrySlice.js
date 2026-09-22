@@ -103,13 +103,13 @@ export const cancelGameEntry = createAsyncThunk(
   }
 );
 
-// ================= GET USER BALANCE =================
-export const getUserBalance = createAsyncThunk(
-  "pakistanGameEntry/getBalance",
+// ================= GET USER credit =================
+export const getUsercredit = createAsyncThunk(
+  "pakistanGameEntry/getcredit",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await api.get("/pakistan/game-entry/balance/me");
-      return data.balance;
+      const { data } = await api.get("/pakistan/game-entry/credit/me");
+      return data.credit;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Something went wrong."
@@ -138,7 +138,7 @@ const initialState = {
   selectedEntry: null,
   results: null,
   winningNumbers: null,
-  balance: 0,
+  credit: 0,
   loading: false,
   success: false,
   error: null,
@@ -206,9 +206,9 @@ const pakistanGameEntrySlice = createSlice({
         if (action.payload?.data?.pool) {
           state.entries.unshift(action.payload.data.pool);
         }
-        // Update balance
-        if (action.payload?.balance) {
-          state.balance = action.payload.balance.amount;
+        // Update credit
+        if (action.payload?.credit) {
+          state.credit = action.payload.credit.amount;
         }
       })
       .addCase(createGameEntry.rejected, (state, action) => {
@@ -315,9 +315,9 @@ const pakistanGameEntrySlice = createSlice({
                     item.poolId !== action.payload.data.poolId
           );
         }
-        // Update balance
-        if (action.payload?.balance) {
-          state.balance = action.payload.balance.amount;
+        // Update credit
+        if (action.payload?.credit) {
+          state.credit = action.payload.credit.amount;
         }
         if (state.selectedEntry) {
           state.selectedEntry = null;
@@ -330,12 +330,12 @@ const pakistanGameEntrySlice = createSlice({
         state.error = action.payload;
       })
 
-      // ================= GET BALANCE =================
-      .addCase(getUserBalance.fulfilled, (state, action) => {
-        state.balance = action.payload;
+      // ================= GET credit =================
+      .addCase(getUsercredit.fulfilled, (state, action) => {
+        state.credit = action.payload;
       })
-      .addCase(getUserBalance.rejected, (state) => {
-        state.balance = 0;
+      .addCase(getUsercredit.rejected, (state) => {
+        state.credit = 0;
       })
 
       // ================= GET ENTRIES BY COUNTRY =================
@@ -371,7 +371,7 @@ export const selectAllEntries = (state) => state.pakistanGameEntries.entries;
 export const selectSelectedEntry = (state) => state.pakistanGameEntries.selectedEntry;
 export const selectEntryResults = (state) => state.pakistanGameEntries.results;
 export const selectWinningNumbers = (state) => state.pakistanGameEntries.winningNumbers;
-export const selectBalance = (state) => state.pakistanGameEntries.balance;
+export const selectcredit = (state) => state.pakistanGameEntries.credit;
 export const selectGameEntryLoading = (state) => state.pakistanGameEntries.loading;
 export const selectGameEntrySuccess = (state) => state.pakistanGameEntries.success;
 export const selectGameEntryError = (state) => state.pakistanGameEntries.error;

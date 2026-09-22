@@ -208,14 +208,14 @@ export default function ProfileContent({
 
   const stats = [
     {
-      title: "Available Balance",
-      value: formatCurrency(user?.balance || 0),
+      title: "Available credit",
+      value: formatCurrency(user?.credit || 0),
       icon: WalletCards,
       color: "text-[#9B59B6]",
     },
     {
-      title: "Wallet Balance",
-      value: formatCurrency(user?.balance || 0),
+      title: "Wallet credit",
+      value: formatCurrency(user?.credit || 0),
       icon: Wallet,
       color: "text-[#00E676]",
     },

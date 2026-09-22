@@ -52,7 +52,7 @@ const ImgData = [
 ];
 
 const X_DATA = [1, 5, 10, 20, 50, 100];
-const BALANCE_OPTIONS = [1, 10, 100, 1000];
+const credit_OPTIONS = [1, 10, 100, 1000];
 const TIME_OPTIONS = [
   { value: 10, label: "30s", game: "wingo10" },
   { value: 1, label: "1Min", game: "wingo" },
@@ -221,7 +221,7 @@ const Wingo = () => {
   const [selectBet, setSelectBet] = useState("");
   const [animate, setAnimate] = useState(false);
   const [isChecked, setIsChecked] = useState(true);
-  const [balance, setBalance] = useState(1);
+  const [credit, setcredit] = useState(1);
   const [multiplier, setMultiplier] = useState(1);
   const [numbers, setNumbers] = useState([4, 16, 3, 14, 18, 18, 1, 9, 7, 22]);
   const [number2, setNumber2] = useState([4, 1, 9, 14, 18, 11, 10, 9, 12, 22]);
@@ -254,7 +254,7 @@ const Wingo = () => {
   const Game = queryParams.get("Game");
 
   // ---- Derived ----
-  const totalAmount = balance * multiplier;
+  const totalAmount = credit * multiplier;
   const currentGameInfo = GAME_EVENT_MAP[typeid1] || GAME_EVENT_MAP[10];
 
   useEffect(() => {
@@ -692,13 +692,13 @@ const Wingo = () => {
           typeid: typeid1,
           join: selectBet,
           x: multiplier,
-          money: balance,
+          money: credit,
         }),
       ).unwrap();
 
       setOpenPopup(false);
       setShowSuccessPopup(true);
-      setBalance(1);
+      setcredit(1);
       setMultiplier(1);
       setActiveX(0);
       localStorage.setItem("bet", true);
@@ -1546,18 +1546,18 @@ const Wingo = () => {
             </div>
             <div className="max-h-[72vh] overflow-y-auto p-4 bg-[#12061C]">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-bold text-white">Balance</span>
+                <span className="text-sm font-bold text-white">credit</span>
                 <div className="flex flex-wrap justify-end gap-1.5">
-                  {BALANCE_OPTIONS.map((val) => (
+                  {credit_OPTIONS.map((val) => (
                     <button
                       key={val}
                       type="button"
                       className={`rounded-lg px-2.5 py-1 text-xs font-black ${
-                        balance === val
+                        credit === val
                           ? `${purpleGradient} text-white`
                           : "border border-[#2a1b3d] bg-[#1C0F2B] text-gray-300 hover:bg-[#2a1b3d]"
                       }`}
-                      onClick={() => setBalance(val)}
+                      onClick={() => setcredit(val)}
                     >
                       {formatMoney(val)}
                     </button>

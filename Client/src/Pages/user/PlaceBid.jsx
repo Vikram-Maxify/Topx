@@ -753,11 +753,11 @@ const PlaceBid = () => {
       );
     }
 
-    const userBalance = Number(user?.balance?.local ?? user?.balance ?? 0);
+    const usercredit = Number(user?.credit?.local ?? user?.credit ?? 0);
 
-    if (!Number.isFinite(userBalance) || userBalance < bidAmountUser) {
+    if (!Number.isFinite(usercredit) || usercredit < bidAmountUser) {
       return setLocalError(
-        `Insufficient balance. Need ${formatUserCurrency(bidAmountUser)}, have ${formatUserCurrency(userBalance)}`,
+        `Insufficient credit. Need ${formatUserCurrency(bidAmountUser)}, have ${formatUserCurrency(usercredit)}`,
       );
     }
 
@@ -1483,12 +1483,12 @@ const PlaceBid = () => {
                       <div className="flex justify-between text-sm">
                         <div>
                           <p className="text-[10px] text-gray-500">
-                            YOUR BALANCE
+                            YOUR credit
                           </p>
                           <p className="font-bold text-gray-200">
                             {formatUserCurrency(
                               Number(
-                                user?.balance?.local ?? user?.balance ?? 0,
+                                user?.credit?.local ?? user?.credit ?? 0,
                               ),
                             )}
                           </p>

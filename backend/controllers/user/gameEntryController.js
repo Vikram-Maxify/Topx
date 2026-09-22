@@ -413,11 +413,11 @@ exports.createGamePool = async (req, res) => {
     }
 
     // ========================================================
-    // BALANCE CHECK
+    // credit CHECK
     // ========================================================
 
     if (
-      Number(user.balance || 0) <
+      Number(user.credit || 0) <
       amountToDeduct
     ) {
       await session.abortTransaction();
@@ -426,12 +426,12 @@ exports.createGamePool = async (req, res) => {
         success: false,
 
         message:
-          "Insufficient balance.",
+          "Insufficient credit.",
 
-        balance: {
+        credit: {
           amount:
             Number(
-              user.balance || 0
+              user.credit || 0
             ),
 
           currency:
@@ -820,7 +820,7 @@ exports.createGamePool = async (req, res) => {
       addedPlayer?._id || null;
 
     // ========================================================
-    // DEDUCT BALANCE
+    // DEDUCT credit
     // ========================================================
 
     const updatedUser =
@@ -828,7 +828,7 @@ exports.createGamePool = async (req, res) => {
         req.user.id,
         {
           $inc: {
-            balance:
+            credit:
               -amountToDeduct,
           },
         },
@@ -840,7 +840,7 @@ exports.createGamePool = async (req, res) => {
 
     if (!updatedUser) {
       throw new Error(
-        "User not found during balance update."
+        "User not found during credit update."
       );
     }
 
@@ -888,8 +888,8 @@ exports.createGamePool = async (req, res) => {
           status:
             "completed",
 
-          balanceAfter:
-            updatedUser.balance,
+          creditAfter:
+            updateduser.credit,
 
           exchangeRate:
             1,
@@ -906,8 +906,8 @@ exports.createGamePool = async (req, res) => {
 
     await session.commitTransaction();
 
-    const formattedBalance =
-      `${updatedUser.balance} ${currencyToUse}`;
+    const formattedcredit =
+      `${updateduser.credit} ${currencyToUse}`;
 
     // ========================================================
     // RESPONSE
@@ -945,15 +945,15 @@ exports.createGamePool = async (req, res) => {
             : null,
       },
 
-      balance: {
+      credit: {
         amount:
-          updatedUser.balance,
+          updateduser.credit,
 
         currency:
           currencyToUse,
 
         formatted:
-          formattedBalance,
+          formattedcredit,
       },
     });
   } catch (error) {
@@ -1729,7 +1729,7 @@ exports.cancelGameEntry = async (
         req.user.id,
         {
           $inc: {
-            balance:
+            credit:
               refundAmount,
           },
         },
@@ -1783,8 +1783,8 @@ exports.cancelGameEntry = async (
           status:
             "completed",
 
-          balanceAfter:
-            updatedUser.balance,
+          creditAfter:
+            updateduser.credit,
 
           exchangeRate:
             1,
@@ -1797,8 +1797,8 @@ exports.cancelGameEntry = async (
 
     await session.commitTransaction();
 
-    const formattedBalance =
-      `${updatedUser.balance} ${refundCurrency}`;
+    const formattedcredit =
+      `${updateduser.credit} ${refundCurrency}`;
 
     return res.status(200).json({
       success:
@@ -1818,15 +1818,15 @@ exports.cancelGameEntry = async (
           refundCurrency,
       },
 
-      balance: {
+      credit: {
         amount:
-          updatedUser.balance,
+          updateduser.credit,
 
         currency:
           refundCurrency,
 
         formatted:
-          formattedBalance,
+          formattedcredit,
       },
     });
   } catch (error) {
@@ -1858,10 +1858,10 @@ exports.cancelGameEntry = async (
 };
 
 // ============================================================
-// GET USER BALANCE
+// GET USER credit
 // ============================================================
 
-exports.getUserBalance = async (
+exports.getUsercredit = async (
   req,
   res
 ) => {
@@ -1875,7 +1875,7 @@ exports.getUserBalance = async (
       await User.findById(
         req.user.id
       ).select(
-        "balance country"
+        "credit country"
       );
 
     if (!user) {
@@ -1897,9 +1897,9 @@ exports.getUserBalance = async (
       success:
         true,
 
-      balance:
+      credit:
         Number(
-          user.balance || 0
+          user.credit || 0
         ),
 
       currency,
@@ -1908,7 +1908,7 @@ exports.getUserBalance = async (
     });
   } catch (error) {
     console.error(
-      "Get Balance Error:",
+      "Get credit Error:",
       error
     );
 

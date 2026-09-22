@@ -668,7 +668,7 @@ const getProfile = async (req, res) => {
       success: true,
       user: {
         ...user,
-        balance: user.balance,
+        credit: user.credit,
         country: user.country || null,
       },
       referralStats: {

@@ -1,4 +1,4 @@
-// components/WalletBalanceCard.jsx
+// components/WalletcreditCard.jsx
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -34,17 +34,17 @@ const getCurrencySymbol = (countryCode) => {
   return currencySymbolMap[currencyCode] || "₹"; // Default to INR if currency not found
 };
 
-export default function WalletBalanceCard() {
+export default function WalletcreditCard() {
   const { user } = useSelector((state) => state.auth);
-  const [showBalance, setShowBalance] = useState(true);
+  const [showcredit, setShowcredit] = useState(true);
 
   // Get the currency symbol based on user's country
   const currencySymbol = getCurrencySymbol(user?.country);
   
-  // Get balance with fallback
-  const balance = user?.balance?.local || 0;
+  // Get credit with fallback
+  const credit = user?.credit?.local || 0;
   
-  const formatBalance = (amount) => {
+  const formatcredit = (amount) => {
     return amount.toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -61,15 +61,15 @@ export default function WalletBalanceCard() {
 
       {/* Top Section */}
       <div>
-        {/* Header with Balance Label and Toggle */}
+        {/* Header with credit Label and Toggle */}
         <div className="flex items-center space-x-2 text-gray-600 mb-2">
-          <span className="text-sm font-medium">Current Wallet Balance</span>
+          <span className="text-sm font-medium">Current Wallet credit</span>
           <button
-            onClick={() => setShowBalance(!showBalance)}
+            onClick={() => setShowcredit(!showcredit)}
             className="hover:text-purple-600 transition-colors"
-            aria-label={showBalance ? "Hide balance" : "Show balance"}
+            aria-label={showcredit ? "Hide credit" : "Show credit"}
           >
-            {showBalance ? (
+            {showcredit ? (
               <EyeOff size={18} className="text-gray-500" />
             ) : (
               <Eye size={18} className="text-gray-500" />
@@ -77,11 +77,11 @@ export default function WalletBalanceCard() {
           </button>
         </div>
 
-        {/* Balance Amount */}
+        {/* credit Amount */}
         <div className="flex items-baseline space-x-2">
           <span className="text-2xl font-bold text-gray-900">{currencySymbol}</span>
           <span className="text-4xl md:text-[56px] font-extrabold text-gray-900 tracking-tight">
-            {showBalance ? formatBalance(balance) : '••••••••••'}
+            {showcredit ? formatcredit(credit) : '••••••••••'}
           </span>
         </div>
 

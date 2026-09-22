@@ -659,14 +659,14 @@ exports.placeBid = async (req, res) => {
       });
     }
 
-    // Balance is maintained in INR
-    if (Number(user.balance) < amount) {
-      const balanceUserCurrency = Number(user.balance);
+    // credit is maintained in INR
+    if (Number(user.credit) < amount) {
+      const creditUserCurrency = Number(user.credit);
       return res.status(400).json({
         success: false,
-        message: "Insufficient balance",
-        balance: user.balance,
-        balanceUserCurrency,
+        message: "Insufficient credit",
+        credit: user.credit,
+        creditUserCurrency,
         currencyCode,
         required: amount,
         requiredUserCurrency: amount,
@@ -703,7 +703,7 @@ exports.placeBid = async (req, res) => {
 
     console.log(bid);
 
-    user.balance = Number(user.balance) - amount;
+    user.credit = Number(user.credit) - amount;
     await user.save();
 
     return res.status(201).json({
@@ -738,8 +738,8 @@ exports.placeBid = async (req, res) => {
           deductedINR: amountInINR,
           currencyCode,
           rate,
-          remainingBalance: user.balance, // user currency
-          remainingBalanceUserCurrency: Number(user.balance),
+          remainingcredit: user.credit, // user currency
+          remainingcreditUserCurrency: Number(user.credit),
         },
       },
     });
@@ -962,21 +962,21 @@ exports.placeMultipleBids = async (req, res) => {
       0,
     );
 
-    if (Number(user.balance) < totalBidAmountUserCurrency) {
-      const balanceUserCurrency = Number(user.balance);
+    if (Number(user.credit) < totalBidAmountUserCurrency) {
+      const creditUserCurrency = Number(user.credit);
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
         success: false,
-        message: "Insufficient balance for all bids",
+        message: "Insufficient credit for all bids",
         required: totalBidAmountUserCurrency,
         requiredUserCurrency: totalBidAmountUserCurrency,
-        available: user.balance,
-        availableUserCurrency: balanceUserCurrency,
+        available: user.credit,
+        availableUserCurrency: creditUserCurrency,
         currencyCode,
         rate,
         shortfall: Number(
-          (totalBidAmountUserCurrency - Number(user.balance)).toFixed(2),
+          (totalBidAmountUserCurrency - Number(user.credit)).toFixed(2),
         ),
       });
     }
@@ -1009,7 +1009,7 @@ exports.placeMultipleBids = async (req, res) => {
       createdBids.push(created[0]);
     }
 
-    user.balance = Number(user.balance) - totalBidAmountUserCurrency;
+    user.credit = Number(user.credit) - totalBidAmountUserCurrency;
     await user.save({ session });
 
     await session.commitTransaction();
@@ -1040,8 +1040,8 @@ exports.placeMultipleBids = async (req, res) => {
           totalDeductedINR: totalBidAmountINR,
           currencyCode,
           rate,
-          remainingBalance: user.balance,
-          remainingBalanceUserCurrency: Number(user.balance),
+          remainingcredit: user.credit,
+          remainingcreditUserCurrency: Number(user.credit),
         },
         totalBids: createdBids.length,
       },
@@ -1224,17 +1224,17 @@ exports.placeBidOnMultipleNumbers = async (req, res) => {
 
     const totalBidAmountUserCurrency = uniqueNumbers.length * amount;
 
-    if (Number(user.balance) < totalBidAmountUserCurrency) {
-      const balanceUserCurrency = Number(user.balance);
+    if (Number(user.credit) < totalBidAmountUserCurrency) {
+      const creditUserCurrency = Number(user.credit);
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
         success: false,
-        message: "Insufficient balance",
+        message: "Insufficient credit",
         required: totalBidAmountINR,
         requiredUserCurrency: totalBidAmountUserCurrency,
-        available: user.balance,
-        availableUserCurrency: balanceUserCurrency,
+        available: user.credit,
+        availableUserCurrency: creditUserCurrency,
         currencyCode,
         rate,
       });
@@ -1284,7 +1284,7 @@ exports.placeBidOnMultipleNumbers = async (req, res) => {
       createdBids.push(created[0]);
     }
 
-    user.balance = Number(user.balance) - totalBidAmountUserCurrency;
+    user.credit = Number(user.credit) - totalBidAmountUserCurrency;
     await user.save({ session });
 
     await session.commitTransaction();
@@ -1311,8 +1311,8 @@ exports.placeBidOnMultipleNumbers = async (req, res) => {
           totalDeductedINR: totalBidAmountINR,
           currencyCode,
           rate,
-          remainingBalance: user.balance,
-          remainingBalanceUserCurrency: Number(user.balance),
+          remainingcredit: user.credit,
+          remainingcreditUserCurrency: Number(user.credit),
         },
         totalBids: createdBids.length,
         numbersPlayed: createdBids.map((bid) => bid.number),
@@ -1727,7 +1727,7 @@ exports.cancelBid = async (req, res) => {
 
     // Refund in the user's country currency.
     const refundAmount = Number(bid.bidAmount);
-    user.balance = Number(user.balance) + refundAmount;
+    user.credit = Number(user.credit) + refundAmount;
     await user.save({ session });
 
     bid.status = "cancelled";
@@ -1750,8 +1750,8 @@ exports.cancelBid = async (req, res) => {
         refundAmountUserCurrency: refundUserCurrency,
         currencyCode: currencyInfo.currencyCode,
         rate: currencyInfo.rate,
-        balance: user.balance,
-        balanceUserCurrency: Number(user.balance),
+        credit: user.credit,
+        creditUserCurrency: Number(user.credit),
       },
     });
   } catch (error) {
@@ -1827,7 +1827,7 @@ exports.cancelMultipleBids = async (req, res) => {
       await bid.save({ session });
     }
 
-    user.balance = Number(user.balance) + totalRefundUserCurrency;
+    user.credit = Number(user.credit) + totalRefundUserCurrency;
     await user.save({ session });
 
     await session.commitTransaction();
@@ -1847,8 +1847,8 @@ exports.cancelMultipleBids = async (req, res) => {
         ),
         currencyCode: currencyInfo.currencyCode,
         rate: currencyInfo.rate,
-        balance: user.balance,
-        balanceUserCurrency: Number(user.balance),
+        credit: user.credit,
+        creditUserCurrency: Number(user.credit),
         cancelledBids: bids.map((bid) => ({
           id: bid._id,
           transactionId: bid.transactionId,
@@ -1910,7 +1910,7 @@ exports.adminGetAllBids = async (req, res) => {
     }
 
     const bids = await Bid.find(filter)
-      .populate("userId", "name email mobile balance country")
+      .populate("userId", "name email mobile credit country")
       .populate("marketId", "name marketId digitType gameTypes")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -2237,7 +2237,7 @@ exports.adminGetBidById = async (req, res) => {
     const { bidId } = req.params;
 
     const bid = await Bid.findById(bidId)
-      .populate("userId", "name email mobile balance country")
+      .populate("userId", "name email mobile credit country")
       .populate("marketId", "name marketId digitType gameTypes marketArray");
 
     if (!bid) {
@@ -2284,8 +2284,8 @@ exports.adminUpdateBidStatus = async (req, res) => {
     if (status === "won" && bid.status !== "won") {
       const user = await User.findById(bid.userId).session(session);
       if (user) {
-        // winAmount and balance are stored in the user's country currency.
-        user.balance += Number(bid.possibleWinAmount);
+        // winAmount and credit are stored in the user's country currency.
+        user.credit += Number(bid.possibleWinAmount);
         await user.save({ session });
         bid.winAmount = bid.possibleWinAmount;
         bid.wonAt = new Date();
@@ -2295,7 +2295,7 @@ exports.adminUpdateBidStatus = async (req, res) => {
     if (bid.status === "won" && status !== "won") {
       const user = await User.findById(bid.userId).session(session);
       if (user && bid.winAmount) {
-        user.balance -= Number(bid.winAmount);
+        user.credit -= Number(bid.winAmount);
         await user.save({ session });
         bid.winAmount = 0;
       }
@@ -2346,7 +2346,7 @@ exports.adminDeleteBid = async (req, res) => {
     if (bid.status === "pending") {
       const user = await User.findById(bid.userId).session(session);
       if (user) {
-        user.balance += Number(bid.bidAmount);
+        user.credit += Number(bid.bidAmount);
         await user.save({ session });
       }
     }
@@ -2354,7 +2354,7 @@ exports.adminDeleteBid = async (req, res) => {
     if (bid.status === "won" && bid.winAmount) {
       const user = await User.findById(bid.userId).session(session);
       if (user) {
-        user.balance -= Number(bid.winAmount);
+        user.credit -= Number(bid.winAmount);
         await user.save({ session });
       }
     }
@@ -2558,8 +2558,8 @@ exports.declareResult = async (req, res) => {
 
         const user = await User.findById(bid.userId).session(session);
         if (user) {
-          // Wallet balance is maintained in the user's own country currency.
-          user.balance += Number(bid.possibleWinAmount);
+          // Wallet credit is maintained in the user's own country currency.
+          user.credit += Number(bid.possibleWinAmount);
           await user.save({ session });
 
           const cur = await getUserCurrency(user, session);

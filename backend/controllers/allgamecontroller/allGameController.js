@@ -12,9 +12,9 @@ const key = "5HXuVkACXHtu04Y7SgBL";
 // const key = "3aqSD5NzX8sKj2MG2CkNS6mqerzJywUW";
 
 /* =========================
-   CHECK BALANCE (AUTO CREATE USER)
+   CHECK credit (AUTO CREATE USER)
 ========================= */
-const checkBalance = async (req, res) => {
+const checkcredit = async (req, res) => {
   try {
     const playerid = String(req.body.playerid || "").trim();
     if (!playerid) {
@@ -23,31 +23,31 @@ const checkBalance = async (req, res) => {
         .json({ status: false, message: "playerid required" });
     }
 
-    const response = await axios.post(`${apiUrl}/Userbalance`, {
+    const response = await axios.post(`${apiUrl}/Usercredit`, {
       playerid,
       key,
     });
 
-    console.log("CHECK BALANCE RESPONSE 👉", response.data);
+    console.log("CHECK credit RESPONSE 👉", response.data);
 
     return res.json({
       status: true,
-      message: "Balance fetched successfully",
+      message: "credit fetched successfully",
       data: response.data,
     });
   } catch (error) {
     return res.status(500).json({
       status: false,
-      message: "Balance error",
+      message: "credit error",
       error: error.response?.data || error.message,
     });
   }
 };
 
 /* =========================
-   TRANSFER BALANCE (ZAP → LOCAL)
+   TRANSFER credit (ZAP → LOCAL)
 ========================= */
-const transferBalance = async (req, res) => {
+const transfercredit = async (req, res) => {
   try {
     /* 1️⃣ Find user */
     const user = await AuthModel.findById(req.user._id);
@@ -60,9 +60,9 @@ const transferBalance = async (req, res) => {
 
     const playerid = String(user.mobile).trim();
 
-    /* 2️⃣ Get balance from Zapcore */
+    /* 2️⃣ Get credit from Zapcore */
     const balRes = await axios.post(
-      `${apiUrl}/Userbalance?playerid=${playerid}&key=${key}`,
+      `${apiUrl}/Usercredit?playerid=${playerid}&key=${key}`,
       {
         playerid,
         key,
@@ -75,29 +75,29 @@ const transferBalance = async (req, res) => {
       },
     );
 
-    // console.log("ZAPCORE BALANCE RESPONSE 👉", balRes.data);
+    // console.log("ZAPCORE credit RESPONSE 👉", balRes.data);
 
-    const zapBalance = Number(balRes.data?.Balance || 0);
-    // console.log("ZAPCORE BALANCE 👉", zapBalance);
+    const zapcredit = Number(balRes.data?.credit || 0);
+    // console.log("ZAPCORE credit 👉", zapcredit);
 
     /* 3️⃣ IF–ELSE CONDITION */
-    if (!isNaN(zapBalance) && zapBalance > 0) {
-      /* 4️⃣ Add balance to local wallet */
+    if (!isNaN(zapcredit) && zapcredit > 0) {
+      /* 4️⃣ Add credit to local wallet */
       const updatedUser = await AuthModel.findByIdAndUpdate(
         user._id,
-        { $inc: { credit: zapBalance + user.exposure } },
+        { $inc: { credit: zapcredit + user.exposure } },
         { new: true },
       );
 
       // console.log("LOCAL WALLET UPDATED 👉", updatedUser);
 
-      /* 5️⃣ Reset Zapcore balance */
+      /* 5️⃣ Reset Zapcore credit */
       const resetRes = await axios.post(
-        `${apiUrl}/Setbalance?playerid=${playerid}&key=${key}`,
+        `${apiUrl}/Setcredit?playerid=${playerid}&key=${key}`,
         {
           playerid,
           key,
-          opening_balance: -zapBalance,
+          opening_credit: -zapcredit,
         },
         {
           headers: {
@@ -107,7 +107,7 @@ const transferBalance = async (req, res) => {
         },
       );
 
-      // console.log("ZAPCORE BALANCE RESET RESPONSE 👉", resetRes.data);
+      // console.log("ZAPCORE credit RESET RESPONSE 👉", resetRes.data);
 
       /* 6️⃣ Rollback if reset fails */
       if (resetRes.data?.status !== true) {
@@ -116,8 +116,8 @@ const transferBalance = async (req, res) => {
             $set: {
               credit: {
                 $cond: [
-                  { $gte: ["$credit", zapBalance] },
-                  { $subtract: ["$credit", zapBalance] },
+                  { $gte: ["$credit", zapcredit] },
+                  { $subtract: ["$credit", zapcredit] },
                   0,
                 ],
               },
@@ -134,15 +134,15 @@ const transferBalance = async (req, res) => {
       /* ✅ SUCCESS */
       return res.status(200).json({
         status: true,
-        message: "Balance transferred successfully",
-        transferredAmount: zapBalance,
-        currentBalance: updatedUser.credit,
+        message: "credit transferred successfully",
+        transferredAmount: zapcredit,
+        currentcredit: updatedUser.credit,
       });
     } else {
-      /* ❌ NO BALANCE */
+      /* ❌ NO credit */
       return res.status(200).json({
         status: false,
-        message: "No balance to transfer",
+        message: "No credit to transfer",
       });
     }
   } catch (error) {
@@ -175,10 +175,10 @@ const launchGame = async (req, res) => {
 
     const playerid = String(user.mobile).trim();
 
-    // console.log("USER BALANCE BEFORE LAUNCH 👉",playerid);
+    // console.log("USER credit BEFORE LAUNCH 👉",playerid);
 
     // auto-create safety
-    // const userbalnace = await axios.post(`${apiUrl}/Userbalance?key=${key}`, {
+    // const userbalnace = await axios.post(`${apiUrl}/Usercredit?key=${key}`, {
     //   playerid,
     //   key,
     // },{
@@ -188,14 +188,14 @@ const launchGame = async (req, res) => {
     //  }
     // });
 
-    // console.log("USER BALANCE RESPONSE 👉", userbalnace);
+    // console.log("USER credit RESPONSE 👉", userbalnace);
 
     const response = await axios.post(
       launchUrl,
       {
         playerid,
         uid: gameId,
-        opening_balance: user.credit - user.exposure,
+        opening_credit: user.credit - user.exposure,
         key,
       },
       {
@@ -346,8 +346,8 @@ const gameHistory = async (req, res) => {
    EXPORTS
 ========================= */
 module.exports = {
-  checkBalance,
-  transferBalance,
+  checkcredit,
+  transfercredit,
   launchGame,
   getgamedetails,
   gameProvider,

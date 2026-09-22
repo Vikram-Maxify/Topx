@@ -459,7 +459,7 @@ exports.withdraw = async (req, res) => {
           .json({ success: false, message: "User not found" });
       return res
         .status(400)
-        .json({ success: false, message: "balance insufficient" });
+        .json({ success: false, message: "credit insufficient" });
     }
     try {
       await Withdrawal.create({

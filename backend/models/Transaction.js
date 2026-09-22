@@ -42,7 +42,7 @@ const transactionSchema = new mongoose.Schema({
         enum: ['pending', 'completed', 'failed'],
         default: 'completed'
     },
-    balanceAfter: Number
+    creditAfter: Number
 }, {
     timestamps: true
 });

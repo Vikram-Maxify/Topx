@@ -216,18 +216,18 @@ export const cancelGameEntry =
     }
   );
 
-// ================= GET USER BALANCE =================
-export const getUserBalance =
+// ================= GET USER credit =================
+export const getUsercredit =
   createAsyncThunk(
-    "gameEntry/getBalance",
+    "gameEntry/getcredit",
     async (_, { rejectWithValue }) => {
       try {
         const { data } =
           await api.get(
-            "/game-entry/balance/me"
+            "/game-entry/credit/me"
           );
 
-        return data.balance;
+        return data.credit;
       } catch (error) {
         return rejectWithValue(
           error.response?.data?.message ||
@@ -303,7 +303,7 @@ const initialState = {
   results: null,
   winningNumbers: null,
 
-  balance: 0,
+  credit: 0,
 
   loading: false,
   success: false,
@@ -423,10 +423,10 @@ const gameEntrySlice = createSlice({
           }
 
           if (
-            action.payload?.balance
+            action.payload?.credit
           ) {
-            state.balance =
-              action.payload.balance.amount;
+            state.credit =
+              action.payload.credit.amount;
           }
         }
       )
@@ -664,10 +664,10 @@ const gameEntrySlice = createSlice({
           }
 
           if (
-            action.payload?.balance
+            action.payload?.credit
           ) {
-            state.balance =
-              action.payload.balance.amount;
+            state.credit =
+              action.payload.credit.amount;
           }
 
           if (
@@ -690,21 +690,21 @@ const gameEntrySlice = createSlice({
       )
 
       // ==================================================
-      // GET BALANCE
+      // GET credit
       // ==================================================
 
       .addCase(
-        getUserBalance.fulfilled,
+        getUsercredit.fulfilled,
         (state, action) => {
-          state.balance =
+          state.credit =
             action.payload;
         }
       )
 
       .addCase(
-        getUserBalance.rejected,
+        getUsercredit.rejected,
         (state) => {
-          state.balance = 0;
+          state.credit = 0;
         }
       )
 
@@ -783,9 +783,9 @@ export const selectWinningNumbers = (
   state
 ) => state.gameEntry.winningNumbers;
 
-export const selectBalance = (
+export const selectcredit = (
   state
-) => state.gameEntry.balance;
+) => state.gameEntry.credit;
 
 export const selectGameEntryLoading = (
   state

@@ -160,14 +160,14 @@ const Trx = () => {
     setIsChecked(!isChecked);
   };
 
-  const [balance, setBalance] = useState(1);
+  const [credit, setcredit] = useState(1);
   const [multiplier, setMultiplier] = useState(1);
 
-  const balanceOptions = [1, 10, 100, 1000];
+  const creditOptions = [1, 10, 100, 1000];
 
 
 
-  const totalAmount = balance * multiplier;
+  const totalAmount = credit * multiplier;
   const handleVoice = () => {
     const newVoiceState = !activeVoice;
     setActiveVoice(newVoiceState);
@@ -257,12 +257,12 @@ const Trx = () => {
     return `**${end}`;
   }
   const handleBet = async () => {
-    dispatch(wingoBet({ typeid1, selectBet, balance, multiplier })).then((res) => {
+    dispatch(wingoBet({ typeid1, selectBet, credit, multiplier })).then((res) => {
       setBetAlert(true)
       setOpenPopup(false)
       dispatch(userDetail())
       setMessage(res.payload.message)
-      setBalance(1)
+      setcredit(1)
       setMultiplier(1)
       setActiveX(0)
       setTimeout(() => {
@@ -1463,14 +1463,14 @@ const Trx = () => {
           </div>
           <div className="px-4 py-3  text-whites">
             <div className="flex justify-between items-center mb-4">
-              <span>Balance</span>
+              <span>credit</span>
               <div className="flex space-x-2">
-                {balanceOptions.map((value) => (
+                {creditOptions.map((value) => (
                   <button
                     key={value}
-                    onClick={() => setBalance(value)}
+                    onClick={() => setcredit(value)}
                     className={`gray-50 text-base mx-1 px-2 py-[3px]  rounded-md ${
-                      balance === value
+                      credit === value
                         ? selectBet == "x"
                           ? "bgs-green text-white"
                           : selectBet == "d"

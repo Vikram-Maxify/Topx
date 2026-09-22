@@ -213,8 +213,8 @@ const Withdrawal = () => {
       errors.amount = `Minimum withdrawal amount is ${currencySymbol}${settings?.minWithdrawal}`;
     } else if (parseFloat(formData.amount) > settings?.maxWithdrawal) {
       errors.amount = `Maximum withdrawal amount is ${currencySymbol}${settings?.maxWithdrawal}`;
-    } else if (parseFloat(formData.amount) > user?.balance) {
-      errors.amount = `Insufficient balance. Available: ${currencySymbol}${user?.balance}`;
+    } else if (parseFloat(formData.amount) > user?.credit) {
+      errors.amount = `Insufficient credit. Available: ${currencySymbol}${user?.credit}`;
     }
 
     if (!formData.paymentMethod) {
@@ -551,7 +551,7 @@ const Withdrawal = () => {
               </div>
             </div>
 
-            {/* Balance Card */}
+            {/* credit Card */}
             <div className="w-full sm:w-auto bg-[#12061C] px-4 sm:px-6 py-3 rounded-xl border border-[#9B59B6]/40 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-[#9B59B6]/20 rounded-lg border border-[#9B59B6]/30">
@@ -559,10 +559,10 @@ const Withdrawal = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                    Available Balance
+                    Available credit
                   </p>
                   <p className="text-xl sm:text-2xl font-bold text-[#9B59B6]">
-                    {formatCurrency(user?.balance || 0)}
+                    {formatCurrency(user?.credit || 0)}
                   </p>
                 </div>
               </div>

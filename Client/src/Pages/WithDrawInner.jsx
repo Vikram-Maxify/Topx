@@ -25,7 +25,7 @@ const WithdrawInner = () => {
   console.log( userInfo?.userId)
 
 
-  const accountBalance = 15000.00;
+  const accountcredit = 15000.00;
   const availableForWithdrawal = 12000.00;
   const commissionRate = 0.02;
 
@@ -56,7 +56,7 @@ const WithdrawInner = () => {
     <div className="w-full mx-auto md:p-4 h-[80vh] overflow-auto">
       {/* Account Summary Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Account Balance Card */}
+        {/* Account credit Card */}
         <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
           <h2 className="text-xl font-semibold mb-6 text-white flex items-center">
             <FiDollarSign className="mr-2 text-green-500" />
@@ -66,7 +66,7 @@ const WithdrawInner = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-4 border-b border-gray-700">
               <div>
-                <p className="text-gray-400 font-medium">Current Balance</p>
+                <p className="text-gray-400 font-medium">Current credit</p>
                 <p className="text-sm text-gray-500">Total funds in your account</p>
               </div>
               <p className=" md:text-2xl font-bold text-white">₹{userInfo?.money}</p>

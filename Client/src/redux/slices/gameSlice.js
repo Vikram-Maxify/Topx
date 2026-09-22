@@ -3,36 +3,36 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "./api";
 
 /* ===========================
-   CHECK GAME BALANCE
+   CHECK GAME credit
 =========================== */
-export const checkGameBalance = createAsyncThunk(
-  "game/checkBalance",
+export const checkGamecredit = createAsyncThunk(
+  "game/checkcredit",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await api.get("/game/balance/transfer", {
+      const { data } = await api.get("/game/credit/transfer", {
         withCredentials: true,
       });
       return data; // ✅ FIXED
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || { message: "Balance check failed" },
+        error.response?.data || { message: "credit check failed" },
       );
     }
   },
 );
 
 /* ===========================
-   TRANSFER BALANCE
+   TRANSFER credit
 =========================== */
 export const transferFromGame = createAsyncThunk(
   "game/transferFromGame",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await api.post("/game/transfer-balance");
+      const { data } = await api.post("/game/transfer-credit");
       return data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data || { message: "Balance transfer failed" },
+        err.response?.data || { message: "credit transfer failed" },
       );
     }
   },
@@ -116,16 +116,16 @@ const gameSlice = createSlice({
     filteredGames: [],
     gameHistory: [],
     gameUrl: null,
-    // Balance
-    gameBalance: 0,
+    // credit
+    gamecredit: 0,
 
     // Popup message
-    balanceMessage: "",
-    balanceStatus: null, // true / false
+    creditMessage: "",
+    creditStatus: null, // true / false
 
     // Loading
     loading: false,
-    isBalanceLoading: false,
+    iscreditLoading: false,
     launchLoading: false,
     transferLoading: false,
 
@@ -140,8 +140,8 @@ const gameSlice = createSlice({
       state.launchError = null;
       state.transferError = null;
       state.error = null;
-      state.balanceMessage = "";
-      state.balanceStatus = null;
+      state.creditMessage = "";
+      state.creditStatus = null;
     },
     clearGameUrl: (state) => {
       state.gameUrl = null;
@@ -152,22 +152,22 @@ const gameSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      /* ===== CHECK BALANCE ===== */
-      .addCase(checkGameBalance.pending, (state) => {
-        state.isBalanceLoading = true;
-        state.balanceMessage = "";
+      /* ===== CHECK credit ===== */
+      .addCase(checkGamecredit.pending, (state) => {
+        state.iscreditLoading = true;
+        state.creditMessage = "";
       })
-      .addCase(checkGameBalance.fulfilled, (state, action) => {
-        state.isBalanceLoading = false;
-        state.gameBalance = action.payload.balance || 0;
-        state.balanceStatus = action.payload.status;
-        state.balanceMessage = action.payload.message;
+      .addCase(checkGamecredit.fulfilled, (state, action) => {
+        state.iscreditLoading = false;
+        state.gamecredit = action.payload.credit || 0;
+        state.creditStatus = action.payload.status;
+        state.creditMessage = action.payload.message;
       })
-      .addCase(checkGameBalance.rejected, (state, action) => {
-        state.isBalanceLoading = false;
-        state.balanceStatus = false;
-        state.balanceMessage =
-          action.payload?.message || "Balance check failed";
+      .addCase(checkGamecredit.rejected, (state, action) => {
+        state.iscreditLoading = false;
+        state.creditStatus = false;
+        state.creditMessage =
+          action.payload?.message || "credit check failed";
       })
 
       /* ===== TRANSFER FROM GAME ===== */
@@ -176,14 +176,14 @@ const gameSlice = createSlice({
       })
       .addCase(transferFromGame.fulfilled, (state, action) => {
         state.transferLoading = false;
-        state.gameBalance = 0;
-        state.balanceStatus = true;
-        state.balanceMessage = action.payload.message;
+        state.gamecredit = 0;
+        state.creditStatus = true;
+        state.creditMessage = action.payload.message;
       })
       .addCase(transferFromGame.rejected, (state, action) => {
         state.transferLoading = false;
-        state.balanceStatus = false;
-        state.balanceMessage = action.payload?.message || "Transfer failed";
+        state.creditStatus = false;
+        state.creditMessage = action.payload?.message || "Transfer failed";
       })
 
       /* ===== LAUNCH GAME ===== */

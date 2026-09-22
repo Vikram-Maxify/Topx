@@ -395,7 +395,7 @@ export default function DepositHistory() {
           </div>
 
           <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl border border-orange-500/20 p-6">
-            <div className="text-gray-400 text-sm mb-2">Current Balance</div>
+            <div className="text-gray-400 text-sm mb-2">Current credit</div>
             <div className="text-3xl font-bold text-white flex items-center">
               <FaRupeeSign className="mr-2 text-yellow-400" />
               <span>{userprofile?.credit?.toLocaleString() || "0"}</span>

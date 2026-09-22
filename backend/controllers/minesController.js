@@ -94,7 +94,7 @@ function getMultiplier(safeCells) {
    CURRENCY / COUNTRY HELPERS
    ---------------------------------------------------------
    CurrencyRate is used to identify the user's currency/rate.
-IMPORTANT: User.balance is maintained directly in the user's
+IMPORTANT: user.credit is maintained directly in the user's
 LOCAL currency. No INR conversion is performed for game accounting.
 The client sends the amount in the user's local currency.
 ========================================================= */
@@ -190,7 +190,7 @@ async function getUserCurrencyInfo(user) {
 function localToBaseAmount(localAmount, _rate) {
   const amount = Number(localAmount);
   if (!Number.isFinite(amount) || amount <= 0) return 0;
-  // LOCAL -> LOCAL: no conversion for balance accounting.
+  // LOCAL -> LOCAL: no conversion for credit accounting.
   return amount;
 }
 
@@ -216,7 +216,7 @@ exports.startGame = async (req, res) => {
     // VALIDATE USER FIRST
     // ---------------------------------------------------------
     const user = await User.findById(userId).select(
-      "balance status country",
+      "credit status country",
     );
 
     if (!user) {
@@ -265,7 +265,7 @@ exports.startGame = async (req, res) => {
 
     // IMPORTANT:
     // virtualStake coming from frontend is LOCAL currency.
-    // It is deducted directly from User.balance in the same currency.
+    // It is deducted directly from user.credit in the same currency.
     const localStake = Number(req.body.virtualStake);
 
     if (!Number.isFinite(localStake) || localStake <= 0) {
@@ -303,9 +303,9 @@ exports.startGame = async (req, res) => {
         currency: currencyInfo.currencyCode,
         currencyRate: currencyInfo.rate,
 
-        balance: Number(user.balance || 0),
-        balanceLocal: baseToLocalAmount(
-          Number(user.balance || 0),
+        credit: Number(user.credit || 0),
+        creditLocal: baseToLocalAmount(
+          Number(user.credit || 0),
           currencyInfo.rate,
         ),
 
@@ -342,30 +342,30 @@ exports.startGame = async (req, res) => {
     }
 
     // ---------------------------------------------------------
-    // DEDUCT ENTRY FROM REAL LOCAL BALANCE
+    // DEDUCT ENTRY FROM REAL LOCAL credit
     // ---------------------------------------------------------
     const updatedUser = await User.findOneAndUpdate(
       {
         _id: userId,
         status: "active",
-        balance: {
+        credit: {
           $gte: virtualStake,
         },
       },
       {
         $inc: {
-          balance: -virtualStake,
+          credit: -virtualStake,
         },
       },
       {
         new: true,
       },
-    ).select("balance country");
+    ).select("credit country");
 
     if (!updatedUser) {
       return res.status(400).json({
         success: false,
-        message: "Insufficient balance",
+        message: "Insufficient credit",
       });
     }
 
@@ -408,7 +408,7 @@ exports.startGame = async (req, res) => {
     } catch (createError) {
       await User.findByIdAndUpdate(userId, {
         $inc: {
-          balance: virtualStake,
+          credit: virtualStake,
         },
       });
 
@@ -444,7 +444,7 @@ exports.startGame = async (req, res) => {
         // Local display value.
         localStake: entryLocalAmount,
 
-        balanceAfter: Number(updatedUser.balance),
+        creditAfter: Number(updateduser.credit),
 
         status: game.status,
         createdAt: game.createdAt,
@@ -461,11 +461,11 @@ exports.startGame = async (req, res) => {
       currency: currencyInfo.currencyCode,
       currencyRate: currencyInfo.rate,
 
-      balance: Number(updatedUser.balance),
+      credit: Number(updateduser.credit),
 
-      // Local balance for display.
-      balanceLocal: baseToLocalAmount(
-        Number(updatedUser.balance),
+      // Local credit for display.
+      creditLocal: baseToLocalAmount(
+        Number(updateduser.credit),
         currencyInfo.rate,
       ),
 
@@ -502,11 +502,11 @@ exports.startGame = async (req, res) => {
       try {
         await User.findByIdAndUpdate(req.user.id, {
           $inc: {
-            balance: deductedAmount,
+            credit: deductedAmount,
           },
         });
       } catch (refundError) {
-        console.error("Mines balance refund error:", refundError);
+        console.error("Mines credit refund error:", refundError);
       }
     }
 
@@ -539,7 +539,7 @@ exports.revealCell = async (req, res) => {
     // GET USER + COUNTRY RATE
     // ---------------------------------------------------------
     const user = await User.findById(userId).select(
-      "balance status country",
+      "credit status country",
     );
 
     if (!user) {
@@ -709,23 +709,23 @@ exports.revealCell = async (req, res) => {
 
       await game.save();
 
-      // Add the WIN in local currency to the real balance.
+      // Add the WIN in local currency to the real credit.
       const updatedUser = await User.findByIdAndUpdate(
         userId,
         {
           $inc: {
-            balance: virtualWin,
+            credit: virtualWin,
           },
         },
         {
           new: true,
         },
-      ).select("balance country");
+      ).select("credit country");
 
       if (!updatedUser) {
         return res.status(500).json({
           success: false,
-          message: "Win recorded but balance update failed. Contact admin.",
+          message: "Win recorded but credit update failed. Contact admin.",
         });
       }
 
@@ -763,12 +763,12 @@ exports.revealCell = async (req, res) => {
         currency: currencyInfo.currencyCode,
         currencyRate: currencyInfo.rate,
 
-        // Balance stays local currency.
-        balance: Number(updatedUser.balance || 0),
+        // credit stays local currency.
+        credit: Number(updateduser.credit || 0),
 
-        // Local balance for display.
-        balanceLocal: baseToLocalAmount(
-          Number(updatedUser.balance || 0),
+        // Local credit for display.
+        creditLocal: baseToLocalAmount(
+          Number(updateduser.credit || 0),
           currencyInfo.rate,
         ),
 
@@ -793,7 +793,7 @@ exports.revealCell = async (req, res) => {
           virtualStake: Number(game.virtualStake || 0),
           virtualWin: Number(virtualWin || 0),
 
-          balanceAfter: Number(updatedUser?.balance || 0),
+          creditAfter: Number(updatedUser?.credit || 0),
 
           finishedAt: game.finishedAt,
         });
@@ -879,7 +879,7 @@ exports.cashout = async (req, res) => {
     // GET USER + COUNTRY RATE
     // ---------------------------------------------------------
     const user = await User.findById(userId).select(
-      "balance status country",
+      "credit status country",
     );
 
     if (!user) {
@@ -986,19 +986,19 @@ exports.cashout = async (req, res) => {
     }
 
     // ---------------------------------------------------------
-    // ADD WINNING AMOUNT TO REAL LOCAL BALANCE
+    // ADD WINNING AMOUNT TO REAL LOCAL credit
     // ---------------------------------------------------------
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
         $inc: {
-          balance: virtualWin,
+          credit: virtualWin,
         },
       },
       {
         new: true,
       },
-    ).select("balance country");
+    ).select("credit country");
 
     if (!updatedUser) {
       console.error(
@@ -1013,7 +1013,7 @@ exports.cashout = async (req, res) => {
       return res.status(500).json({
         success: false,
         message:
-          "Cashout recorded but balance update failed. Contact admin.",
+          "Cashout recorded but credit update failed. Contact admin.",
       });
     }
 
@@ -1049,12 +1049,12 @@ exports.cashout = async (req, res) => {
       currency: currencyInfo.currencyCode,
       currencyRate: currencyInfo.rate,
 
-      // Balance remains local currency.
-      balance: Number(updatedUser.balance || 0),
+      // credit remains local currency.
+      credit: Number(updateduser.credit || 0),
 
-      // Local balance for display.
-      balanceLocal: baseToLocalAmount(
-        Number(updatedUser.balance || 0),
+      // Local credit for display.
+      creditLocal: baseToLocalAmount(
+        Number(updateduser.credit || 0),
         currencyInfo.rate,
       ),
 
@@ -1085,7 +1085,7 @@ exports.cashout = async (req, res) => {
         localStake,
         localWin,
 
-        balanceAfter: Number(updatedUser.balance || 0),
+        creditAfter: Number(updateduser.credit || 0),
 
         finishedAt: updatedGame.finishedAt,
       });
@@ -1107,10 +1107,10 @@ exports.cashout = async (req, res) => {
 
       multiplier: Number(updatedGame.multiplier || 1),
 
-      balance: Number(updatedUser.balance || 0),
+      credit: Number(updateduser.credit || 0),
 
-      balanceLocal: baseToLocalAmount(
-        Number(updatedUser.balance || 0),
+      creditLocal: baseToLocalAmount(
+        Number(updateduser.credit || 0),
         currencyInfo.rate,
       ),
 

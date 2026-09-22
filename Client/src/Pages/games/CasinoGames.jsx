@@ -44,7 +44,7 @@ const CasinoGames = ({ limit, showViewAll = false, showSearch = true }) => {
 
   const MIN_CREDIT_TO_PLAY = 10;
   const hasDeposited = true;
-  const credit = Number(user?.balance || 0);
+  const credit = Number(user?.credit || 0);
   const needsRecharge = !hasDeposited || credit < MIN_CREDIT_TO_PLAY;
 
   useEffect(() => {
@@ -367,10 +367,10 @@ const CasinoGames = ({ limit, showViewAll = false, showSearch = true }) => {
             <p className="text-sm text-gray-300 mb-2">
               {!hasDeposited
                 ? "You need to make at least one deposit before you can play."
-                : `You need a minimum balance of ₹${MIN_CREDIT_TO_PLAY} to play this game.`}
+                : `You need a minimum credit of ₹${MIN_CREDIT_TO_PLAY} to play this game.`}
             </p>
             <p className="text-xs text-gray-400 mb-6">
-              Current Balance: ₹{credit.toLocaleString()}
+              Current credit: ₹{credit.toLocaleString()}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button

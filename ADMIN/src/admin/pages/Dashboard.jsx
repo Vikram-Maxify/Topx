@@ -420,7 +420,7 @@ const Dashboard = () => {
     }).format(amount || 0);
   };
 
-  const totalBalance = depositData.totalAmount - withdrawalData.totalAmount;
+  const totalcredit = depositData.totalAmount - withdrawalData.totalAmount;
 
   const toggleFullScreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -541,11 +541,11 @@ const Dashboard = () => {
                 trendValue="3.2% this month"
               />
               <StatCard
-                title="Net Balance"
-                value={formatCurrency(totalBalance)}
+                title="Net credit"
+                value={formatCurrency(totalcredit)}
                 icon={Wallet}
                 gradient="from-purple-500 to-violet-600"
-                subtitle={`Platform balance`}
+                subtitle={`Platform credit`}
                 trend="up"
                 trendValue="5.1% this month"
               />

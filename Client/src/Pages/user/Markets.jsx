@@ -346,14 +346,14 @@ const MatkaMarkets = () => {
   const { activeMarkets, loading } = useSelector((state) => state.market);
   const { user } = useSelector((state) => state.auth);
 
-  const walletBalance = user?.balance;
+  const walletcredit = user?.credit;
 
   // TopX Purple gradient (used for all primary buttons/tabs)
   const purpleGradient =
     "bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)]";
 
   // Country-wise currency SYMBOL only.
-  // Balance value remains exactly as received from backend.
+  // credit value remains exactly as received from backend.
   const getCurrencySymbol = () => {
     const country = String(user?.country || "")
       .trim()
@@ -802,11 +802,11 @@ const MatkaMarkets = () => {
                 </h3>
               </div>
 
-              {/* Wallet Balance */}
+              {/* Wallet credit */}
               <div className="absolute left-[70%] top-[51%] flex h-[10%] w-[30%] items-center justify-center px-1">
                 <span className="text-[10px] font-bold text-gray-800 sm:text-base">
                   {getCurrencySymbol()}
-                  {walletBalance?.toLocaleString("en-IN", {
+                  {walletcredit?.toLocaleString("en-IN", {
                     maximumFractionDigits: 2,
                   }) || "0.00"}
                 </span>

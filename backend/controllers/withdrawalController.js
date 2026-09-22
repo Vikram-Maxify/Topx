@@ -67,12 +67,12 @@ const requestWithdrawal = async (req, res) => {
 
     console.log(user)
 
-    // Check user balance
-    if (user.balance < amount) {
+    // Check user credit
+    if (user.credit < amount) {
       return res.status(400).json({
         success: false,
-        message: 'Insufficient balance',
-        availableBalance: user.balance,
+        message: 'Insufficient credit',
+        availablecredit: user.credit,
       });
     }
 
@@ -212,8 +212,8 @@ const requestWithdrawal = async (req, res) => {
         : 'pending',
     });
 
-    // Deduct amount from user balance
-    user.balance -= amount;
+    // Deduct amount from user credit
+    user.credit -= amount;
     await user.save();
 
     await withdrawal.save();
@@ -226,7 +226,7 @@ const requestWithdrawal = async (req, res) => {
     }
 
     // Populate user details for response
-    await withdrawal.populate('user', 'name email mobile balance');
+    await withdrawal.populate('user', 'name email mobile credit');
 
     return res.status(201).json({
       success: true,
@@ -357,7 +357,7 @@ const cancelWithdrawal = async (req, res) => {
 
     // Refund amount to user
     const user = await User.findById(userId);
-    user.balance += withdrawal.amount;
+    user.credit += withdrawal.amount;
     await user.save();
 
     withdrawal.status = 'cancelled';
@@ -485,7 +485,7 @@ const getAllWithdrawals = async (req, res) => {
 
     const [withdrawals, total] = await Promise.all([
       Withdrawal.find(query)
-        .populate('user', 'name email mobile balance')
+        .populate('user', 'name email mobile credit')
         .populate('processedBy', 'name email')
         .sort({ requestedAt: -1 })
         .skip(skip)
@@ -570,7 +570,7 @@ const updateWithdrawalStatus = async (req, res) => {
       // Refund amount
       const user = await User.findById(withdrawal.user);
       if (user) {
-        user.balance += withdrawal.amount;
+        user.credit += withdrawal.amount;
         await user.save();
       }
     }

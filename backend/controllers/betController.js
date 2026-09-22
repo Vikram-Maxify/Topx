@@ -334,11 +334,11 @@ const betWinGo = async (req, res) => {
       });
     }
 
-    if (Number(user.balance || 0) < totalBetAmount) {
+    if (Number(user.credit || 0) < totalBetAmount) {
       return res.status(400).json({
         message: "The amount is not enough",
         status: false,
-        balance: Number(user.balance || 0),
+        credit: Number(user.credit || 0),
       });
     }
 
@@ -353,8 +353,8 @@ const betWinGo = async (req, res) => {
         message: "Your account is locked",
         status: true,
         change: lockedUser?.level || null,
-        money: Number(lockedUser?.balance || 0),
-        balance: Number(lockedUser?.balance || 0),
+        money: Number(lockedUser?.credit || 0),
+        credit: Number(lockedUser?.credit || 0),
       });
     }
 
@@ -364,23 +364,23 @@ const betWinGo = async (req, res) => {
       Math.floor(Math.random() * 1000000000000000);
     const checkTime = formatDate(Date.now());
 
-    const balanceUpdate = await User.updateOne(
+    const creditUpdate = await User.updateOne(
       {
         _id: user._id,
         veri: 1,
-        balance: { $gte: totalBetAmount },
+        credit: { $gte: totalBetAmount },
       },
       {
         $inc: {
-          balance: -totalBetAmount,
+          credit: -totalBetAmount,
           rebate: totalBetAmount,
         },
       },
     );
 
-    if (balanceUpdate.modifiedCount !== 1) {
+    if (creditUpdate.modifiedCount !== 1) {
       return res.status(400).json({
-        message: "Insufficient balance",
+        message: "Insufficient credit",
         status: false,
       });
     }
@@ -408,7 +408,7 @@ const betWinGo = async (req, res) => {
         { _id: user._id },
         {
           $inc: {
-            balance: totalBetAmount,
+            credit: totalBetAmount,
             rebate: -totalBetAmount,
           },
         },
@@ -438,7 +438,7 @@ const betWinGo = async (req, res) => {
     await Transaction.create({
       mobile: user.mobile,
       detail: "Bet",
-      balance: -totalBetAmount,
+      credit: -totalBetAmount,
       time: checkTime,
     });
 
@@ -453,8 +453,8 @@ const betWinGo = async (req, res) => {
       message: "Bet Succeeded",
       status: true,
       change: updatedUser?.level || null,
-      money: Number(updatedUser?.balance || 0),
-      balance: Number(updatedUser?.balance || 0),
+      money: Number(updatedUser?.credit || 0),
+      credit: Number(updatedUser?.credit || 0),
       betAmount: totalBetAmount,
       fee,
       netBetAmount: total,
@@ -773,13 +773,13 @@ const handlingWinGo1P = async (typeid) => {
         await Transaction.create({
           mobile: mobile,
           detail: "Win",
-          balance: nhan_duoc,
+          credit: nhan_duoc,
           time: checkTime2,
         });
 
         await User.updateOne(
           { mobile: mobile },
-          { $inc: { balance: nhan_duoc } },
+          { $inc: { credit: nhan_duoc } },
         );
       } else {
         await Bet.updateOne({ _id: bet._id }, { status: 2 });
@@ -817,7 +817,7 @@ const tradeCommission = async () => {
       await User.updateOne(
         { mobile: user.mobile },
         {
-          $inc: { balance: user.pending_commission },
+          $inc: { credit: user.pending_commission },
           $set: { pending_commission: 0 },
         },
       );
@@ -825,7 +825,7 @@ const tradeCommission = async () => {
       await Transaction.create({
         mobile: user.mobile,
         detail: "Agent Commission",
-        balance: user.pending_commission,
+        credit: user.pending_commission,
         time: sumdate,
       });
     }
@@ -851,7 +851,7 @@ const tradeCommissionadmin = async (req, res) => {
       await User.updateOne(
         { mobile: user.mobile },
         {
-          $inc: { balance: user.pending_commission },
+          $inc: { credit: user.pending_commission },
           $set: { pending_commission: 0 },
         },
       );
@@ -859,7 +859,7 @@ const tradeCommissionadmin = async (req, res) => {
       await Transaction.create({
         mobile: user.mobile,
         detail: "Agent Commission",
-        balance: user.pending_commission,
+        credit: user.pending_commission,
         time: sumdate,
       });
     }

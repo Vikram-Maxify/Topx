@@ -64,7 +64,7 @@ const MinesAdmin = () => {
       virtualStake: Number(data.virtualStake || data.entryAmount || 0),
       entryAmount: Number(data.entryAmount || data.virtualStake || 0),
       virtualWin: Number(data.virtualWin || 0),
-      balanceAfter: Number(data.balanceAfter || 0),
+      creditAfter: Number(data.creditAfter || 0),
     });
 
     const handleCreated = (data) => {
@@ -302,7 +302,7 @@ const MinesAdmin = () => {
                 <th className="px-5 py-4">Multiplier</th>
                 <th className="px-5 py-4">Game Entry</th>
                 <th className="px-5 py-4">Virtual Win</th>
-                <th className="px-5 py-4">Balance</th>
+                <th className="px-5 py-4">credit</th>
                 <th className="px-5 py-4">Status</th>
                 <th className="px-5 py-4">Created</th>
                 <th className="px-5 py-4">Action</th>
@@ -339,7 +339,7 @@ const MinesAdmin = () => {
                     game.entryAmount ?? game.virtualStake ?? 0
                   );
                   const virtualWin = Number(game.virtualWin || 0);
-                  const balanceAfter = game.balanceAfter;
+                  const creditAfter = game.creditAfter;
 
                   return (
                     <tr
@@ -416,11 +416,11 @@ const MinesAdmin = () => {
                       </td>
 
                       <td className="px-5 py-4">
-                        {balanceAfter !== undefined && balanceAfter !== null ? (
+                        {creditAfter !== undefined && creditAfter !== null ? (
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-100">
                             <Wallet size={13} className="text-blue-500" />
                             <span className="font-bold text-blue-600 text-sm">
-                              {formatMoney(balanceAfter)}
+                              {formatMoney(creditAfter)}
                             </span>
                           </div>
                         ) : (
@@ -631,10 +631,10 @@ const GameDetailsModal = ({ game, onClose, formatMoney, formatDate }) => {
             />
             <InfoCard
               icon={<Wallet size={16} />}
-              label="Balance After"
+              label="credit After"
               value={
-                game.balanceAfter !== undefined && game.balanceAfter !== null
-                  ? formatMoney(game.balanceAfter)
+                game.creditAfter !== undefined && game.creditAfter !== null
+                  ? formatMoney(game.creditAfter)
                   : "-"
               }
               color="from-blue-500 to-cyan-500"

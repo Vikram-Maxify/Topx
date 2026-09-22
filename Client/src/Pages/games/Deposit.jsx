@@ -366,11 +366,11 @@ export default function Deposit() {
       </div>
 
       <div className=" mx-auto md:px-4 pb-8">
-        {/* Account Balance */}
+        {/* Account credit */}
         <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl border border-orange-500/20 p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
-              <div className="text-gray-400 text-sm mb-1">Current Balance</div>
+              <div className="text-gray-400 text-sm mb-1">Current credit</div>
               <div className="text-3xl sm:text-4xl font-bold text-white flex items-center justify-center sm:justify-start">
                 <FaRupeeSign className="mr-2 text-yellow-400" />
                 <span>{userprofile?.credit?.toLocaleString() || "0"}</span>

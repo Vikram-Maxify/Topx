@@ -1,4 +1,4 @@
-const BalancePopup = ({ message, status, onClose }) => {
+const creditPopup = ({ message, status, onClose }) => {
   if (!message) return null;
 
   return (
@@ -25,4 +25,4 @@ const BalancePopup = ({ message, status, onClose }) => {
   );
 };
 
-export default BalancePopup;
+export default creditPopup;

@@ -288,7 +288,7 @@ const withdrawalSlice = createSlice({
         state.requestSuccess = true;
         state.currentWithdrawal = action.payload.data;
         state.message = action.payload.message;
-        // Update user balance in auth slice will happen via auth/loadUser
+        // Update user credit in auth slice will happen via auth/loadUser
       })
       .addCase(requestWithdrawal.rejected, (state, action) => {
         state.requestLoading = false;

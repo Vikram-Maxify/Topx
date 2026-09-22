@@ -370,7 +370,7 @@ const MatkaDashboard = () => {
         </div>
 
         {/* ==================================================
-            BALANCE
+            credit
         ================================================== */}
 
         <div className="group relative">
@@ -400,12 +400,12 @@ const MatkaDashboard = () => {
                 <div className="min-w-0 flex-1">
 
                   <p className="text-gray-500 text-xs sm:text-sm font-medium">
-                    Available Balance
+                    Available credit
                   </p>
 
                   <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent truncate">
                     {formatCurrency(
-                      user?.balance
+                      user?.credit
                         ?.local || 0
                     )}
                   </p>

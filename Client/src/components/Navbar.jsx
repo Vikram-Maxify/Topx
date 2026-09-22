@@ -120,7 +120,7 @@ const Navbar = ({ children }) => {
     return user.name || user.username || "User";
   };
 
-  const walletBalance = user?.balance;
+  const walletcredit = user?.credit;
 
   // Country-wise currency SYMBOL only.
   const getCurrencySymbol = () => {
@@ -460,7 +460,7 @@ const Navbar = ({ children }) => {
 
             {/* ================= RIGHT - WALLET + ACCOUNT ================= */}
             <div className="flex items-center gap-2">
-              {/* Wallet Balance */}
+              {/* Wallet credit */}
               {isAuthenticated && (
                 <Link
                   to="/wallet"
@@ -474,7 +474,7 @@ const Navbar = ({ children }) => {
 
                   <span className="text-xs font-bold text-gray-200 sm:text-sm">
                     {getCurrencySymbol()}
-                    {Number(walletBalance || 0).toFixed(2)}
+                    {Number(walletcredit || 0).toFixed(2)}
                   </span>
 
                   {/* Plus Button */}

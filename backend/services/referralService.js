@@ -141,12 +141,12 @@ const distributeReferralEarning = async (
 
                 if (earning > 0) {
                     // ==========================================
-                    // ADD BALANCE + REFERRAL EARNING
+                    // ADD credit + REFERRAL EARNING
                     // ==========================================
 
                     const updateQuery = {
                         $inc: {
-                            balance: earning,
+                            credit: earning,
                             referralEarning:
                                 earning,
                         },
@@ -178,9 +178,9 @@ const distributeReferralEarning = async (
                         sourceAmount:
                             amount,
                         earning,
-                        balance:
+                        credit:
                             updatedParent
-                                ?.balance ||
+                                ?.credit ||
                             0,
                     });
                 }

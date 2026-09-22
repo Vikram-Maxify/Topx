@@ -64,7 +64,7 @@ const Maintenance = () => {
           We're topping up the tables{dots}
         </h2>
         <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-          WINZOX is under scheduled maintenance. Your balance and bet history
+          WINZOX is under scheduled maintenance. Your credit and bet history
           are safe — we'll be back shortly.
         </p>
 

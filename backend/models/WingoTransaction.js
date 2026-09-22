@@ -11,7 +11,7 @@ const wingotransactionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    balance: {
+    credit: {
       type: Number,
       default: 0,
     },

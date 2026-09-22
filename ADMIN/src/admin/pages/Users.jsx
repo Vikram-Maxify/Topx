@@ -255,8 +255,8 @@ const useUserManagement = () => {
           return new Date(a.createdAt) - new Date(b.createdAt);
         case "name":
           return a.name?.localeCompare(b.name);
-        case "balance":
-          return (b.balance || 0) - (a.balance || 0);
+        case "credit":
+          return (b.credit || 0) - (a.credit || 0);
         default:
           return 0;
       }
@@ -584,7 +584,7 @@ const UserCard = ({
           </div>
           <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 min-w-0">
             <DollarSign size={12} className="sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
-            <span className="font-semibold text-emerald-600 truncate">{formatCurrency(user.country, user.balance)}</span>
+            <span className="font-semibold text-emerald-600 truncate">{formatCurrency(user.country, user.credit)}</span>
           </div>
           {user.city && (
             <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 min-w-0 col-span-1">
@@ -920,7 +920,7 @@ const UserDetailsModal = ({
                 <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">Account Information</span>
               </div>
               <div className="space-y-2 sm:space-y-3">
-                <InfoRow label="Balance" value={formatCurrency(user.country, user.balance)} icon={<DollarSign size={12} className="sm:w-3.5 sm:h-3.5" />} highlight />
+                <InfoRow label="credit" value={formatCurrency(user.country, user.credit)} icon={<DollarSign size={12} className="sm:w-3.5 sm:h-3.5" />} highlight />
                 <InfoRow label="Role" value={getRoleBadge(user.role)} />
                 <InfoRow label="Demo Account" value={user.isDemo ? "Yes" : "No"} />
                 {/* ✅ Plain Password Row - hidden by default with toggle */}
@@ -1243,7 +1243,7 @@ const Users = () => {
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
                 <option value="name">A-Z</option>
-                <option value="balance">Balance</option>
+                <option value="credit">credit</option>
               </select>
             </div>
           </div>

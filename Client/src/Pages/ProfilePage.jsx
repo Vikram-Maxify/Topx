@@ -180,9 +180,9 @@ function DesktopSidebar({
         </div>
 
         <div className="mt-8 rounded-2xl bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] text-white p-5">
-          <p className="text-sm opacity-90">Available Balance</p>
+          <p className="text-sm opacity-90">Available credit</p>
           <h2 className="text-4xl font-bold mt-2">
-            {formatCurrency(user?.balance || 0)}
+            {formatCurrency(user?.credit || 0)}
           </h2>
         </div>
       </div>
@@ -294,9 +294,9 @@ function MobileSidebar({
             </div>
           </div>
           <div className="mt-6 rounded-xl bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75),inset_0_2px_4px_rgba(255,255,255,0.45),inset_0_-5px_8px_rgba(30,0,100,0.45)] p-4 text-white">
-            <p className="text-sm opacity-90">Available Balance</p>
+            <p className="text-sm opacity-90">Available credit</p>
             <h2 className="text-3xl font-bold mt-1">
-              {formatCurrency(user?.balance || 0)}
+              {formatCurrency(user?.credit || 0)}
             </h2>
           </div>
         </div>

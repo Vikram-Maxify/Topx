@@ -187,7 +187,7 @@ const addReferralBettingBonus = async (
       },
       {
         $inc: {
-          balance:
+          credit:
             referralBonus,
 
           referralEarning:
@@ -633,7 +633,7 @@ exports.createPowerballResult =
       await gamePool.save();
 
       // ====================================================
-      // UPDATE WINNER BALANCES
+      // UPDATE WINNER creditS
       // ====================================================
 
       const updatedUsers = [];
@@ -656,9 +656,9 @@ exports.createPowerballResult =
           // ADD WINNING PRIZE
           // ================================================
 
-          const oldBalance =
+          const oldcredit =
             Number(
-              user.balance
+              user.credit
             ) || 0;
 
           const prizeAmount =
@@ -666,8 +666,8 @@ exports.createPowerballResult =
               update.amount
             ) || 0;
 
-          user.balance =
-            oldBalance +
+          user.credit =
+            oldcredit +
             prizeAmount;
 
           await user.save();
@@ -779,10 +779,10 @@ exports.createPowerballResult =
             email:
               user.email,
 
-            oldBalance,
+            oldcredit,
 
-            newBalance:
-              user.balance,
+            newcredit:
+              user.credit,
 
             amountAdded:
               prizeAmount,
@@ -953,7 +953,7 @@ exports.getPowerballResultById =
         )
           .populate(
             "players.user",
-            "name email balance username"
+            "name email credit username"
           );
 
       const winnerDetails =
@@ -977,8 +977,8 @@ exports.getPowerballResultById =
               username:
                 p.user?.username,
 
-              balance:
-                p.user?.balance,
+              credit:
+                p.user?.credit,
 
               prize:
                 p.result?.prize,
@@ -1134,9 +1134,9 @@ exports.deletePowerballResult =
             // REVERSE WINNING PRIZE
             // ==============================================
 
-            const oldBalance =
+            const oldcredit =
               Number(
-                user.balance
+                user.credit
               ) || 0;
 
             const prizeAmount =
@@ -1144,10 +1144,10 @@ exports.deletePowerballResult =
                 player.result.prize
               ) || 0;
 
-            user.balance =
+            user.credit =
               Math.max(
                 0,
-                oldBalance -
+                oldcredit -
                   prizeAmount
               );
 
@@ -1260,7 +1260,7 @@ exports.deletePowerballResult =
                   },
                   {
                     $inc: {
-                      balance:
+                      credit:
                         -referralBonus,
 
                       referralEarning:
@@ -1286,10 +1286,10 @@ exports.deletePowerballResult =
               email:
                 user.email,
 
-              oldBalance,
+              oldcredit,
 
-              newBalance:
-                user.balance,
+              newcredit:
+                user.credit,
 
               amountDeducted:
                 prizeAmount,
@@ -1313,7 +1313,7 @@ exports.deletePowerballResult =
             });
           } catch (error) {
             console.error(
-              `Error reversing balance for user ${player.user}:`,
+              `Error reversing credit for user ${player.user}:`,
               error
             );
           }
@@ -1365,7 +1365,7 @@ exports.deletePowerballResult =
           success: true,
 
           message:
-            "Result deleted successfully. Game pool reset and winner/referral balances reversed.",
+            "Result deleted successfully. Game pool reset and winner/referral credits reversed.",
 
           reversedUsers,
 
@@ -1453,7 +1453,7 @@ exports.getResultsByGamePool =
           )
           .populate(
             "players.user",
-            "name email username balance"
+            "name email username credit"
           );
 
       const winners =
@@ -1474,8 +1474,8 @@ exports.getResultsByGamePool =
               email:
                 p.user?.email,
 
-              balance:
-                p.user?.balance,
+              credit:
+                p.user?.credit,
 
               prize:
                 p.result?.prize,
@@ -1815,7 +1815,7 @@ exports.getGamePoolDetails =
           )
           .populate(
             "players.user",
-            "name email username balance"
+            "name email username credit"
           );
 
       if (!gamePool) {
@@ -2076,10 +2076,10 @@ exports.getUserWinningHistory =
   };
 
 // ==========================================================
-// GET USER BALANCE
+// GET USER credit
 // ==========================================================
 
-exports.getUserBalance =
+exports.getUsercredit =
   async (
     req,
     res
@@ -2093,7 +2093,7 @@ exports.getUserBalance =
         await User.findById(
           userId
         ).select(
-          "balance name email username"
+          "credit name email username"
         );
 
       if (!user) {
@@ -2120,8 +2120,8 @@ exports.getUserBalance =
           username:
             user.username,
 
-          balance:
-            user.balance ||
+          credit:
+            user.credit ||
             0,
         },
       });
