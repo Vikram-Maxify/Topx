@@ -138,9 +138,9 @@ const GamePlayModal = ({
     }
   };
 
-  useEffect(()=>{
-    dispatch(checkGamecredit())
-  },[dispatch])
+  useEffect(() => {
+    dispatch(checkGamecredit());
+  }, [dispatch]);
 
   const reloadGame = () => {
     if (!resolvedGameUrl) return;
