@@ -9,6 +9,7 @@ import Footer from "../Pages/Footer";
 import AviatorSection from "./games/AviatorSection";
 import CasinoSection from "./games/CasinoSection";
 // import ChickenGamesSection from "./games/ChickenGamesSection";
+import AviatorGames from "./games/AviatorGames";
 import BingoSection from "./games/BingoSection";
 import CrashGames from "./games/CrashGames";
 import DesiKhel from "./games/DesiKhel";
@@ -23,6 +24,10 @@ const Homme = () => {
       <Herosection />
       {/* <StatsSection /> */}
       <PopularGamesCards />
+      <CasinoSlotGames />
+      <div className="pl-5">
+        <AviatorGames />
+      </div>
       <RecommendedGames />
       <AviatorSection />
       <BingoSection />

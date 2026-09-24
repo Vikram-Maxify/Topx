@@ -1,5 +1,5 @@
 const axios = require("axios");
-const AuthModel = require("../../models/usermodel");
+const AuthModel = require("../../models/authmodel");
 
 /**
  * 🔴 LIVE ENVIRONMENT ONLY
@@ -10,7 +10,6 @@ const launchUrl = "https://www.api-doc.space/api/launch-game";
 // const launchUrl = "http://localhost:8000/api/launch-game";
 const key = "5HXuVkACXHtu04Y7SgBL";
 // const key = "3aqSD5NzX8sKj2MG2CkNS6mqerzJywUW";
-
 
 /* =========================
    HELPERS
@@ -43,7 +42,7 @@ const axiosRetry = async (fn, retries = 2, baseDelay = 400) => {
 
       const delay = baseDelay * (i + 1);
       console.warn(
-        `⚠️ [axiosRetry] conflict detected, retry ${i + 1}/${retries} in ${delay}ms → ${msg}`
+        `⚠️ [axiosRetry] conflict detected, retry ${i + 1}/${retries} in ${delay}ms → ${msg}`,
       );
       await new Promise((r) => setTimeout(r, delay));
     }
@@ -60,13 +59,13 @@ const ensureZapPlayer = async (playerid) => {
     const res = await axios.post(
       `${apiUrl}/Userbalance`,
       { playerid, key },
-      { headers: zapHeaders }
+      { headers: zapHeaders },
     );
     return res.data;
   } catch (err) {
     console.warn(
       "⚠️ [ensureZapPlayer] failed:",
-      err.response?.data || err.message
+      err.response?.data || err.message,
     );
     return null;
   }
@@ -79,13 +78,15 @@ const checkBalance = async (req, res) => {
   try {
     const playerid = String(req.body.playerid || "").trim();
     if (!playerid) {
-      return res.status(400).json({ status: false, message: "playerid required" });
+      return res
+        .status(400)
+        .json({ status: false, message: "playerid required" });
     }
 
     const response = await axios.post(
       `${apiUrl}/Userbalance`,
       { playerid, key },
-      { headers: zapHeaders }
+      { headers: zapHeaders },
     );
 
     console.log("CHECK BALANCE RESPONSE 👉", response.data);
@@ -121,47 +122,25 @@ const transferBalance = async (req, res) => {
     const playerid = String(user.mobile).trim();
 
     /* 2️⃣ Get balance from Zapcore */
-<<<<<<< Updated upstream
     const balRes = await axios.post(
       `${apiUrl}/Userbalance?playerid=${playerid}&key=${key}`,
       { playerid, key },
-      { headers: zapHeaders }
+      { headers: zapHeaders },
     );
-=======
-    const balRes = await axios.post(`${apiUrl}/Userbalance?playerid=${playerid}&key=${key}`,
-      {
-      playerid,
-      key,
-    },{
-      headers: {
-      "Content-Type": "application/json",
-      "x-domain": "matchadda.vip"
-     }
-    });
->>>>>>> Stashed changes
 
     const zapBalance = Number(balRes.data?.Balance || 0);
     console.log("ZAPCORE BALANCE 👉", zapBalance);
 
     /* 3️⃣ IF–ELSE CONDITION */
     if (!isNaN(zapBalance) && zapBalance > 0) {
-<<<<<<< Updated upstream
       /* 4️⃣ Add balance to local wallet (atomic $inc only — no $set on same field) */
       const updatedUser = await AuthModel.findByIdAndUpdate(
         user._id,
         { $inc: { credit: zapBalance + (user.exposure || 0) } },
-=======
-
-      /* 4️⃣ Add balance to local wallet */
-      const updatedUser = await AuthModel.findByIdAndUpdate(
-        user._id,
-        { $inc: { credit: zapBalance + user.exposure } },
->>>>>>> Stashed changes
-        { new: true }
+        { new: true },
       );
 
       /* 5️⃣ Reset Zapcore balance */
-<<<<<<< Updated upstream
       let resetRes;
       try {
         resetRes = await axios.post(
@@ -171,54 +150,18 @@ const transferBalance = async (req, res) => {
             key,
             opening_balance: -zapBalance,
           },
-          { headers: zapHeaders }
+          { headers: zapHeaders },
         );
       } catch (err) {
         resetRes = { data: { status: false } };
-        console.error(
-          "SETBALANCE ERROR 👉",
-          err.response?.data || err.message
-        );
+        console.error("SETBALANCE ERROR 👉", err.response?.data || err.message);
       }
 
       /* 6️⃣ Rollback if reset fails — atomic $inc (never $set+$inc together) */
       if (resetRes.data?.status !== true) {
         await AuthModel.updateOne(
           { _id: user._id },
-          { $inc: { credit: -(zapBalance + (user.exposure || 0)) } }
-=======
-      const resetRes = await axios.post(`${apiUrl}/Setbalance?playerid=${playerid}&key=${key}`, {
-        playerid,
-        key,
-        opening_balance: -zapBalance,
-      },
-    {
-      headers: {
-      "Content-Type": "application/json",
-      "x-domain": "matchadda.vip"
-      }
-     });
-
-      // console.log("ZAPCORE BALANCE RESET RESPONSE 👉", resetRes.data);
-
-      /* 6️⃣ Rollback if reset fails */
-      if (resetRes.data?.status !== true) {
-        await AuthModel.updateOne(
-          { _id: user._id },
-          [
-            {
-              $set: {
-                credit: {
-                  $cond: [
-                    { $gte: ["$credit", zapBalance] },
-                    { $subtract: ["$credit", zapBalance] },
-                    0,
-                  ],
-                },
-              },
-            },
-          ]
->>>>>>> Stashed changes
+          { $inc: { credit: -(zapBalance + (user.exposure || 0)) } },
         );
 
         return res.status(500).json({
@@ -234,7 +177,6 @@ const transferBalance = async (req, res) => {
         transferredAmount: zapBalance,
         currentBalance: updatedUser.credit,
       });
-
     } else {
       /* ❌ NO BALANCE */
       return res.status(200).json({
@@ -242,7 +184,6 @@ const transferBalance = async (req, res) => {
         message: "No balance to transfer",
       });
     }
-
   } catch (error) {
     return res.status(500).json({
       status: false,
@@ -251,8 +192,6 @@ const transferBalance = async (req, res) => {
     });
   }
 };
-
-
 
 /* =========================
    LAUNCH GAME (LOCAL → ZAP)
@@ -263,7 +202,9 @@ const launchGame = async (req, res) => {
   try {
     const { gameId } = req.body;
     if (!gameId) {
-      return res.status(400).json({ status: false, message: "gameId required" });
+      return res
+        .status(400)
+        .json({ status: false, message: "gameId required" });
     }
 
     const user = await AuthModel.findById(req.user._id);
@@ -271,44 +212,12 @@ const launchGame = async (req, res) => {
       return res.status(400).json({ status: false, message: "Invalid user" });
     }
 
-<<<<<<< Updated upstream
     /* 🛡️ ATOMIC LOCK — only one launch per user at a time */
     const locked = await AuthModel.findOneAndUpdate(
       { _id: user._id, launching: { $ne: true } },
       { $set: { launching: true } },
-      { new: true }
+      { new: true },
     );
-=======
-    const playerid = String(user.mobile).trim();
-
-    // console.log("USER BALANCE BEFORE LAUNCH 👉",playerid);
-
-    // auto-create safety
-    // const userbalnace = await axios.post(`${apiUrl}/Userbalance?key=${key}`, {
-    //   playerid,
-    //   key,
-    // },{
-    //   headers: {
-    //   "Content-Type": "application/json",
-    //   "x-domain": "matchadda.vip"
-    //  }
-    // });
-
-    // console.log("USER BALANCE RESPONSE 👉", userbalnace);
-
-
-    const response = await axios.post(launchUrl, {
-      playerid,
-      uid: gameId,
-      opening_balance: user.balance - user.exposure,
-      key,
-    },{
-    headers: {
-    "Content-Type": "application/json",
-    "x-domain": "matchadda.vip"
-   }
-    });
->>>>>>> Stashed changes
 
     if (!locked) {
       return res.status(429).json({
@@ -333,19 +242,12 @@ const launchGame = async (req, res) => {
           opening_balance: (locked.credit || 0) - (locked.exposure || 0),
           key,
         },
-        { headers: zapHeaders }
-      )
+        { headers: zapHeaders },
+      ),
     );
 
     if (response.data?.status === true) {
-      await AuthModel.updateOne(
-<<<<<<< Updated upstream
-        { _id: locked._id },
-=======
-        { _id: user._id },
->>>>>>> Stashed changes
-        { $set: { credit: 0 } }
-      );
+      await AuthModel.updateOne({ _id: locked._id }, { $set: { credit: 0 } });
 
       return res.json({
         status: true,
@@ -378,7 +280,7 @@ const launchGame = async (req, res) => {
       try {
         await AuthModel.updateOne(
           { _id: lockedUserId },
-          { $set: { launching: false } }
+          { $set: { launching: false } },
         );
       } catch (e) {
         console.error("LOCK RELEASE ERROR 👉", e.message);
@@ -394,7 +296,7 @@ const getgamedetails = async (req, res) => {
   try {
     const { page = 1, size = 2000 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?page=${page}&size=${size}`
+      `${apiUrl}/getgamedetails?page=${page}&size=${size}`,
     );
     return res.json(response.data);
   } catch (err) {
@@ -402,11 +304,10 @@ const getgamedetails = async (req, res) => {
   }
 };
 
-
 const gameProvider = async (req, res) => {
   try {
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?provider_list=1`
+      `${apiUrl}/getgamedetails?provider_list=1`,
     );
     return res.json(response.data);
   } catch (err) {
@@ -417,7 +318,7 @@ const gameProvider = async (req, res) => {
 const gameType = async (req, res) => {
   try {
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?gametype_list=1`
+      `${apiUrl}/getgamedetails?gametype_list=1`,
     );
     return res.json(response.data);
   } catch (err) {
@@ -429,7 +330,7 @@ const gameListByProvider = async (req, res) => {
   try {
     const { provider, page = 1, size = 20 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?provider=${provider}&page=${page}&size=${size}`
+      `${apiUrl}/getgamedetails?provider=${provider}&page=${page}&size=${size}`,
     );
     return res.json(response.data);
   } catch (err) {
@@ -441,7 +342,7 @@ const gameListByGameType = async (req, res) => {
   try {
     const { game_type, page = 1, size = 20 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?game_type=${game_type}&page=${page}&size=${size}`
+      `${apiUrl}/getgamedetails?game_type=${game_type}&page=${page}&size=${size}`,
     );
     return res.json(response.data);
   } catch (err) {
@@ -453,7 +354,7 @@ const gameListByGameTypeAndProvider = async (req, res) => {
   try {
     const { provider, game_type, page = 1, size = 20 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?provider=${provider}&game_type=${game_type}&page=${page}&size=${size}`
+      `${apiUrl}/getgamedetails?provider=${provider}&game_type=${game_type}&page=${page}&size=${size}`,
     );
     return res.json(response.data);
   } catch (err) {
@@ -468,27 +369,19 @@ const gameHistory = async (req, res) => {
   try {
     const playerid = String(req.user.mobile).trim();
 
-     const { page = 1, size = 2000,from_date,to_date } = req.query;
+    const { page = 1, size = 2000, from_date, to_date } = req.query;
     const response = await axios.post(
-      `${apiUrl}/history?page=${page}&size=${size}`,{
+      `${apiUrl}/history?page=${page}&size=${size}`,
+      {
         key,
         playerid,
         page,
         limit: size,
         from_date,
         to_date,
-<<<<<<< Updated upstream
       },
-      { headers: zapHeaders }
+      { headers: zapHeaders },
     );
-=======
-      },{
-        headers: {
-          "Content-Type": "application/json",
-          "x-domain": "matchadda.vip"
-        }
-      });
->>>>>>> Stashed changes
 
     return res.json({
       data: response.data,
@@ -515,4 +408,4 @@ module.exports = {
   gameListByGameType,
   gameListByGameTypeAndProvider,
   gameHistory,
-}
+};
