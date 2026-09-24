@@ -137,14 +137,7 @@ const transferBalance = async (req, res) => {
       const updatedUser = await AuthModel.findByIdAndUpdate(
         user._id,
         { $inc: { credit: zapBalance + (user.exposure || 0) } },
-=======
-
-      /* 4️⃣ Add balance to local wallet */
-      const updatedUser = await AuthModel.findByIdAndUpdate(
-        user._id,
-        { $inc: { credit: zapBalance + user.exposure } },
->>>>>>> Stashed changes
-        { new: true }
+        { new: true },
       );
 
       /* 5️⃣ Reset Zapcore balance */
@@ -168,40 +161,7 @@ const transferBalance = async (req, res) => {
       if (resetRes.data?.status !== true) {
         await AuthModel.updateOne(
           { _id: user._id },
-          { $inc: { credit: -(zapBalance + (user.exposure || 0)) } }
-=======
-      const resetRes = await axios.post(`${apiUrl}/Setbalance?playerid=${playerid}&key=${key}`, {
-        playerid,
-        key,
-        opening_balance: -zapBalance,
-      },
-    {
-      headers: {
-      "Content-Type": "application/json",
-      "x-domain": "matchadda.vip"
-      }
-     });
-
-      // console.log("ZAPCORE BALANCE RESET RESPONSE 👉", resetRes.data);
-
-      /* 6️⃣ Rollback if reset fails */
-      if (resetRes.data?.status !== true) {
-        await AuthModel.updateOne(
-          { _id: user._id },
-          [
-            {
-              $set: {
-                credit: {
-                  $cond: [
-                    { $gte: ["$credit", zapBalance] },
-                    { $subtract: ["$credit", zapBalance] },
-                    0,
-                  ],
-                },
-              },
-            },
-          ]
->>>>>>> Stashed changes
+          { $inc: { credit: -(zapBalance + (user.exposure || 0)) } },
         );
 
         return res.status(500).json({
@@ -256,39 +216,8 @@ const launchGame = async (req, res) => {
     const locked = await AuthModel.findOneAndUpdate(
       { _id: user._id, launching: { $ne: true } },
       { $set: { launching: true } },
-      { new: true }
+      { new: true },
     );
-=======
-    const playerid = String(user.mobile).trim();
-
-    // console.log("USER BALANCE BEFORE LAUNCH 👉",playerid);
-
-    // auto-create safety
-    // const userbalnace = await axios.post(`${apiUrl}/Userbalance?key=${key}`, {
-    //   playerid,
-    //   key,
-    // },{
-    //   headers: {
-    //   "Content-Type": "application/json",
-    //   "x-domain": "matchadda.vip"
-    //  }
-    // });
-
-    // console.log("USER BALANCE RESPONSE 👉", userbalnace);
-
-
-    const response = await axios.post(launchUrl, {
-      playerid,
-      uid: gameId,
-      opening_balance: user.balance - user.exposure,
-      key,
-    },{
-    headers: {
-    "Content-Type": "application/json",
-    "x-domain": "matchadda.vip"
-   }
-    });
->>>>>>> Stashed changes
 
     if (!locked) {
       return res.status(429).json({
@@ -318,14 +247,7 @@ const launchGame = async (req, res) => {
     );
 
     if (response.data?.status === true) {
-      await AuthModel.updateOne(
-<<<<<<< Updated upstream
-        { _id: locked._id },
-=======
-        { _id: user._id },
->>>>>>> Stashed changes
-        { $set: { credit: 0 } }
-      );
+      await AuthModel.updateOne({ _id: locked._id }, { $set: { credit: 0 } });
 
       return res.json({
         status: true,
