@@ -1,1128 +1,1123 @@
-const Deposit = require("../models/Deposit");
-const DepositSettings = require("../models/DepositSettings");
-const User = require("../models/authmodel");
+const axios = require("axios");
+const crypto = require("crypto");
 const mongoose = require("mongoose");
-const ReferralCommission = require("../models/ReferralCommission");
-const ReferralLevel = require("../models/ReferralLevel");
-const uploadToImgBB = require("../utils/uploadToImgBB");
-// CurrencyRate ab use nahi ho raha (conversion hata diya)
-// const CurrencyRate = require("../models/CurrencyRate");
 
-// ==========================================
-// Create Deposit Request
-// ==========================================
-exports.createDeposit = async (req, res) => {
-    try {
-        // ==========================================
-        // 1. USER ID
-        // ==========================================
-        const userId = req.user.id;
+const Deposit = require("../models/Deposit.js");
+const User = require("../models/authmodel.js");
+const Transaction = require("../models/Transaction"); // renamed from TransactionHistory
 
-        // ==========================================
-        // 2. REQUEST BODY
-        // ==========================================
-        const {
-            amount,
-            transactionId,
-            methodType,
-            methodTitle,
-        } = req.body;
+// =====================================================
+// STATUS CONSTANTS (string based, matching new schema)
+// =====================================================
+const STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+};
 
-        // ==========================================
-        // 3. REQUIRED FIELDS
-        // ==========================================
-        if (
-            amount === undefined ||
-            amount === null ||
-            !transactionId ||
-            !methodType ||
-            !methodTitle
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required",
-            });
-        }
+// =====================================================
+// QWACKPAY CONFIG
+// =====================================================
+const QWACKPAY_BASE_URL =
+  process.env.QWACKPAY_BASE_URL || "https://qwackpay.com/api/v1";
 
-        // ==========================================
-        // 4. AMOUNT VALIDATION
-        // ==========================================
-        const depositAmount = Number(amount);
+const QWACKPAY_MERCHANT_ID =
+  process.env.QWACKPAY_MERCHANT_ID || "636055076";
 
-        if (!Number.isFinite(depositAmount) || depositAmount <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid amount",
-            });
-        }
+const QWACKPAY_API_KEY =
+  process.env.QWACKPAY_API_KEY || "DASHBOARD_SE_COPY_KARO";
 
-        // ==========================================
-        // 5. TRANSACTION ID CLEAN
-        // ==========================================
-        const cleanTransactionId = String(transactionId).trim();
+// =====================================================
+// HELPER: QWACKPAY SIGN
+// =====================================================
+const generateQwackPaySign = (params, apiKey) => {
+  const clean = { ...params };
+  delete clean.sign;
 
-        if (!cleanTransactionId) {
-            return res.status(400).json({
-                success: false,
-                message: "Transaction ID is required",
-            });
-        }
+  const filtered = {};
+  Object.keys(clean).forEach((key) => {
+    const val = clean[key];
+    if (val !== null && val !== undefined && val !== "") {
+      filtered[key] = val;
+    }
+  });
 
-        // ==========================================
-        // 6. GET USER
-        // ==========================================
-        const user = await User.findById(userId);
+  const sortedKeys = Object.keys(filtered).sort();
+  const queryString = sortedKeys
+    .map((key) => `${key}=${filtered[key]}`)
+    .join("&");
 
-        console.log("USER:", user);
+  const signString = `${queryString}&key=${apiKey}`;
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
+  return crypto
+    .createHash("md5")
+    .update(signString)
+    .digest("hex")
+    .toUpperCase();
+};
 
-        // ==========================================
-        // 7. CHECK USER COUNTRY
-        // ==========================================
-        if (!user.country) {
-            return res.status(400).json({
-                success: false,
-                message: "Country not found",
-            });
-        }
+const getQwackPayHeaders = () => ({
+  "Content-Type": "application/json",
+  "X-API-Key": QWACKPAY_API_KEY,
+});
 
-        // ==========================================
-        // 8. COUNTRY NAME -> ISO CODE
-        // ==========================================
-        const countryMap = {
-            // India
-            india: "IN",
+const getFrontendUrl = () => {
+  return (
+    process.env.FRONTEND_URL ||
+    process.env.CLIENT_URL ||
+    "http://localhost:5173"
+  ).replace(/\/$/, "");
+};
 
-            // Australia
-            australia: "AU",
-            austraila: "AU",
+const getQwackPayReturnUrl = () => {
+  return (
+    process.env.QWACKPAY_RETURN_URL ||
+    `${getFrontendUrl()}/payment-success`
+  ).replace(/\/$/, "");
+};
 
-            // Nepal
-            nepal: "NP",
+// =====================================================
+// HELPER: Resolve authenticated user
+// =====================================================
+const resolveAuthUser = async (req) => {
+  const id =
+    req.user?.id || req.user?._id || req.user?.userId;
 
-            // Pakistan
-            pakistan: "PK",
+  if (!id) return null;
 
-            // Bangladesh
-            bangladesh: "BD",
+  // id could be a Mongo ObjectId or numeric userId
+  let user = null;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    user = await User.findById(id);
+  }
+  if (!user && !isNaN(Number(id))) {
+    user = await User.findOne({ userId: Number(id) });
+  }
+  return user;
+};
 
-            // UAE
-            dubai: "AE",
-            uae: "AE",
-            "united arab emirates": "AE",
-        };
+// =====================================================
+// CREATE DEPOSIT
+// =====================================================
+const createDeposit = async (req, res) => {
+  try {
+    const {
+      paymentMethod,
+      channel,
+      amount,
+      utr,
+      country,
+      currency,
+      methodType,
+      methodTitle,
+      transactionId,
+    } = req.body;
 
-        const userCountry = String(user.country)
-            .trim()
-            .toLowerCase();
+    // ---------- AMOUNT VALIDATION ----------
+    if (amount === undefined || amount === null || amount === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Amount is required",
+      });
+    }
 
-        // Country name hai to code mein convert karo.
-        // Agar already IN / BD / AU etc. hai to direct use hoga.
-        const countryCode =
-            countryMap[userCountry] ||
-            userCountry.toUpperCase();
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid amount",
+      });
+    }
 
-        console.log("USER COUNTRY:", user.country);
-        console.log("NORMALIZED COUNTRY:", userCountry);
-        console.log("COUNTRY CODE:", countryCode);
+    // ---------- USER ----------
+    const user = await resolveAuthUser(req);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User authentication required",
+      });
+    }
 
-        // ==========================================
-        // 9. GET DEPOSIT SETTINGS
-        // ==========================================
-        const settings = await DepositSettings.findOne({
-            country: countryCode,
-        });
+    // ---------- NORMALIZE CHANNEL ----------
+    const normalizedChannel = String(channel || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_-]/g, "");
 
-        console.log("DEPOSIT SETTINGS:", settings);
+    // =====================================================
+    // QWACKPAY FLOW
+    // =====================================================
+    if (normalizedChannel === "qwackpay") {
+      const finalMethodType = "INR";
+      const finalMethodTitle = "QwackPay";
+      const money = numericAmount;
+      const orderId = `DEP${Date.now()}`;
 
-        if (!settings) {
-            return res.status(404).json({
-                success: false,
-                message: "Deposit settings not found",
-                country: user.country,
-                countryCode: countryCode,
-            });
-        }
+      // ---------- CREATE PENDING DEPOSIT ----------
+      const deposit = await Deposit.create({
+        user: user._id,
+        country: (country || "IN").toUpperCase(),
+        currency: currency || "INR",
+        methodType: finalMethodType,
+        methodTitle: finalMethodTitle,
+        amount: money,
+        transactionId: orderId,
+        status: STATUS.PENDING,
+        remark: "QwackPay recharge initiated",
+      });
 
-        // ==========================================
-        // 10. CHECK METHODS ARRAY
-        // ==========================================
-        if (!Array.isArray(settings.methods)) {
-            return res.status(404).json({
-                success: false,
-                message: "No payment methods configured",
-            });
-        }
+      // ---------- CUSTOMER EMAIL ----------
+      const customerEmail =
+        String(user.email || "").trim() ||
+        `customer${String(user._id)}@setthelife.com`;
 
-        // ==========================================
-        // 11. FIND PAYMENT METHOD
-        // ==========================================
-        const cleanMethodType = String(methodType).trim();
-        const cleanMethodTitle = String(methodTitle).trim();
+      // ---------- QWACKPAY ORDER ----------
+      const orderPayload = {
+        merchant_id: QWACKPAY_MERCHANT_ID,
+        amount: Math.round(numericAmount),
+        order_id: orderId,
+        customer_phone: String(user.mobile || "").trim(),
+        customer_email: customerEmail,
+        return_url: getQwackPayReturnUrl(),
+      };
 
-        const method = settings.methods.find(
-            (m) =>
-                m &&
-                String(m.type).trim().toUpperCase() ===
-                    cleanMethodType.toUpperCase() &&
-                String(m.title).trim().toLowerCase() ===
-                    cleanMethodTitle.toLowerCase() &&
-                m.status === true
+      orderPayload.sign = generateQwackPaySign(
+        orderPayload,
+        QWACKPAY_API_KEY
+      );
+
+      try {
+        const { data: gatewayResponse } = await axios.post(
+          `${QWACKPAY_BASE_URL}/order/create`,
+          orderPayload,
+          { headers: getQwackPayHeaders(), timeout: 30000 }
         );
 
-        console.log("SELECTED METHOD:", method);
+        console.log("QWACKPAY CREATE RESPONSE:", gatewayResponse);
 
-        if (!method) {
-            return res.status(404).json({
-                success: false,
-                message: "Payment method not found",
-            });
-        }
+        const paymentUrl =
+          gatewayResponse?.data?.payment_url ||
+          gatewayResponse?.data?.paymentUrl ||
+          gatewayResponse?.payment_url ||
+          gatewayResponse?.paymentUrl ||
+          "";
 
-        // ==========================================
-        // 12. MINIMUM DEPOSIT
-        // ==========================================
-        const minimumDeposit = Number(
-            method.minimumDeposit || 0
-        );
+        const returnedOrderId =
+          gatewayResponse?.data?.merchant_order_id ||
+          gatewayResponse?.data?.order_id ||
+          gatewayResponse?.merchant_order_id ||
+          gatewayResponse?.order_id ||
+          orderId;
 
-        if (
-            minimumDeposit > 0 &&
-            depositAmount < minimumDeposit
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: `Minimum deposit is ${minimumDeposit}`,
-            });
-        }
+        const qwackOrderId =
+          gatewayResponse?.data?.qwack_order_id ||
+          gatewayResponse?.qwack_order_id ||
+          "";
 
-        // ==========================================
-        // 13. MAXIMUM DEPOSIT
-        // ==========================================
-        const maximumDeposit = Number(
-            method.maximumDeposit || 0
-        );
+        if (Number(gatewayResponse?.code) === 200 && paymentUrl) {
+          deposit.transactionId = String(qwackOrderId || returnedOrderId);
+          deposit.remark = `QwackPay order ${returnedOrderId}`;
+          // status remains PENDING
+          await deposit.save();
 
-        if (
-            maximumDeposit > 0 &&
-            depositAmount > maximumDeposit
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: `Maximum deposit is ${maximumDeposit}`,
-            });
-        }
-
-        // ==========================================
-        // 14. CHECK DUPLICATE TRANSACTION ID
-        // ==========================================
-        const already = await Deposit.findOne({
-            transactionId: cleanTransactionId,
-        });
-
-        if (already) {
-            return res.status(400).json({
-                success: false,
-                message: "Transaction ID already used",
-            });
-        }
-
-        // ==========================================
-        // 15. UPLOAD SCREENSHOT
-        // ==========================================
-        let screenshot = "";
-
-        if (req.file) {
-            screenshot = await uploadToImgBB(req.file);
-        }
-
-        // ==========================================
-        // 16. CREATE DEPOSIT
-        // ==========================================
-        const deposit = await Deposit.create({
+          // ---------- TRANSACTION HISTORY ----------
+          await Transaction.create({
             user: user._id,
-
-            // Always save normalized ISO country code
-            country: settings.country,
-
-            currency: settings.currency,
-
-            methodType: method.type,
-            methodTitle: method.title,
-
-            amount: depositAmount,
-
-            transactionId: cleanTransactionId,
-
-            screenshot,
-
+            amount: money,
+            currency: currency || "INR",
+            usdAmount: money,
+            type: "CREDIT",
+            category: "DEPOSIT",
+            description: "Pending QwackPay recharge",
+            reference: deposit._id,
+            referenceModel: "Deposit",
             status: "pending",
-        });
+          });
 
-        // ==========================================
-        // 17. SUCCESS RESPONSE
-        // ==========================================
-        return res.status(201).json({
+          return res.status(201).json({
             success: true,
-            message: "Deposit request submitted successfully",
-
+            message: "QwackPay recharge order created successfully.",
+            paymentUrl: String(paymentUrl),
+            successUrl: getQwackPayReturnUrl(),
+            orderId: returnedOrderId,
+            depositId: deposit._id,
+            amount: money,
+            status: "pending",
             deposit,
-        });
-
-    } catch (error) {
-        console.error(
-            "CREATE DEPOSIT ERROR:",
-            error
-        );
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
-
-// ==========================================
-// Get Logged In User Deposit History
-// ==========================================
-exports.getUserDeposits = async (req, res) => {
-    try {
-        const userId = req.user.id;
-
-        const page =
-            Number(req.query.page) || 1;
-
-        const limit =
-            Number(req.query.limit) || 10;
-
-        const skip =
-            (page - 1) * limit;
-
-        const filter = {
-            user: userId,
-        };
-
-        if (req.query.status) {
-            filter.status =
-                req.query.status;
+            gatewayResponse,
+          });
         }
 
-        const total =
-            await Deposit.countDocuments(
-                filter
-            );
-
-        const deposits =
-            await Deposit.find(filter)
-                .sort({
-                    createdAt: -1,
-                })
-                .skip(skip)
-                .limit(limit);
-
-        return res.status(200).json({
-            success: true,
-            currentPage: page,
-            totalPages:
-                Math.ceil(
-                    total / limit
-                ),
-            totalRecords: total,
-            deposits,
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
-
-// ==========================================
-// Get Single Deposit
-// ==========================================
-exports.getDepositDetails = async (
-    req,
-    res
-) => {
-    try {
-        const { id } = req.params;
-
-        const deposit =
-            await Deposit.findOne({
-                _id: id,
-                user: req.user.id,
-            });
-
-        if (!deposit) {
-            return res.status(404).json({
-                success: false,
-                message: "Deposit not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            deposit,
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
-
-// ==========================================
-// Admin - Get All Deposits
-// ==========================================
-exports.getAllDeposits = async (
-    req,
-    res
-) => {
-    try {
-        const page =
-            Number(req.query.page) || 1;
-
-        const limit =
-            Number(req.query.limit) || 20;
-
-        const skip =
-            (page - 1) * limit;
-
-        const filter = {};
-
-        if (req.query.status) {
-            filter.status =
-                req.query.status;
-        }
-
-        if (req.query.country) {
-            filter.country =
-                req.query.country.toUpperCase();
-        }
-
-        if (req.query.methodType) {
-            filter.methodType =
-                req.query.methodType;
-        }
-
-        if (req.query.search) {
-            const users =
-                await User.find({
-                    $or: [
-                        {
-                            name: {
-                                $regex:
-                                    req.query.search,
-                                $options: "i",
-                            },
-                        },
-                        {
-                            email: {
-                                $regex:
-                                    req.query.search,
-                                $options: "i",
-                            },
-                        },
-                        {
-                            mobile: {
-                                $regex:
-                                    req.query.search,
-                                $options: "i",
-                            },
-                        },
-                    ],
-                }).select("_id");
-
-            filter.user = {
-                $in: users.map(
-                    (u) => u._id
-                ),
-            };
-        }
-
-        const total =
-            await Deposit.countDocuments(
-                filter
-            );
-
-        const deposits =
-            await Deposit.find(filter)
-                .populate(
-                    "user",
-                    "name email mobile country credit"
-                )
-                .sort({
-                    createdAt: -1,
-                })
-                .skip(skip)
-                .limit(limit);
-
-        return res.status(200).json({
-            success: true,
-            currentPage: page,
-            totalPages:
-                Math.ceil(
-                    total / limit
-                ),
-            totalRecords: total,
-            deposits,
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
-
-// ==========================================
-// Admin Pending Deposits
-// ==========================================
-exports.getPendingDeposits = async (
-    req,
-    res
-) => {
-    try {
-        const deposits =
-            await Deposit.find({
-                status: "pending",
-            })
-                .populate(
-                    "user",
-                    "name email mobile country"
-                )
-                .sort({
-                    createdAt: -1,
-                });
-
-        return res.status(200).json({
-            success: true,
-            total: deposits.length,
-            deposits,
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
-
-
-// ==========================================
-// Admin - Approve Deposit
-// ==========================================
-exports.approveDeposit = async (
-    req,
-    res
-) => {
-    const session =
-        await mongoose.startSession();
-
-    try {
-        session.startTransaction();
-
-        const { id } = req.params;
-        const { remark } = req.body;
-
-        // ==========================================
-        // FIND DEPOSIT
-        // ==========================================
-
-        const deposit =
-            await Deposit.findById(
-                id
-            ).session(session);
-
-        if (!deposit) {
-            await session.abortTransaction();
-            session.endSession();
-
-            return res.status(404).json({
-                success: false,
-                message: "Deposit not found",
-            });
-        }
-
-        // ==========================================
-        // PREVENT DOUBLE APPROVAL
-        // ==========================================
-
-        if (
-            deposit.status !==
-            "pending"
-        ) {
-            await session.abortTransaction();
-            session.endSession();
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    `Deposit already ${deposit.status}`,
-            });
-        }
-
-        // ==========================================
-        // FIND USER
-        // ==========================================
-
-        const user =
-            await User.findById(
-                deposit.user
-            ).session(session);
-
-        if (!user) {
-            await session.abortTransaction();
-            session.endSession();
-
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        // ==========================================
-        // AMOUNT (NO CONVERSION - SAME CURRENCY)
-        // ==========================================
-        // Deposit jis currency me hua hai, usi me credit hoga.
-        // Koi INR conversion nahi.
-
-        const amountInINR = Number(deposit.amount);
-        const conversionRate = 1;
-        const currencyCode = deposit.currency || "INR";
-        const countryCode = deposit.country || "IN";
-
-        console.log(
-            "Crediting amount (same currency):",
-            amountInINR,
-            currencyCode,
-            "for country:",
-            countryCode
-        );
-
-        // ==========================================
-        // COUNT PREVIOUS APPROVED DEPOSITS
-        // ==========================================
-
-        const approvedRechargeCount =
-            await Deposit.countDocuments({
-                user: user._id,
-                status: "approved",
-            }).session(session);
-
-        // ==========================================
-        // CREDIT USER credit (SAME CURRENCY)
-        // ==========================================
-
-        user.credit =
-            Number(
-                user.credit || 0
-            ) + amountInINR;
-
-        await user.save({
-            session,
-        });
-
-        // ==========================================
-        // GET 8 LEVEL CONFIGURATION
-        // ==========================================
-
-        const referralLevels =
-            await ReferralLevel.find({
-                level: {
-                    $gte: 1,
-                    $lte: 8,
-                },
-                status: true,
-            })
-                .sort({
-                    level: 1,
-                })
-                .session(session)
-                .lean();
-
-        // ==========================================
-        // REFERRAL COMMISSION ARRAY
-        // ==========================================
-
-        const referralCommission = [];
-
-        // Direct referrer = Level 1
-        let currentUserId =
-            user.referredByUser ||
-            null;
-
-        // ==========================================
-        // TRAVERSE 8 LEVELS
-        // ==========================================
-
-        for (
-            let level = 1;
-            level <= 8;
-            level++
-        ) {
-            // No more upline
-            if (!currentUserId) {
-                break;
-            }
-
-            // ======================================
-            // FIND UPLINE
-            // ======================================
-
-            const referrer =
-                await User.findById(
-                    currentUserId
-                ).session(session);
-
-            if (!referrer) {
-                break;
-            }
-
-            // ======================================
-            // GET ADMIN LEVEL CONFIG
-            // ======================================
-
-            const levelConfig =
-                referralLevels.find(
-                    (item) =>
-                        item.level ===
-                        level
-                );
-
-            // Level not configured/disabled.
-            // Still continue to next upline.
-            if (!levelConfig) {
-                currentUserId =
-                    referrer.referredByUser ||
-                    null;
-
-                continue;
-            }
-
-            const commissionPercent =
-                Number(
-                    levelConfig.percentage
-                ) || 0;
-
-            // ======================================
-            // BLOCKED USER DOES NOT GET COMMISSION
-            // ======================================
-
-            if (
-                referrer.status !==
-                "active"
-            ) {
-                currentUserId =
-                    referrer.referredByUser ||
-                    null;
-
-                continue;
-            }
-
-            // ======================================
-            // CALCULATE COMMISSION (SAME CURRENCY)
-            // ======================================
-
-            const commission =
-                Number(
-                    (
-                        (amountInINR *
-                            commissionPercent) /
-                        100
-                    ).toFixed(2)
-                );
-
-            if (commission > 0) {
-                // ==================================
-                // ADD credit
-                // ==================================
-
-                referrer.credit =
-                    Number(
-                        referrer.credit ||
-                            0
-                    ) + commission;
-
-                // ==================================
-                // ADD REFERRAL EARNING
-                // ==================================
-
-                referrer.referralEarning =
-                    Number(
-                        referrer.referralEarning ||
-                            0
-                    ) + commission;
-
-                // ==================================
-                // SAVE REFERRER
-                // ==================================
-
-                await referrer.save({
-                    session,
-                });
-
-                // ==================================
-                // SAVE COMMISSION HISTORY
-                // ==================================
-
-                const commissionRecord =
-                    await ReferralCommission.create(
-                        [
-                            {
-                                referrer:
-                                    referrer._id,
-
-                                referredUser:
-                                    user._id,
-
-                                deposit:
-                                    deposit._id,
-
-                                depositAmount:
-                                    deposit.amount,
-
-                                depositAmountINR:
-                                    amountInINR,
-
-                                currencyCode:
-                                    currencyCode,
-
-                                level:
-                                    level,
-
-                                percentage:
-                                    commissionPercent,
-
-                                commission:
-                                    commission,
-
-                                rechargeNumber:
-                                    approvedRechargeCount +
-                                    1,
-
-                                status:
-                                    "credited",
-                            },
-                        ],
-                        {
-                            session,
-                        }
-                    );
-
-                referralCommission.push(
-                    commissionRecord[0]
-                );
-            }
-
-            // ==================================
-            // MOVE TO NEXT UPLINE
-            // ==================================
-
-            currentUserId =
-                referrer.referredByUser ||
-                null;
-        }
-
-        // ==========================================
-        // UPDATE DEPOSIT
-        // ==========================================
-
-        deposit.status =
-            "approved";
-
-        deposit.approvedBy =
-            req.user.id;
-
-        deposit.approvedAt =
-            new Date();
-
-        deposit.amountInINR =
-            amountInINR;
-
-        deposit.conversionRate =
-            conversionRate;
-
-        deposit.currencyCode =
-            currencyCode;
-
-        if (remark) {
-            deposit.remark =
-                remark;
-        }
-
-        await deposit.save({
-            session,
-        });
-
-        // ==========================================
-        // COMMIT
-        // ==========================================
-
-        await session.commitTransaction();
-
-        session.endSession();
-
-        // ==========================================
-        // TOTAL REFERRAL COMMISSION
-        // ==========================================
-
-        const totalReferralCommission =
-            Number(
-                referralCommission
-                    .reduce(
-                        (
-                            total,
-                            item
-                        ) =>
-                            total +
-                            Number(
-                                item.commission ||
-                                    0
-                            ),
-                        0
-                    )
-                    .toFixed(2)
-            );
-
-        // ==========================================
-        // RESPONSE
-        // ==========================================
-
-        return res.status(200).json({
-            success: true,
-
-            message:
-                "Deposit approved successfully",
-
-            deposit,
-
-            usercredit:
-                user.credit,
-
-            amountInINR,
-
-            conversionRate,
-
-            currencyCode,
-
-            referralLevelsCredited:
-                referralCommission.length,
-
-            totalReferralCommission,
-
-            referralCommission,
-        });
-
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        console.log(
-            "APPROVE DEPOSIT ERROR:",
-            error
-        );
-
-        return res.status(500).json({
-            success: false,
-            message:
-                error.message,
-        });
-    }
-};
-
-
-// ==========================================
-// Admin Reject Deposit
-// ==========================================
-exports.rejectDeposit = async (
-    req,
-    res
-) => {
-    try {
-        const { id } =
-            req.params;
-
-        const { remark } =
-            req.body;
-
-        const deposit =
-            await Deposit.findById(id);
-
-        if (!deposit) {
-            return res.status(404).json({
-                success: false,
-                message: "Deposit not found",
-            });
-        }
-
-        if (
-            deposit.status !==
-            "pending"
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    `Deposit already ${deposit.status}`,
-            });
-        }
-
-        deposit.status =
-            "rejected";
-
-        deposit.rejectedAt =
-            new Date();
-
-        if (remark) {
-            deposit.remark =
-                remark;
-        }
-
+        // ---------- GATEWAY FAILED ----------
+        deposit.status = STATUS.REJECTED;
+        deposit.remark =
+          gatewayResponse?.error ||
+          gatewayResponse?.message ||
+          gatewayResponse?.data?.message ||
+          "QwackPay payment URL not received";
         await deposit.save();
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Deposit rejected successfully",
-            deposit,
+        return res.status(400).json({
+          success: false,
+          message: deposit.remark,
+          paymentUrl: "",
+          orderId: deposit.transactionId,
+          gatewayResponse,
         });
+      } catch (gatewayErr) {
+        console.error(
+          "QWACKPAY CREATE ERROR:",
+          gatewayErr.response?.data || gatewayErr.message
+        );
 
-    } catch (error) {
-        console.log(error);
+        deposit.status = STATUS.REJECTED;
+        deposit.remark = "QwackPay payment request failed.";
+        await deposit.save();
 
-        return res.status(500).json({
-            success: false,
-            message: error.message,
+        return res.status(502).json({
+          success: false,
+          message: "QwackPay payment request failed.",
+          paymentUrl: "",
+          orderId: deposit.transactionId,
+          error: gatewayErr.response?.data || gatewayErr.message,
         });
+      }
     }
+
+    // =====================================================
+    // MANUAL FLOW
+    // =====================================================
+    if (!paymentMethod || !channel) {
+      return res.status(400).json({
+        success: false,
+        message: "paymentMethod and channel are required",
+      });
+    }
+
+    const finalMethodType = paymentMethod;
+    const finalMethodTitle = methodTitle || channel;
+    const orderId = `DEP${Date.now()}`;
+
+    let imageUrl = "";
+    if (req.files && req.files.image && req.files.image[0]) {
+      imageUrl = req.files.image[0].path;
+    }
+
+    const deposit = await Deposit.create({
+      user: user._id,
+      country: (country || "IN").toUpperCase(),
+      currency: currency || "INR",
+      methodType: finalMethodType,
+      methodTitle: finalMethodTitle,
+      amount: numericAmount,
+      transactionId: transactionId || utr || orderId,
+      status: STATUS.PENDING,
+      remark: `Recharge request via ${channel}${
+        imageUrl ? ` | proof: ${imageUrl}` : ""
+      }`,
+    });
+
+    await Transaction.create({
+      user: user._id,
+      amount: numericAmount,
+      currency: currency || "INR",
+      usdAmount: numericAmount,
+      type: "CREDIT",
+      category: "DEPOSIT",
+      description: `Recharge request submitted via ${channel}`,
+      reference: deposit._id,
+      referenceModel: "Deposit",
+      status: "pending",
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Recharge request submitted successfully.",
+      paymentUrl: "",
+      orderId,
+      depositId: deposit._id,
+      deposit,
+    });
+  } catch (error) {
+    console.error("CREATE DEPOSIT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
 };
 
+// =====================================================
+// CANCEL DEPOSIT
+// =====================================================
+const cancelDeposit = async (req, res) => {
+  try {
+    const user = await resolveAuthUser(req);
+    const { depositId } = req.params;
+    const { reason = "User cancelled at gateway" } = req.body || {};
 
-// ==========================================
-// Admin Deposit Statistics
-// ==========================================
-exports.getDepositStats = async (
-    req,
-    res
-) => {
-    try {
-        const [
-            totalDeposits,
-            pendingDeposits,
-            approvedDeposits,
-            rejectedDeposits,
-            approvedAmount,
-            pendingAmount,
-        ] = await Promise.all([
-
-            Deposit.countDocuments(),
-
-            Deposit.countDocuments({
-                status: "pending",
-            }),
-
-            Deposit.countDocuments({
-                status: "approved",
-            }),
-
-            Deposit.countDocuments({
-                status: "rejected",
-            }),
-
-            Deposit.aggregate([
-                {
-                    $match: {
-                        status:
-                            "approved",
-                    },
-                },
-                {
-                    $group: {
-                        _id: null,
-                        total: {
-                            $sum: "$amount",
-                        },
-                    },
-                },
-            ]),
-
-            Deposit.aggregate([
-                {
-                    $match: {
-                        status:
-                            "pending",
-                    },
-                },
-                {
-                    $group: {
-                        _id: null,
-                        total: {
-                            $sum: "$amount",
-                        },
-                    },
-                },
-            ]),
-        ]);
-
-        return res.status(200).json({
-            success: true,
-
-            stats: {
-                totalDeposits,
-
-                pendingDeposits,
-
-                approvedDeposits,
-
-                rejectedDeposits,
-
-                approvedAmount:
-                    approvedAmount.length >
-                    0
-                        ? approvedAmount[0]
-                              .total
-                        : 0,
-
-                pendingAmount:
-                    pendingAmount.length >
-                    0
-                        ? pendingAmount[0]
-                              .total
-                        : 0,
-            },
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            success: false,
-            message:
-                error.message,
-        });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
     }
+
+    const query = mongoose.Types.ObjectId.isValid(depositId)
+      ? { _id: depositId, user: user._id }
+      : { transactionId: String(depositId), user: user._id };
+
+    const deposit = await Deposit.findOne(query);
+
+    if (!deposit) {
+      return res.status(404).json({
+        success: false,
+        message: "Deposit not found",
+      });
+    }
+
+    if (deposit.status === STATUS.APPROVED) {
+      return res.status(400).json({
+        success: false,
+        message: "Deposit already approved, cannot cancel",
+        status: deposit.status,
+      });
+    }
+
+    if (deposit.status === STATUS.REJECTED) {
+      return res.status(200).json({
+        success: true,
+        message: "Deposit already cancelled/rejected",
+        depositId: deposit._id,
+        orderId: deposit.transactionId,
+        status: deposit.status,
+      });
+    }
+
+    deposit.status = STATUS.REJECTED;
+    deposit.remark = String(reason);
+    deposit.rejectedAt = new Date();
+    await deposit.save();
+
+    try {
+      await Transaction.findOneAndUpdate(
+        {
+          reference: deposit._id,
+          user: user._id,
+          category: "DEPOSIT",
+          status: "pending",
+        },
+        {
+          $set: {
+            status: "failed",
+            description: `User cancelled payment. Reason: ${reason}`,
+          },
+        },
+        { new: true, sort: { createdAt: -1 } }
+      );
+    } catch (thErr) {
+      console.warn("Transaction update failed:", thErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Deposit cancelled",
+      depositId: deposit._id,
+      orderId: deposit.transactionId,
+      status: deposit.status,
+      cancelledAt: deposit.rejectedAt,
+    });
+  } catch (error) {
+    console.error("CANCEL DEPOSIT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// =====================================================
+// GET DEPOSIT STATUS
+// =====================================================
+const getDepositStatusByIdentifier = async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const user = await resolveAuthUser(req);
+
+    if (!identifier) {
+      return res.status(400).json({
+        success: false,
+        message: "Deposit identifier is required",
+      });
+    }
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const query = mongoose.Types.ObjectId.isValid(identifier)
+      ? { _id: identifier, user: user._id }
+      : { transactionId: String(identifier), user: user._id };
+
+    const deposit = await Deposit.findOne(query).lean();
+
+    if (!deposit) {
+      return res.status(404).json({
+        success: false,
+        message: "Deposit not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      deposit: {
+        _id: deposit._id,
+        orderId: deposit.transactionId,
+        amount: deposit.amount,
+        currency: deposit.currency,
+        status: deposit.status,
+        methodType: deposit.methodType,
+        methodTitle: deposit.methodTitle,
+        remark: deposit.remark || "",
+        rejectedAt: deposit.rejectedAt || null,
+        approvedAt: deposit.approvedAt || null,
+        createdAt: deposit.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("GET DEPOSIT STATUS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// =====================================================
+// QWACKPAY WEBHOOK
+// =====================================================
+const onlinePayCallback = async (req, res) => {
+  console.log("=================================================");
+  console.log("QWACKPAY WEBHOOK RECEIVED:");
+  console.log(req.body);
+  console.log("=================================================");
+
+  try {
+    const {
+      merchant_order_id,
+      qwack_order_id,
+      amount,
+      status,
+      utr,
+      sign,
+    } = req.body;
+
+    if (!merchant_order_id) {
+      console.error("QWACKPAY WEBHOOK: ORDER ID MISSING");
+      return res.status(400).send("order id missing");
+    }
+
+    // ---------- VERIFY SIGN ----------
+    const webhookPayload = {
+      merchant_order_id,
+      qwack_order_id,
+      amount,
+      status,
+      utr,
+    };
+
+    const expectedSign = generateQwackPaySign(
+      webhookPayload,
+      QWACKPAY_API_KEY
+    );
+
+    if (
+      String(expectedSign).toUpperCase() !==
+      String(sign || "").toUpperCase()
+    ) {
+      console.error("QWACKPAY WEBHOOK SIGN MISMATCH");
+      console.error("Expected:", expectedSign);
+      console.error("Received:", sign);
+      return res.status(400).send("invalid sign");
+    }
+
+    // ---------- FIND DEPOSIT ----------
+    const deposit = await Deposit.findOne({
+      transactionId: String(qwack_order_id || merchant_order_id),
+    });
+
+    // Fallback: try by object id of transaction
+    let foundDeposit = deposit;
+    if (!foundDeposit) {
+      foundDeposit = await Deposit.findOne({
+        transactionId: String(merchant_order_id),
+      });
+    }
+
+    if (!foundDeposit) {
+      console.warn(`Deposit not found: ${merchant_order_id}`);
+      return res.send("success");
+    }
+
+    // ---------- ALREADY FINAL ----------
+    if (foundDeposit.status === STATUS.APPROVED) {
+      console.log(`Webhook already processed: ${merchant_order_id}`);
+      return res.send("success");
+    }
+    if (foundDeposit.status === STATUS.REJECTED) {
+      console.log(
+        `Ignoring webhook for cancelled/rejected deposit: ${merchant_order_id}`
+      );
+      return res.send("success");
+    }
+
+    // ---------- NORMALIZE STATUS ----------
+    const webhookStatus = String(status || "").trim().toLowerCase();
+    const isSuccess =
+      webhookStatus === "success" ||
+      webhookStatus === "1" ||
+      webhookStatus === "paid";
+
+    // ---------- FAILED PAYMENT ----------
+    if (!isSuccess) {
+      console.log(
+        `QwackPay payment failed: ${merchant_order_id}, status=${status}`
+      );
+
+      foundDeposit.status = STATUS.REJECTED;
+      foundDeposit.remark = `QwackPay recharge failed. Status: ${status}${
+        utr ? ` UTR: ${utr}` : ""
+      }`;
+      foundDeposit.rejectedAt = new Date();
+      await foundDeposit.save();
+
+      await Transaction.findOneAndUpdate(
+        {
+          reference: foundDeposit._id,
+          user: foundDeposit.user,
+          category: "DEPOSIT",
+          status: "pending",
+        },
+        {
+          $set: {
+            status: "failed",
+            description: `QwackPay recharge failed. Status: ${status}`,
+          },
+        },
+        { new: true, sort: { createdAt: -1 } }
+      );
+
+      return res.send("success");
+    }
+
+    // =================================================
+    // SUCCESS PAYMENT
+    // =================================================
+    console.log(`QWACKPAY PAYMENT SUCCESS: ${merchant_order_id}`);
+
+    const user = await User.findById(foundDeposit.user);
+    if (!user) {
+      console.error(`User not found for deposit: ${merchant_order_id}`);
+      return res.send("success");
+    }
+
+    // ---------- ATOMIC CLAIM ----------
+    const claimed = await Deposit.findOneAndUpdate(
+      {
+        _id: foundDeposit._id,
+        status: { $ne: STATUS.APPROVED },
+      },
+      {
+        $set: {
+          status: STATUS.APPROVED,
+          remark: `QwackPay success. UTR: ${utr || "N/A"}`,
+          approvedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    if (!claimed) {
+      console.log(`Webhook already claimed: ${merchant_order_id}`);
+      return res.send("success");
+    }
+
+    const creditAmount =
+      Number(amount) || Number(foundDeposit.amount) || 0;
+
+    // ---------- WALLET CREDIT ----------
+    // New User schema has no `wallet` field.
+    // Adjust these fields to match your actual balance fields.
+    if (creditAmount > 0) {
+      await User.findByIdAndUpdate(
+        user._id,
+        {
+          $inc: {
+            credit: creditAmount,     // primary balance field
+            total_money: creditAmount,
+            recharge: creditAmount,
+          },
+        },
+        { new: true }
+      );
+
+      console.log(
+        `WALLET CREDITED: ₹${creditAmount} to user ${user._id} (${user.mobile})`
+      );
+    }
+
+    // ---------- UPDATE TRANSACTION ----------
+    const successRemark = `Wallet recharge successful via QwackPay. UTR: ${
+      utr || "N/A"
+    }. ₹${creditAmount} credited.`;
+
+    const transactionUpdate = await Transaction.findOneAndUpdate(
+      {
+        reference: foundDeposit._id,
+        user: user._id,
+        category: "DEPOSIT",
+        status: "pending",
+      },
+      {
+        $set: {
+          status: "completed",
+          amount: creditAmount,
+          usdAmount: creditAmount,
+          description: successRemark,
+        },
+      },
+      { new: true, sort: { createdAt: -1 } }
+    );
+
+    // Fallback: create a new completed transaction
+    if (!transactionUpdate) {
+      await Transaction.create({
+        user: user._id,
+        amount: creditAmount,
+        currency: foundDeposit.currency || "INR",
+        usdAmount: creditAmount,
+        type: "CREDIT",
+        category: "DEPOSIT",
+        description: successRemark,
+        reference: foundDeposit._id,
+        referenceModel: "Deposit",
+        status: "completed",
+        creditAfter: (user.credit || 0) + creditAmount,
+      });
+    }
+
+    console.log("=================================================");
+    console.log("PAYMENT SUCCESS COMPLETED");
+    console.log(`Order ID: ${merchant_order_id}`);
+    console.log(`Amount: ₹${creditAmount}`);
+    console.log("=================================================");
+
+    return res.send("success");
+  } catch (error) {
+    console.error("=================================================");
+    console.error("QWACKPAY WEBHOOK ERROR:");
+    console.error(error);
+    console.error("=================================================");
+    return res.send("success");
+  }
+};
+
+// =====================================================
+// CHECK QWACKPAY ORDER STATUS
+// =====================================================
+const checkQwackPayOrderStatus = async (orderId) => {
+  try {
+    const payload = {
+      merchant_id: QWACKPAY_MERCHANT_ID,
+      order_id: orderId,
+    };
+
+    payload.sign = generateQwackPaySign(payload, QWACKPAY_API_KEY);
+
+    const { data } = await axios.post(
+      `${QWACKPAY_BASE_URL}/order/query`,
+      payload,
+      { headers: getQwackPayHeaders(), timeout: 30000 }
+    );
+
+    console.log("QWACKPAY QUERY RESPONSE:", data);
+    return data;
+  } catch (error) {
+    console.error(
+      "QwackPay Query Error:",
+      error.response?.data || error.message
+    );
+    return null;
+  }
+};
+
+// =====================================================
+// GET MY DEPOSITS
+// =====================================================
+const getMyDeposits = async (req, res) => {
+  try {
+    const {
+      status,
+      methodType,
+      methodTitle,
+      transactionId,
+      country,
+      currency,
+      fromDate,
+      toDate,
+      minAmount,
+      maxAmount,
+      page = 1,
+      limit = 10,
+      sort = "desc",
+    } = req.query;
+
+    const user = await resolveAuthUser(req);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const query = { user: user._id };
+
+    if (status !== undefined && status !== "") {
+      query.status = String(status).toLowerCase();
+    }
+
+    if (methodType && methodType.trim()) {
+      query.methodType = { $regex: methodType.trim(), $options: "i" };
+    }
+
+    if (methodTitle && methodTitle.trim()) {
+      query.methodTitle = { $regex: methodTitle.trim(), $options: "i" };
+    }
+
+    if (transactionId && transactionId.trim()) {
+      query.transactionId = { $regex: transactionId.trim(), $options: "i" };
+    }
+
+    if (country && country.trim()) {
+      query.country = { $regex: country.trim(), $options: "i" };
+    }
+
+    if (currency && currency.trim()) {
+      query.currency = { $regex: currency.trim(), $options: "i" };
+    }
+
+    // ---------- AMOUNT FILTER ----------
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      query.amount = {};
+
+      if (minAmount !== undefined && minAmount !== "") {
+        const min = Number(minAmount);
+        if (Number.isFinite(min)) query.amount.$gte = min;
+      }
+
+      if (maxAmount !== undefined && maxAmount !== "") {
+        const max = Number(maxAmount);
+        if (Number.isFinite(max)) query.amount.$lte = max;
+      }
+
+      if (Object.keys(query.amount).length === 0) delete query.amount;
+    }
+
+    // ---------- DATE FILTER ----------
+    if (fromDate || toDate) {
+      query.createdAt = {};
+
+      if (fromDate) {
+        const startDate = new Date(fromDate);
+        if (!isNaN(startDate.getTime())) query.createdAt.$gte = startDate;
+      }
+
+      if (toDate) {
+        const endDate = new Date(toDate);
+        if (!isNaN(endDate.getTime())) {
+          endDate.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = endDate;
+        }
+      }
+
+      if (Object.keys(query.createdAt).length === 0) delete query.createdAt;
+    }
+
+    // ---------- PAGINATION ----------
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
+    const total = await Deposit.countDocuments(query);
+
+    const sortDirection = String(sort).toLowerCase() === "asc" ? 1 : -1;
+
+    const deposits = await Deposit.find(query)
+      .sort({ createdAt: sortDirection })
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      total,
+      currentPage,
+      totalPages: Math.ceil(total / perPage),
+      limit: perPage,
+      deposits,
+    });
+  } catch (error) {
+    console.error("GET MY DEPOSITS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// =====================================================
+// GET MY TURNOVER HISTORY (referral based)
+// =====================================================
+const getMyTurnoverHistory = async (req, res) => {
+  try {
+    const user = await resolveAuthUser(req);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    // New User schema uses `referralCode` / `referredBy`
+    const downlineCount = await User.countDocuments({
+      referredBy: user.referralCode,
+    });
+
+    const commissions = await Transaction.find({
+      user: user._id,
+      category: "REFERRAL_BONUS",
+      status: "completed",
+    }).sort({ createdAt: -1 });
+
+    const formattedCommissions = commissions.map((c) => {
+      const match = c.description
+        ? c.description.match(/from deposit of (.+)/)
+        : null;
+
+      const referredUsername = match ? match[1] : "Referred User";
+
+      const rechargeAmount = Number(
+        (Number(c.amount || 0) * 10).toFixed(2)
+      );
+
+      return {
+        id: c._id,
+        amount: c.amount,
+        rechargeAmount,
+        referredUsername,
+        date: c.createdAt
+          ? new Date(c.createdAt).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "-",
+        createdAt: c.createdAt,
+      };
+    });
+
+    const now = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(now.getDate() - 7);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(now.getDate() - 30);
+
+    let weeklyCommission = 0;
+    let monthlyCommission = 0;
+    let totalCommission = 0;
+
+    formattedCommissions.forEach((c) => {
+      const amount = Number(c.amount || 0);
+      totalCommission += amount;
+
+      const cDate = new Date(c.createdAt);
+      if (cDate >= oneWeekAgo) weeklyCommission += amount;
+      if (cDate >= oneMonthAgo) monthlyCommission += amount;
+    });
+
+    totalCommission = Number(totalCommission.toFixed(2));
+    weeklyCommission = Number(weeklyCommission.toFixed(2));
+    monthlyCommission = Number(monthlyCommission.toFixed(2));
+
+    const totalTurnover = Number((totalCommission * 10).toFixed(2));
+    const weeklyTurnover = Number((weeklyCommission * 10).toFixed(2));
+    const monthlyTurnover = Number((monthlyCommission * 10).toFixed(2));
+
+    return res.status(200).json({
+      success: true,
+      downlineCount,
+      stats: {
+        totalCommission,
+        weeklyCommission,
+        monthlyCommission,
+        totalTurnover,
+        weeklyTurnover,
+        monthlyTurnover,
+      },
+      commissions: formattedCommissions,
+    });
+  } catch (error) {
+    console.error("GET TURNOVER HISTORY ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// =====================================================
+// ADMIN: GET ALL DEPOSITS
+// =====================================================
+const getAllDepositsForAdmin = async (req, res) => {
+  try {
+    const {
+      status,
+      methodType,
+      methodTitle,
+      transactionId,
+      country,
+      currency,
+      userId,
+      fromDate,
+      toDate,
+      minAmount,
+      maxAmount,
+      page = 1,
+      limit = 20,
+      sort = "desc",
+    } = req.query;
+
+    const query = {};
+
+    if (status !== undefined && status !== "") {
+      query.status = String(status).toLowerCase();
+    }
+
+    if (methodType && methodType.trim()) {
+      query.methodType = { $regex: methodType.trim(), $options: "i" };
+    }
+
+    if (methodTitle && methodTitle.trim()) {
+      query.methodTitle = { $regex: methodTitle.trim(), $options: "i" };
+    }
+
+    if (transactionId && transactionId.trim()) {
+      query.transactionId = { $regex: transactionId.trim(), $options: "i" };
+    }
+
+    if (country && country.trim()) {
+      query.country = { $regex: country.trim(), $options: "i" };
+    }
+
+    if (currency && currency.trim()) {
+      query.currency = { $regex: currency.trim(), $options: "i" };
+    }
+
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      query.user = userId;
+    }
+
+    // ---------- AMOUNT FILTER ----------
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      query.amount = {};
+
+      if (minAmount !== undefined && minAmount !== "") {
+        const min = Number(minAmount);
+        if (Number.isFinite(min)) query.amount.$gte = min;
+      }
+
+      if (maxAmount !== undefined && maxAmount !== "") {
+        const max = Number(maxAmount);
+        if (Number.isFinite(max)) query.amount.$lte = max;
+      }
+
+      if (Object.keys(query.amount).length === 0) delete query.amount;
+    }
+
+    // ---------- DATE FILTER ----------
+    if (fromDate || toDate) {
+      query.createdAt = {};
+
+      if (fromDate) {
+        const startDate = new Date(fromDate);
+        if (!isNaN(startDate.getTime())) {
+          startDate.setHours(0, 0, 0, 0);
+          query.createdAt.$gte = startDate;
+        }
+      }
+
+      if (toDate) {
+        const endDate = new Date(toDate);
+        if (!isNaN(endDate.getTime())) {
+          endDate.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = endDate;
+        }
+      }
+
+      if (Object.keys(query.createdAt).length === 0) delete query.createdAt;
+    }
+
+    // ---------- PAGINATION ----------
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const skip = (currentPage - 1) * perPage;
+
+    const sortDirection = String(sort).toLowerCase() === "asc" ? 1 : -1;
+
+    const total = await Deposit.countDocuments(query);
+
+    const deposits = await Deposit.find(query)
+      .populate("user", "name email mobile userId referralCode")
+      .sort({ createdAt: sortDirection })
+      .skip(skip)
+      .limit(perPage)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: "All deposits fetched successfully",
+      total,
+      currentPage,
+      perPage,
+      totalPages: Math.ceil(total / perPage),
+      deposits,
+    });
+  } catch (error) {
+    console.error("GET ALL DEPOSITS FOR ADMIN ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  createDeposit,
+  cancelDeposit,
+  onlinePayCallback,
+  getDepositStatusByIdentifier,
+  getMyDeposits,
+  getMyTurnoverHistory,
+  getAllDepositsForAdmin,
+  checkQwackPayOrderStatus,
+  generateQwackPaySign,
+  STATUS,
 };

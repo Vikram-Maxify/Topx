@@ -50,10 +50,7 @@ const depositSchema = new mongoose.Schema(
       trim: true,
     },
 
-    screenshot: {
-      type: String,
-      default: "",
-    },
+
 
     // Pending
     // Approved

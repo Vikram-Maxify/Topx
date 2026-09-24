@@ -1,96 +1,64 @@
 const express = require("express");
-
 const router = express.Router();
 
 const upload = require("../middleware/upload");
 
 const {
-    createDeposit,
-    getUserDeposits,
-    getDepositDetails,
-
-    getAllDeposits,
-    getPendingDeposits,
-
-    approveDeposit,
-    rejectDeposit,
-
-    getDepositStats
-
+  createDeposit,
+  cancelDeposit,
+  onlinePayCallback,
+  getDepositStatusByIdentifier,
+  getMyDeposits,
+  getMyTurnoverHistory,
+  getAllDepositsForAdmin,
 } = require("../controllers/depositController");
 
 const { protect, adminProtect } = require("../middleware/authMiddleware.js");
 
+// ======================================================
+// PUBLIC / WEBHOOK ROUTES
+// ======================================================
+
+// QwackPay webhook/callback (no auth — gateway hits this)
+router.post("/qwackpay/callback", onlinePayCallback);
+router.get("/qwackpay/callback", onlinePayCallback); // some gateways use GET
 
 // ======================================================
 // USER ROUTES
 // ======================================================
 
-// Create Deposit
+// Create deposit (QwackPay OR manual)
+// Note: upload.single("screenshot") — use same field name in controller
+// If your controller reads req.files.image, change to upload.single("image")
 router.post(
-    "/create",
-    protect,
-    upload.single("screenshot"),
-    createDeposit
+  "/create",
+  protect,
+  upload.single("screenshot"),
+  createDeposit
 );
 
-// Deposit History
-router.get(
-    "/my",
-    protect,
-    getUserDeposits
-);
+// Cancel a pending deposit
+router.post("/cancel/:depositId", protect, cancelDeposit);
 
-// Single Deposit
-router.get(
-    "/my/:id",
-    protect,
-    getDepositDetails
-);
+// My deposit history (with filters + pagination)
+router.get("/my", protect, getMyDeposits);
 
+// Deposit status by Mongo _id OR transactionId
+router.get("/status/:identifier", protect, getDepositStatusByIdentifier);
+
+// Referral / turnover history
+router.get("/my-turnover", protect, getMyTurnoverHistory);
 
 // ======================================================
 // ADMIN ROUTES
 // ======================================================
 
-// Dashboard Stats
+// All deposits (with filters + pagination)
 router.get(
-    "/admin/stats",
-    protect,
-    adminProtect,
-    getDepositStats
-);
-
-// Pending Deposits
-router.get(
-    "/admin/pending",
-    protect,
-    adminProtect,
-    getPendingDeposits
-);
-
-// All Deposits
-router.get(
-    "/admin/all",
-    protect,
-    adminProtect,
-    getAllDeposits
-);
-
-// Approve
-router.put(
-    "/admin/approve/:id",
-    protect,
-    adminProtect,
-    approveDeposit
-);
-
-// Reject
-router.put(
-    "/admin/reject/:id",
-    protect,
-    adminProtect,
-    rejectDeposit
+  "/admin/all",
+  protect,
+  adminProtect,
+  getAllDepositsForAdmin
 );
 
 module.exports = router;

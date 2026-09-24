@@ -244,7 +244,7 @@ const Navbar = ({ children }) => {
   const WinzoxLogo = ({ className = "h-48" }) => (
     <img
       src="https://i.ibb.co/5W1GTsh1/Chat-GPT-Image-Sep-15-2026-03-03-53-PM.png"
-      alt="WINZOX"
+      alt="TOPX"
       className={`${className} object-contain w-auto`}
     />
   );
@@ -281,7 +281,7 @@ const Navbar = ({ children }) => {
               <div className="relative">
                 {isCollapsed ? (
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B45CFF] via-[#7418F5] to-[#3A00C9] border border-[#C77AFF] shadow-[0_0_8px_#B45CFF,0_0_18px_rgba(139,43,255,0.75)] flex items-center justify-center">
-                    <span className="text-white font-black text-lg">T</span>
+                    <span className="text-white font-black text-lg">R</span>
                   </div>
                 ) : (
                   <WinzoxLogo className="h-52" />
@@ -678,9 +678,6 @@ const Navbar = ({ children }) => {
                   </div>
                 </div>
               </div>
-              <span className="text-white text-sm font-medium flex justify-center items-center z-30">
-                Deposite
-              </span>
             </Link>
           </div>
         </div>
