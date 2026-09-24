@@ -138,6 +138,10 @@ const GamePlayModal = ({
     }
   };
 
+  useEffect(()=>{
+    dispatch(checkGamecredit())
+  })
+
   const reloadGame = () => {
     if (!resolvedGameUrl) return;
     setIframeLoading(true);
