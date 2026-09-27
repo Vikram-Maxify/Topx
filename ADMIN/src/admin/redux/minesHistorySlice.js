@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-const API = "http://localhost:8097/api/mines/admin/history";
+// const API = "http://localhost:8097/api/mines/admin/history";
+const API = "/api/mines/admin/history";
 
 // Fetch Mines History
 export const fetchMinesHistory = createAsyncThunk(

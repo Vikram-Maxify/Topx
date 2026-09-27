@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { socket } from "../services/socket";
 
-const API = "http://localhost:8097/api/mines/admin/history";
+// const API = "http://localhost:8097/api/mines/admin/history";
+const API = "/api/mines/admin/history";
 
 export default function MinesHistory() {
   const [games, setGames] = useState([]);
