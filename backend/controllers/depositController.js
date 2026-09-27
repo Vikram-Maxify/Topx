@@ -21,8 +21,7 @@ const STATUS = {
 const QWACKPAY_BASE_URL =
   process.env.QWACKPAY_BASE_URL || "https://qwackpay.com/api/v1";
 
-const QWACKPAY_MERCHANT_ID =
-  process.env.QWACKPAY_MERCHANT_ID || "636055076";
+const QWACKPAY_MERCHANT_ID = process.env.QWACKPAY_MERCHANT_ID || "636055076";
 
 const QWACKPAY_API_KEY =
   process.env.QWACKPAY_API_KEY || "DASHBOARD_SE_COPY_KARO";
@@ -71,8 +70,7 @@ const getFrontendUrl = () => {
 
 const getQwackPayReturnUrl = () => {
   return (
-    process.env.QWACKPAY_RETURN_URL ||
-    `${getFrontendUrl()}/payment-success`
+    process.env.QWACKPAY_RETURN_URL || `${getFrontendUrl()}/payment-success`
   ).replace(/\/$/, "");
 };
 
@@ -80,8 +78,7 @@ const getQwackPayReturnUrl = () => {
 // HELPER: Resolve authenticated user
 // =====================================================
 const resolveAuthUser = async (req) => {
-  const id =
-    req.user?.id || req.user?._id || req.user?.userId;
+  const id = req.user?.id || req.user?._id || req.user?.userId;
 
   if (!id) return null;
 
@@ -181,16 +178,13 @@ const createDeposit = async (req, res) => {
         return_url: getQwackPayReturnUrl(),
       };
 
-      orderPayload.sign = generateQwackPaySign(
-        orderPayload,
-        QWACKPAY_API_KEY
-      );
+      orderPayload.sign = generateQwackPaySign(orderPayload, QWACKPAY_API_KEY);
 
       try {
         const { data: gatewayResponse } = await axios.post(
           `${QWACKPAY_BASE_URL}/order/create`,
           orderPayload,
-          { headers: getQwackPayHeaders(), timeout: 30000 }
+          { headers: getQwackPayHeaders(), timeout: 30000 },
         );
 
         console.log("QWACKPAY CREATE RESPONSE:", gatewayResponse);
@@ -267,7 +261,7 @@ const createDeposit = async (req, res) => {
       } catch (gatewayErr) {
         console.error(
           "QWACKPAY CREATE ERROR:",
-          gatewayErr.response?.data || gatewayErr.message
+          gatewayErr.response?.data || gatewayErr.message,
         );
 
         deposit.status = STATUS.REJECTED;
@@ -414,7 +408,7 @@ const cancelDeposit = async (req, res) => {
             description: `User cancelled payment. Reason: ${reason}`,
           },
         },
-        { new: true, sort: { createdAt: -1 } }
+        { new: true, sort: { createdAt: -1 } },
       );
     } catch (thErr) {
       console.warn("Transaction update failed:", thErr.message);
@@ -509,14 +503,8 @@ const onlinePayCallback = async (req, res) => {
   console.log("=================================================");
 
   try {
-    const {
-      merchant_order_id,
-      qwack_order_id,
-      amount,
-      status,
-      utr,
-      sign,
-    } = req.body;
+    const { merchant_order_id, qwack_order_id, amount, status, utr, sign } =
+      req.body;
 
     if (!merchant_order_id) {
       console.error("QWACKPAY WEBHOOK: ORDER ID MISSING");
@@ -532,14 +520,10 @@ const onlinePayCallback = async (req, res) => {
       utr,
     };
 
-    const expectedSign = generateQwackPaySign(
-      webhookPayload,
-      QWACKPAY_API_KEY
-    );
+    const expectedSign = generateQwackPaySign(webhookPayload, QWACKPAY_API_KEY);
 
     if (
-      String(expectedSign).toUpperCase() !==
-      String(sign || "").toUpperCase()
+      String(expectedSign).toUpperCase() !== String(sign || "").toUpperCase()
     ) {
       console.error("QWACKPAY WEBHOOK SIGN MISMATCH");
       console.error("Expected:", expectedSign);
@@ -572,13 +556,15 @@ const onlinePayCallback = async (req, res) => {
     }
     if (foundDeposit.status === STATUS.REJECTED) {
       console.log(
-        `Ignoring webhook for cancelled/rejected deposit: ${merchant_order_id}`
+        `Ignoring webhook for cancelled/rejected deposit: ${merchant_order_id}`,
       );
       return res.send("success");
     }
 
     // ---------- NORMALIZE STATUS ----------
-    const webhookStatus = String(status || "").trim().toLowerCase();
+    const webhookStatus = String(status || "")
+      .trim()
+      .toLowerCase();
     const isSuccess =
       webhookStatus === "success" ||
       webhookStatus === "1" ||
@@ -587,7 +573,7 @@ const onlinePayCallback = async (req, res) => {
     // ---------- FAILED PAYMENT ----------
     if (!isSuccess) {
       console.log(
-        `QwackPay payment failed: ${merchant_order_id}, status=${status}`
+        `QwackPay payment failed: ${merchant_order_id}, status=${status}`,
       );
 
       foundDeposit.status = STATUS.REJECTED;
@@ -610,7 +596,7 @@ const onlinePayCallback = async (req, res) => {
             description: `QwackPay recharge failed. Status: ${status}`,
           },
         },
-        { new: true, sort: { createdAt: -1 } }
+        { new: true, sort: { createdAt: -1 } },
       );
 
       return res.send("success");
@@ -640,7 +626,7 @@ const onlinePayCallback = async (req, res) => {
           approvedAt: new Date(),
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!claimed) {
@@ -648,8 +634,7 @@ const onlinePayCallback = async (req, res) => {
       return res.send("success");
     }
 
-    const creditAmount =
-      Number(amount) || Number(foundDeposit.amount) || 0;
+    const creditAmount = Number(amount) || Number(foundDeposit.amount) || 0;
 
     // ---------- WALLET CREDIT ----------
     // New User schema has no `wallet` field.
@@ -659,16 +644,16 @@ const onlinePayCallback = async (req, res) => {
         user._id,
         {
           $inc: {
-            credit: creditAmount,     // primary balance field
+            credit: creditAmount, // primary balance field
             total_money: creditAmount,
             recharge: creditAmount,
           },
         },
-        { new: true }
+        { new: true },
       );
 
       console.log(
-        `WALLET CREDITED: ₹${creditAmount} to user ${user._id} (${user.mobile})`
+        `WALLET CREDITED: ₹${creditAmount} to user ${user._id} (${user.mobile})`,
       );
     }
 
@@ -692,7 +677,7 @@ const onlinePayCallback = async (req, res) => {
           description: successRemark,
         },
       },
-      { new: true, sort: { createdAt: -1 } }
+      { new: true, sort: { createdAt: -1 } },
     );
 
     // Fallback: create a new completed transaction
@@ -743,7 +728,7 @@ const checkQwackPayOrderStatus = async (orderId) => {
     const { data } = await axios.post(
       `${QWACKPAY_BASE_URL}/order/query`,
       payload,
-      { headers: getQwackPayHeaders(), timeout: 30000 }
+      { headers: getQwackPayHeaders(), timeout: 30000 },
     );
 
     console.log("QWACKPAY QUERY RESPONSE:", data);
@@ -751,7 +736,7 @@ const checkQwackPayOrderStatus = async (orderId) => {
   } catch (error) {
     console.error(
       "QwackPay Query Error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     return null;
   }
@@ -912,9 +897,7 @@ const getMyTurnoverHistory = async (req, res) => {
 
       const referredUsername = match ? match[1] : "Referred User";
 
-      const rechargeAmount = Number(
-        (Number(c.amount || 0) * 10).toFixed(2)
-      );
+      const rechargeAmount = Number((Number(c.amount || 0) * 10).toFixed(2));
 
       return {
         id: c._id,

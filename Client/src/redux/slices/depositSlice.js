@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "./api";
 
 // ==========================
@@ -18,10 +18,10 @@ export const createDeposit = createAsyncThunk(
       return data; // { success, message, paymentUrl, orderId, depositId, deposit }
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong"
+        err.response?.data?.message || "Something went wrong",
       );
     }
-  }
+  },
 );
 
 // ==========================
@@ -38,10 +38,10 @@ export const cancelDeposit = createAsyncThunk(
       return data; // { success, message, depositId, orderId, status }
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong"
+        err.response?.data?.message || "Something went wrong",
       );
     }
-  }
+  },
 );
 
 // ==========================
@@ -56,10 +56,10 @@ export const getDepositStatus = createAsyncThunk(
       return data.deposit; // { _id, orderId, amount, currency, status, ... }
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong"
+        err.response?.data?.message || "Something went wrong",
       );
     }
-  }
+  },
 );
 
 // ==========================
@@ -107,10 +107,10 @@ export const getMyDeposits = createAsyncThunk(
       return data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong"
+        err.response?.data?.message || "Something went wrong",
       );
     }
-  }
+  },
 );
 
 // ==========================
@@ -126,10 +126,10 @@ export const getMyTurnoverHistory = createAsyncThunk(
       return data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong"
+        err.response?.data?.message || "Something went wrong",
       );
     }
-  }
+  },
 );
 
 const initialState = {
@@ -236,7 +236,7 @@ const depositSlice = createSlice({
         const updatedId = action.payload.depositId;
         if (updatedId) {
           const idx = state.deposits.findIndex(
-            (d) => String(d._id) === String(updatedId)
+            (d) => String(d._id) === String(updatedId),
           );
           if (idx !== -1) {
             state.deposits[idx].status = action.payload.status || "rejected";
@@ -269,7 +269,7 @@ const depositSlice = createSlice({
 
         // Sync into history list if exists
         const idx = state.deposits.findIndex(
-          (d) => String(d._id) === String(action.payload._id)
+          (d) => String(d._id) === String(action.payload._id),
         );
         if (idx !== -1) {
           state.deposits[idx] = { ...state.deposits[idx], ...action.payload };
@@ -322,7 +322,6 @@ const depositSlice = createSlice({
   },
 });
 
-export const { clearDepositState, clearCurrentDeposit } =
-  depositSlice.actions;
+export const { clearDepositState, clearCurrentDeposit } = depositSlice.actions;
 
 export default depositSlice.reducer;

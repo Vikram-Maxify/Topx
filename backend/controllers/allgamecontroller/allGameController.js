@@ -8,7 +8,7 @@ const AuthModel = require("../../models/authmodel");
 const apiUrl = "https://www.api-doc.space/api";
 const launchUrl = "https://www.api-doc.space/api/launch-game";
 // const launchUrl = "http://localhost:8000/api/launch-game";
-const key = "5HXuVkACXHtu04Y7SgBL";
+const key = "lham1f1pSAoAViS0BK7e";
 // const key = "3aqSD5NzX8sKj2MG2CkNS6mqerzJywUW";
 
 /* =========================
@@ -17,7 +17,7 @@ const key = "5HXuVkACXHtu04Y7SgBL";
 
 const zapHeaders = {
   "Content-Type": "application/json",
-  "x-domain": "topxbet.live",
+  "x-domain": "regalclub.live",
 };
 
 /**
@@ -42,7 +42,7 @@ const axiosRetry = async (fn, retries = 2, baseDelay = 400) => {
 
       const delay = baseDelay * (i + 1);
       console.warn(
-        `⚠️ [axiosRetry] conflict detected, retry ${i + 1}/${retries} in ${delay}ms → ${msg}`,
+        `⚠️ [axiosRetry] conflict detected, retry ${i + 1}/${retries} in ${delay}ms → ${msg}`
       );
       await new Promise((r) => setTimeout(r, delay));
     }
@@ -59,13 +59,13 @@ const ensureZapPlayer = async (playerid) => {
     const res = await axios.post(
       `${apiUrl}/Userbalance`,
       { playerid, key },
-      { headers: zapHeaders },
+      { headers: zapHeaders }
     );
     return res.data;
   } catch (err) {
     console.warn(
       "⚠️ [ensureZapPlayer] failed:",
-      err.response?.data || err.message,
+      err.response?.data || err.message
     );
     return null;
   }
@@ -86,7 +86,7 @@ const checkBalance = async (req, res) => {
     const response = await axios.post(
       `${apiUrl}/Userbalance`,
       { playerid, key },
-      { headers: zapHeaders },
+      { headers: zapHeaders }
     );
 
     console.log("CHECK BALANCE RESPONSE 👉", response.data);
@@ -125,7 +125,7 @@ const transferBalance = async (req, res) => {
     const balRes = await axios.post(
       `${apiUrl}/Userbalance?playerid=${playerid}&key=${key}`,
       { playerid, key },
-      { headers: zapHeaders },
+      { headers: zapHeaders }
     );
 
     const zapBalance = Number(balRes.data?.Balance || 0);
@@ -137,7 +137,7 @@ const transferBalance = async (req, res) => {
       const updatedUser = await AuthModel.findByIdAndUpdate(
         user._id,
         { $inc: { credit: zapBalance + (user.exposure || 0) } },
-        { new: true },
+        { new: true }
       );
 
       /* 5️⃣ Reset Zapcore balance */
@@ -150,18 +150,21 @@ const transferBalance = async (req, res) => {
             key,
             opening_balance: -zapBalance,
           },
-          { headers: zapHeaders },
+          { headers: zapHeaders }
         );
       } catch (err) {
         resetRes = { data: { status: false } };
-        console.error("SETBALANCE ERROR 👉", err.response?.data || err.message);
+        console.error(
+          "SETBALANCE ERROR 👉",
+          err.response?.data || err.message
+        );
       }
 
       /* 6️⃣ Rollback if reset fails — atomic $inc (never $set+$inc together) */
       if (resetRes.data?.status !== true) {
         await AuthModel.updateOne(
           { _id: user._id },
-          { $inc: { credit: -(zapBalance + (user.exposure || 0)) } },
+          { $inc: { credit: -(zapBalance + (user.exposure || 0)) } }
         );
 
         return res.status(500).json({
@@ -216,7 +219,7 @@ const launchGame = async (req, res) => {
     const locked = await AuthModel.findOneAndUpdate(
       { _id: user._id, launching: { $ne: true } },
       { $set: { launching: true } },
-      { new: true },
+      { new: true }
     );
 
     if (!locked) {
@@ -242,12 +245,15 @@ const launchGame = async (req, res) => {
           opening_balance: (locked.credit || 0) - (locked.exposure || 0),
           key,
         },
-        { headers: zapHeaders },
-      ),
+        { headers: zapHeaders }
+      )
     );
 
     if (response.data?.status === true) {
-      await AuthModel.updateOne({ _id: locked._id }, { $set: { credit: 0 } });
+      await AuthModel.updateOne(
+        { _id: locked._id },
+        { $set: { credit: 0 } }
+      );
 
       return res.json({
         status: true,
@@ -280,7 +286,7 @@ const launchGame = async (req, res) => {
       try {
         await AuthModel.updateOne(
           { _id: lockedUserId },
-          { $set: { launching: false } },
+          { $set: { launching: false } }
         );
       } catch (e) {
         console.error("LOCK RELEASE ERROR 👉", e.message);
@@ -296,7 +302,7 @@ const getgamedetails = async (req, res) => {
   try {
     const { page = 1, size = 2000 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?page=${page}&size=${size}`,
+      `${apiUrl}/getgamedetails?page=${page}&size=${size}`
     );
     return res.json(response.data);
   } catch (err) {
@@ -307,7 +313,7 @@ const getgamedetails = async (req, res) => {
 const gameProvider = async (req, res) => {
   try {
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?provider_list=1`,
+      `${apiUrl}/getgamedetails?provider_list=1`
     );
     return res.json(response.data);
   } catch (err) {
@@ -318,7 +324,7 @@ const gameProvider = async (req, res) => {
 const gameType = async (req, res) => {
   try {
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?gametype_list=1`,
+      `${apiUrl}/getgamedetails?gametype_list=1`
     );
     return res.json(response.data);
   } catch (err) {
@@ -330,7 +336,7 @@ const gameListByProvider = async (req, res) => {
   try {
     const { provider, page = 1, size = 20 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?provider=${provider}&page=${page}&size=${size}`,
+      `${apiUrl}/getgamedetails?provider=${provider}&page=${page}&size=${size}`
     );
     return res.json(response.data);
   } catch (err) {
@@ -342,7 +348,7 @@ const gameListByGameType = async (req, res) => {
   try {
     const { game_type, page = 1, size = 20 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?game_type=${game_type}&page=${page}&size=${size}`,
+      `${apiUrl}/getgamedetails?game_type=${game_type}&page=${page}&size=${size}`
     );
     return res.json(response.data);
   } catch (err) {
@@ -354,7 +360,7 @@ const gameListByGameTypeAndProvider = async (req, res) => {
   try {
     const { provider, game_type, page = 1, size = 20 } = req.query;
     const response = await axios.get(
-      `${apiUrl}/getgamedetails?provider=${provider}&game_type=${game_type}&page=${page}&size=${size}`,
+      `${apiUrl}/getgamedetails?provider=${provider}&game_type=${game_type}&page=${page}&size=${size}`
     );
     return res.json(response.data);
   } catch (err) {
@@ -380,7 +386,7 @@ const gameHistory = async (req, res) => {
         from_date,
         to_date,
       },
-      { headers: zapHeaders },
+      { headers: zapHeaders }
     );
 
     return res.json({
@@ -408,4 +414,4 @@ module.exports = {
   gameListByGameType,
   gameListByGameTypeAndProvider,
   gameHistory,
-};
+}

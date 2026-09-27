@@ -30,12 +30,7 @@ router.get("/qwackpay/callback", onlinePayCallback); // some gateways use GET
 // Create deposit (QwackPay OR manual)
 // Note: upload.single("screenshot") — use same field name in controller
 // If your controller reads req.files.image, change to upload.single("image")
-router.post(
-  "/create",
-  protect,
-  upload.single("screenshot"),
-  createDeposit
-);
+router.post("/create", protect, upload.single("screenshot"), createDeposit);
 
 // Cancel a pending deposit
 router.post("/cancel/:depositId", protect, cancelDeposit);
@@ -54,11 +49,6 @@ router.get("/my-turnover", protect, getMyTurnoverHistory);
 // ======================================================
 
 // All deposits (with filters + pagination)
-router.get(
-  "/admin/all",
-  protect,
-  adminProtect,
-  getAllDepositsForAdmin
-);
+router.get("/admin/all", protect, adminProtect, getAllDepositsForAdmin);
 
 module.exports = router;

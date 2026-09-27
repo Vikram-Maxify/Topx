@@ -5,11 +5,9 @@ import StatsSection2 from "../components/StatsSection2";
 import TopWinners from "../components/TopWinners";
 import Footer from "../Pages/Footer";
 
-import AviatorGames from "../Pages/games/AviatorGames.jsx";
 import CasinoSlotGames from "../Pages/games/CasinoGames.jsx";
-import ChickenGames from "../Pages/games/ChickenGames.jsx";
-import MinesPage from "../Pages/games/Mines.jsx";
 import Slotgame from "../Pages/games/Slotgame.jsx";
+import AllGames from "./games/GamesPages/Allgames .jsx";
 
 import PopularGamesCards from "./PopularGamesCards";
 
@@ -20,11 +18,14 @@ const Homme = () => {
 
       <PopularGamesCards />
 
-      {/* Games Sections */}
+      <AllGames isHome={true} />
 
-      <ChickenGames />
-      <MinesPage />
-      <AviatorGames />
+      {/* <ChickenGames isHome={true} /> */}
+
+      {/* <MinesPage isHome={true} /> */}
+
+      {/* <AviatorGames isHome={true} /> */}
+
       <CasinoSlotGames
         isHome={true}
         limit={6}
@@ -32,18 +33,12 @@ const Homme = () => {
         showSearch={false}
       />
 
-      <Slotgame />
-      {/* <PopularGames /> */}
+      <Slotgame isHome={true} />
 
-      {/* Other Sections */}
       <FeatureBar />
-
       <TopWinners />
-
       <StatsSection2 />
-
       <CountriesSection />
-
       <Footer />
     </main>
   );

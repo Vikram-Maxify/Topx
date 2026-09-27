@@ -9,24 +9,55 @@ const PopularGamesCards = () => {
   const user = useSelector((state) => state.auth.user);
 
   const popularCards = [
-    { id: 1, name: "Wingo", img: wingoIMG, to: "/wingo" },
+    {
+      id: 1,
+      name: "Wingo",
+      img: wingoIMG,
+      to: "/wingo",
+    },
     {
       id: 2,
       name: "Trading",
       img: tradingIMG,
-      to: "https://lotterry.trade.marinclub.site/",
+      to: "https://trading.regalclub.live/",
       external: true,
     },
-    { id: 3, name: "Mines", img: minesIMG, to: "/mine-games" },
-    { id: 4, name: "Matka", img: matkaIMG, to: "/matka/markets" },
+    {
+      id: 3,
+      name: "Mines",
+      img: minesIMG,
+      to: "/mine-games",
+    },
+    {
+      id: 4,
+      name: "POWERBALL",
+      title: "INDIA",
+      img: "https://i.ibb.co/XrN6Rp7M/Chat-GPT-Image-Sep-26-2026-03-49-16-PM.png",
+      to: "/powerhit",
+      // bg: "from-blue-500 to-cyan-400",
+    },
+    {
+      id: 5,
+      name: "Matka",
+      img: matkaIMG,
+      to: "/matka/markets",
+    },
+    {
+      id: 6,
+      name: "POWERBALL",
+      title: "AUSTRALIA",
+      img: "https://i.ibb.co/GfKjJPms/Chat-GPT-Image-Sep-26-2026-03-51-46-PM.png",
+      to: "/powerhit",
+      // bg: "from-red-500 to-orange-400",
+    },
   ];
 
-  // TopX Theme Card Style: Dark background, subtle border, neon shadow on hover
+  // 👇 Card: fixed height, no aspect ratio, image full cover
   const cardClass =
-    "relative aspect-square w-full overflow-hidden rounded-xl border border-[#2a1b3d] bg-[#1C0F2B] shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_8px_20px_rgba(0,230,118,0.15)] group-hover:border-[#00E676]/50 active:scale-[.98]";
+    "relative w-full h-[110px] sm:h-[140px] md:h-[237px] overflow-hidden rounded-2xl border border-[#2a1b3d] bg-[#1C0F2B] shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_8px_20px_rgba(155,89,182,0.35)] group-hover:border-[#B45CFF]/60 active:scale-[.98]";
 
   return (
-    <section className="w-full bg-[#0B0410] px-4 py-5 sm:px-6">
+    <section className="w-full bg-[#0B0410] px-4 py-5 sm:px-2">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[22px]">🔥</span>
@@ -34,21 +65,20 @@ const PopularGamesCards = () => {
             Popular Games
           </h2>
         </div>
-        <Link
+        {/* <Link
           to="/games"
           className="flex items-center gap-1 text-sm font-bold text-gray-300 bg-[#1C0F2B] border border-[#2a1b3d] px-3 py-1.5 rounded-lg hover:bg-[#2a1b3d] hover:text-white transition-all sm:text-base"
         >
           View all
           <span className="text-lg">›</span>
-        </Link>
+        </Link> */}
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid md:grid-cols-4 sm:grid-cols-3 gap-2 sm:gap-1.5">
         {popularCards.map((game) => {
           const isTrading = game.id === 2;
           const needsLogin = isTrading && !user;
 
-          // External link (Trading)
           if (game.external && user) {
             return (
               <a
@@ -62,7 +92,7 @@ const PopularGamesCards = () => {
                   <img
                     src={game.img}
                     alt={game.name}
-                    className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
+                    className="absolute inset-0 h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
                     loading="lazy"
                   />
                 </div>
@@ -70,7 +100,6 @@ const PopularGamesCards = () => {
             );
           }
 
-          // Login redirect (Trading + no user) ya internal links
           const linkTo = needsLogin ? "/login" : game.to;
 
           return (
@@ -84,7 +113,7 @@ const PopularGamesCards = () => {
                 <img
                   src={game.img}
                   alt={game.name}
-                  className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
+                  className="absolute inset-0 h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
                   loading="lazy"
                 />
               </div>
