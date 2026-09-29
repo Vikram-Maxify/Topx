@@ -117,6 +117,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import "./styles/premium-toast.css";
+import PaymentSuccess from "./Pages/PaymentSuccess.jsx";
 
 
 // ========================================
@@ -652,6 +653,12 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+                        <Route
+              path="/payment-success"
+              element={<PaymentSuccess />}
+            />
+
 
 
             {/* ========================================

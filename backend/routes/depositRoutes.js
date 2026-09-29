@@ -1,54 +1,111 @@
 const express = require("express");
-const router = express.Router();
-
-const upload = require("../middleware/upload");
 
 const {
   createDeposit,
   cancelDeposit,
-  onlinePayCallback,
-  getDepositStatusByIdentifier,
   getMyDeposits,
+  onlinePayCallback,
   getMyTurnoverHistory,
   getAllDepositsForAdmin,
-} = require("../controllers/depositController");
+  getDepositStatusByIdentifier,
+  generateTestQwackPaySign,
+} = require("../controllers/depositController.js");
+
+const uploadDeposit = require("../middleware/depositUpload.js");
 
 const { protect, adminProtect } = require("../middleware/authMiddleware.js");
 
-// ======================================================
-// PUBLIC / WEBHOOK ROUTES
-// ======================================================
 
-// QwackPay webhook/callback (no auth — gateway hits this)
-router.post("/qwackpay/callback", onlinePayCallback);
-router.get("/qwackpay/callback", onlinePayCallback); // some gateways use GET
 
-// ======================================================
-// USER ROUTES
-// ======================================================
+const router = express.Router();
 
-// Create deposit (QwackPay OR manual)
-// Note: upload.single("screenshot") — use same field name in controller
-// If your controller reads req.files.image, change to upload.single("image")
-router.post("/create", protect, upload.single("screenshot"), createDeposit);
+// =====================================================
+// CREATE DEPOSIT (RECHARGE)
+// USER
+// =====================================================
 
-// Cancel a pending deposit
-router.post("/cancel/:depositId", protect, cancelDeposit);
+router.post(
+  "/deposit",
+  protect,
+  uploadDeposit.fields([
+    {
+      name: "image",
+      maxCount: 1,
+    },
+  ]),
+  createDeposit
+);
 
-// My deposit history (with filters + pagination)
-router.get("/my", protect, getMyDeposits);
+// =====================================================
+// CANCEL DEPOSIT
+// USER
+// =====================================================
 
-// Deposit status by Mongo _id OR transactionId
-router.get("/status/:identifier", protect, getDepositStatusByIdentifier);
+router.post(
+  "/deposit/:depositId/cancel",
+  protect,
+  cancelDeposit
+);
 
-// Referral / turnover history
-router.get("/my-turnover", protect, getMyTurnoverHistory);
+// =====================================================
+// TURNOVER HISTORY
+// USER
+// =====================================================
 
-// ======================================================
-// ADMIN ROUTES
-// ======================================================
+router.get(
+  "/deposit/turnover",
+  protect,
+  getMyTurnoverHistory
+);
 
-// All deposits (with filters + pagination)
-router.get("/admin/all", protect, adminProtect, getAllDepositsForAdmin);
+// =====================================================
+// DEPOSIT STATUS BY IDENTIFIER
+// PUBLIC
+//
+// _id OR orderId
+// Used by payment-success page
+// =====================================================
+
+router.get(
+  "/deposit/status/:identifier",
+  protect,
+  getDepositStatusByIdentifier
+);
+
+// =====================================================
+// MY DEPOSIT HISTORY
+// USER
+// =====================================================
+
+router.get(
+  "/deposit",
+  protect,
+  getMyDeposits
+);
+
+// =====================================================
+// ADMIN: GET ALL DEPOSITS
+// ADMIN ONLY
+// =====================================================
+
+router.get(
+  "/deposits",
+  protect,
+  adminProtect,
+  getAllDepositsForAdmin
+);
+
+
+// =====================================================
+// AUTOMATIC PAYMENT CALLBACK
+// PUBLIC / PAYMENT GATEWAY
+//
+// QWACKPAY WEBHOOK
+// =====================================================
+
+router.all(
+  "/deposit/callback",
+  onlinePayCallback
+);
 
 module.exports = router;

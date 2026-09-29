@@ -248,7 +248,7 @@ app.use("/api", betRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/daily-claim", dailyClaimRoutes);
 app.use("/api/withdrawals", withdrawalRoutes);
-app.use("/api/deposit", depositRoutes);
+app.use("/api", depositRoutes);
 app.use("/api/banner", bannerRoutes);
 app.use("/api/public-bids", publicBidRoutes);
 

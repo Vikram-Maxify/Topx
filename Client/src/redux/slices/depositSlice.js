@@ -1,327 +1,853 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "./api";
 
-// ==========================
-// Create Deposit
-// Route: POST /deposit/create
-// Body: multipart/form-data (screenshot field: "screenshot")
-// ==========================
+/* ==========================================================
+   STATUS MAP
+========================================================== */
+
+export const DEPOSIT_STATUS = {
+  0: "PENDING",
+  1: "SUCCESS",
+  2: "FAILED",
+  3: "CANCELLED",
+};
+
+/* ==========================================================
+   CREATE DEPOSIT
+========================================================== */
+
 export const createDeposit = createAsyncThunk(
-  "deposit/create",
-  async (formData, thunkAPI) => {
+  "deposit/createDeposit",
+  async (depositData, { rejectWithValue }) => {
     try {
-      const { data } = await api.post("/deposit/create", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return data; // { success, message, paymentUrl, orderId, depositId, deposit }
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong",
+      const formData = new FormData();
+
+      if (depositData.gatewayId) {
+        formData.append("gatewayId", depositData.gatewayId);
+      }
+
+      formData.append(
+        "paymentMethod",
+        depositData.paymentMethod || "INR"
+      );
+
+      formData.append(
+        "channel",
+        depositData.channel || "qwackpay"
+      );
+
+      formData.append("amount", depositData.amount);
+
+      if (depositData.utr) {
+        formData.append("utr", depositData.utr);
+      }
+
+      if (depositData.configId) {
+        formData.append("configId", depositData.configId);
+      }
+
+      if (depositData.entryId) {
+        formData.append("entryId", depositData.entryId);
+      }
+
+      if (depositData.number) {
+        formData.append("number", depositData.number);
+      }
+
+      if (
+        typeof File !== "undefined" &&
+        depositData.paymentProof instanceof File
+      ) {
+        formData.append("image", depositData.paymentProof);
+      }
+
+      const { data } = await api.post("/deposit", formData);
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Deposit submission failed"
       );
     }
-  },
+  }
 );
 
-// ==========================
-// Cancel Deposit
-// Route: POST /deposit/cancel/:depositId
-// ==========================
+/* ==========================================================
+   CANCEL DEPOSIT
+========================================================== */
+
 export const cancelDeposit = createAsyncThunk(
-  "deposit/cancel",
-  async ({ depositId, reason = "User cancelled at gateway" }, thunkAPI) => {
+  "deposit/cancelDeposit",
+  async ({ depositId, reason }, { rejectWithValue }) => {
     try {
-      const { data } = await api.post(`/deposit/cancel/${depositId}`, {
-        reason,
-      });
-      return data; // { success, message, depositId, orderId, status }
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong",
+      const { data } = await api.post(
+        `/deposit/${depositId}/cancel`,
+        {
+          reason:
+            reason || "User cancelled at gateway",
+        }
+      );
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message ||
+          "Failed to cancel deposit"
       );
     }
-  },
+  }
 );
 
-// ==========================
-// Get Deposit Status by identifier (Mongo _id OR transactionId)
-// Route: GET /deposit/status/:identifier
-// ==========================
-export const getDepositStatus = createAsyncThunk(
-  "deposit/status",
-  async (identifier, thunkAPI) => {
+/* ==========================================================
+   GET DEPOSIT STATUS
+========================================================== */
+
+export const fetchDepositStatus = createAsyncThunk(
+  "deposit/fetchDepositStatus",
+  async (identifier, { rejectWithValue }) => {
     try {
-      const { data } = await api.get(`/deposit/status/${identifier}`);
-      return data.deposit; // { _id, orderId, amount, currency, status, ... }
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong",
+      const safeIdentifier = encodeURIComponent(
+        String(identifier || "").trim()
+      );
+
+      if (!safeIdentifier || safeIdentifier === "undefined") {
+        return rejectWithValue("Deposit order ID is required");
+      }
+
+      const { data } = await api.get(
+        `/deposit/status/${safeIdentifier}`
+      );
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message ||
+          "Failed to fetch deposit status"
       );
     }
-  },
+  }
 );
 
-// ==========================
-// Get My Deposits (history with filters + pagination)
-// Route: GET /deposit/my
-// ==========================
+/* ==========================================================
+   GET MY DEPOSITS
+========================================================== */
+
 export const getMyDeposits = createAsyncThunk(
-  "deposit/history",
-  async (params = {}, thunkAPI) => {
+  "deposit/getMyDeposits",
+
+  async (filters = {}, { rejectWithValue }) => {
     try {
-      const {
-        status,
-        methodType,
-        methodTitle,
-        transactionId,
-        country,
-        currency,
-        fromDate,
-        toDate,
-        minAmount,
-        maxAmount,
-        page = 1,
-        limit = 10,
-        sort = "desc",
-      } = params;
+      const params = new URLSearchParams();
 
-      const query = new URLSearchParams();
+      const append = (key, value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+        ) {
+          params.append(key, value);
+        }
+      };
 
-      if (status) query.append("status", status);
-      if (methodType) query.append("methodType", methodType);
-      if (methodTitle) query.append("methodTitle", methodTitle);
-      if (transactionId) query.append("transactionId", transactionId);
-      if (country) query.append("country", country);
-      if (currency) query.append("currency", currency);
-      if (fromDate) query.append("fromDate", fromDate);
-      if (toDate) query.append("toDate", toDate);
-      if (minAmount) query.append("minAmount", minAmount);
-      if (maxAmount) query.append("maxAmount", maxAmount);
-      query.append("page", page);
-      query.append("limit", limit);
-      query.append("sort", sort);
+      append("status", filters.status);
+      append("paymentMethod", filters.paymentMethod);
+      append("channel", filters.channel);
+      append("phone", filters.phone);
+      append("username", filters.username);
+      append("orderId", filters.orderId);
+      append("transactionId", filters.transactionId);
+      append("utr", filters.utr);
 
-      const { data } = await api.get(`/deposit/my?${query.toString()}`);
-      // Controller returns: { success, total, currentPage, totalPages, limit, deposits }
+      append("fromDate", filters.fromDate);
+      append("toDate", filters.toDate);
+
+      append("minAmount", filters.minAmount);
+      append("maxAmount", filters.maxAmount);
+
+      append("page", filters.page || 1);
+      append("limit", filters.limit || 10);
+      append("sort", filters.sort || "desc");
+
+      const queryString = params.toString();
+
+      const url = `/deposit${
+        queryString ? `?${queryString}` : ""
+      }`;
+
+      const { data } = await api.get(url);
+
       return data;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong",
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message ||
+          "Failed to fetch deposits"
       );
     }
-  },
+  }
 );
 
-// ==========================
-// Get My Turnover History (referral)
-// Route: GET /deposit/my-turnover
-// ==========================
-export const getMyTurnoverHistory = createAsyncThunk(
-  "deposit/turnoverHistory",
-  async (_, thunkAPI) => {
+/* ==========================================================
+   ADMIN - GET ALL DEPOSITS
+========================================================== */
+
+export const getAllDepositsForAdmin = createAsyncThunk(
+  "deposit/getAllDepositsForAdmin",
+
+  async (filters = {}, { rejectWithValue }) => {
     try {
-      const { data } = await api.get("/deposit/my-turnover");
-      // Controller returns: { success, downlineCount, stats, commissions }
+      const params = new URLSearchParams();
+
+      const append = (key, value) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+        ) {
+          params.append(key, value);
+        }
+      };
+
+      append("status", filters.status);
+      append("paymentMethod", filters.paymentMethod);
+      append("channel", filters.channel);
+      append("phone", filters.phone);
+      append("username", filters.username);
+      append("uid", filters.uid);
+      append("orderId", filters.orderId);
+      append("transactionId", filters.transactionId);
+      append("utr", filters.utr);
+
+      append("fromDate", filters.fromDate);
+      append("toDate", filters.toDate);
+
+      append("minAmount", filters.minAmount);
+      append("maxAmount", filters.maxAmount);
+
+      append("page", filters.page || 1);
+      append("limit", filters.limit || 20);
+      append("sort", filters.sort || "desc");
+
+      const { data } = await api.get(
+        `/deposits?${params.toString()}`
+      );
+
       return data;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Something went wrong",
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message ||
+          "Failed to fetch all deposits"
       );
     }
-  },
+  }
 );
+
+/* ==========================================================
+   GET SINGLE DEPOSIT
+========================================================== */
+
+export const getSingleDeposit = createAsyncThunk(
+  "deposit/getSingleDeposit",
+
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await api.get(
+        `/deposit/${id}`
+      );
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message ||
+          "Failed to fetch deposit details"
+      );
+    }
+  }
+);
+
+/* ==========================================================
+   INITIAL STATE
+========================================================== */
+
+const defaultFilters = {
+  status: "",
+  paymentMethod: "",
+  channel: "",
+  phone: "",
+  username: "",
+  orderId: "",
+  transactionId: "",
+  utr: "",
+  fromDate: "",
+  toDate: "",
+  minAmount: "",
+  maxAmount: "",
+  sort: "desc",
+};
+
+const defaultAdminFilters = {
+  status: "",
+  paymentMethod: "",
+  channel: "",
+  phone: "",
+  username: "",
+  uid: "",
+  orderId: "",
+  transactionId: "",
+  utr: "",
+  fromDate: "",
+  toDate: "",
+  minAmount: "",
+  maxAmount: "",
+  sort: "desc",
+};
 
 const initialState = {
-  // Deposit history
-  deposits: [],
-  total: 0,
-  currentPage: 1,
-  totalPages: 1,
-  limit: 10,
+  loading: false,
+  cancelLoading: false,
+  statusLoading: false,
 
-  // Single deposit status
+  success: false,
+
+  error: null,
+  message: "",
+
+  deposits: [],
+  adminDeposits: [],
+
   currentDeposit: null,
 
-  // Turnover / referral
-  turnover: {
-    downlineCount: 0,
-    stats: {
-      totalCommission: 0,
-      weeklyCommission: 0,
-      monthlyCommission: 0,
-      totalTurnover: 0,
-      weeklyTurnover: 0,
-      monthlyTurnover: 0,
-    },
-    commissions: [],
+  paymentUrl: null,
+  orderId: "",
+  depositId: "",
+  amount: 0,
+
+  currentStatus: null,
+  cancelledAt: null,
+  cancelReason: "",
+
+  pagination: {
+    total: 0,
+    currentPage: 1,
+    totalPages: 0,
+    limit: 10,
   },
 
-  // UI state
-  loading: false,
-  success: false,
-  message: "",
-  error: null,
+  adminPagination: {
+    total: 0,
+    currentPage: 1,
+    totalPages: 0,
+    perPage: 20,
+  },
 
-  // Create deposit specific
-  paymentUrl: "",
-  orderId: null,
-  depositId: null,
+  filters: {
+    ...defaultFilters,
+  },
+
+  adminFilters: {
+    ...defaultAdminFilters,
+  },
 };
+
+/* ==========================================================
+   SLICE
+========================================================== */
 
 const depositSlice = createSlice({
   name: "deposit",
+
   initialState,
 
   reducers: {
     clearDepositState: (state) => {
       state.loading = false;
+      state.cancelLoading = false;
+      state.statusLoading = false;
+
       state.success = false;
       state.error = null;
       state.message = "";
-      state.paymentUrl = "";
-      state.orderId = null;
-      state.depositId = null;
+
+      state.paymentUrl = null;
+      state.orderId = "";
+      state.depositId = "";
+      state.amount = 0;
+    },
+
+    clearDeposits: (state) => {
+      state.deposits = [];
+
+      state.pagination = {
+        total: 0,
+        currentPage: 1,
+        totalPages: 0,
+        limit: 10,
+      };
+    },
+
+    clearAdminDeposits: (state) => {
+      state.adminDeposits = [];
+
+      state.adminPagination = {
+        total: 0,
+        currentPage: 1,
+        totalPages: 0,
+        perPage: 20,
+      };
     },
 
     clearCurrentDeposit: (state) => {
       state.currentDeposit = null;
+      state.paymentUrl = null;
+      state.orderId = "";
+      state.depositId = "";
+      state.amount = 0;
+
+      state.currentStatus = null;
+      state.cancelledAt = null;
+      state.cancelReason = "";
+    },
+
+    setDepositFilters: (state, action) => {
+      state.filters = {
+        ...state.filters,
+        ...action.payload,
+      };
+    },
+
+    setAdminDepositFilters: (state, action) => {
+      state.adminFilters = {
+        ...state.adminFilters,
+        ...action.payload,
+      };
+    },
+
+    resetDepositFilters: (state) => {
+      state.filters = {
+        ...defaultFilters,
+      };
+    },
+
+    resetAdminDepositFilters: (state) => {
+      state.adminFilters = {
+        ...defaultAdminFilters,
+      };
     },
   },
 
   extraReducers: (builder) => {
     builder
 
-      // ==================
-      // Create Deposit
-      // ==================
+      /* ======================================================
+         CREATE
+      ====================================================== */
+
       .addCase(createDeposit.pending, (state) => {
         state.loading = true;
         state.success = false;
         state.error = null;
         state.message = "";
+        state.paymentUrl = null;
+        state.orderId = "";
+        state.depositId = "";
+        state.amount = 0;
       })
+
       .addCase(createDeposit.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        state.message = action.payload.message || "Deposit created";
-        state.paymentUrl = action.payload.paymentUrl || "";
-        state.orderId = action.payload.orderId || null;
-        state.depositId = action.payload.depositId || null;
 
-        // Agar deposit object aaya ho to history mein push kar do
-        if (action.payload.deposit) {
-          state.deposits = [action.payload.deposit, ...state.deposits];
+        state.message =
+          action.payload?.message ||
+          "Payment order created successfully.";
+
+        state.paymentUrl =
+          action.payload?.paymentUrl || null;
+
+        state.orderId = String(
+          action.payload?.orderId ||
+          action.payload?.deposit?.orderId ||
+          ""
+        );
+
+        state.depositId = String(
+          action.payload?.depositId ||
+          action.payload?.deposit?._id ||
+          ""
+        );
+
+        state.amount = Number(
+          action.payload?.amount ||
+          action.payload?.deposit?.amount ||
+          0
+        );
+
+        state.currentStatus =
+          action.payload?.status === "pending"
+            ? 0
+            : null;
+
+        if (action.payload?.deposit) {
+          state.currentDeposit =
+            action.payload.deposit;
+
+          state.deposits = [
+            action.payload.deposit,
+            ...state.deposits,
+          ];
         }
       })
+
       .addCase(createDeposit.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
-        state.error = action.payload;
+
+        state.error =
+          action.payload ||
+          "Deposit submission failed";
+
+        state.paymentUrl = null;
+        state.orderId = "";
+        state.depositId = "";
+        state.amount = 0;
       })
 
-      // ==================
-      // Cancel Deposit
-      // ==================
+      /* ======================================================
+         CANCEL
+      ====================================================== */
+
       .addCase(cancelDeposit.pending, (state) => {
-        state.loading = true;
+        state.cancelLoading = true;
         state.error = null;
       })
-      .addCase(cancelDeposit.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-        state.message = action.payload.message || "Deposit cancelled";
 
-        // Update deposit in history list
-        const updatedId = action.payload.depositId;
-        if (updatedId) {
-          const idx = state.deposits.findIndex(
-            (d) => String(d._id) === String(updatedId),
-          );
-          if (idx !== -1) {
-            state.deposits[idx].status = action.payload.status || "rejected";
+      .addCase(cancelDeposit.fulfilled, (state, action) => {
+        state.cancelLoading = false;
+
+        state.currentStatus = 3;
+
+        state.cancelledAt =
+          action.payload?.cancelledAt ||
+          new Date().toISOString();
+
+        state.cancelReason =
+          action.payload?.cancelReason ||
+          "User cancelled";
+
+        state.message =
+          action.payload?.message ||
+          "Deposit cancelled";
+
+        const depositId =
+          action.payload?.depositId;
+
+        const orderId =
+          action.payload?.orderId;
+
+        if (depositId || orderId) {
+          state.deposits =
+            state.deposits.map((deposit) => {
+              const idMatch =
+                depositId &&
+                String(deposit._id) ===
+                  String(depositId);
+
+              const orderMatch =
+                orderId &&
+                String(deposit.orderId) ===
+                  String(orderId);
+
+              if (idMatch || orderMatch) {
+                return {
+                  ...deposit,
+                  status: 3,
+                  cancelledAt:
+                    state.cancelledAt,
+                };
+              }
+
+              return deposit;
+            });
+        }
+      })
+
+      .addCase(cancelDeposit.rejected, (state, action) => {
+        state.cancelLoading = false;
+
+        state.error =
+          action.payload ||
+          "Failed to cancel deposit";
+      })
+
+      /* ======================================================
+         STATUS
+      ====================================================== */
+
+      .addCase(
+        fetchDepositStatus.pending,
+        (state) => {
+          state.statusLoading = true;
+          state.error = null;
+        }
+      )
+
+      .addCase(
+        fetchDepositStatus.fulfilled,
+        (state, action) => {
+          state.statusLoading = false;
+
+          const deposit =
+            action.payload?.deposit;
+
+          if (deposit) {
+            state.currentStatus =
+              deposit.status;
+
+            state.orderId = String(
+              deposit.orderId || state.orderId || ""
+            );
+
+            state.depositId = String(
+              deposit._id || state.depositId || ""
+            );
+
+            state.amount = Number(
+              deposit.amount || state.amount || 0
+            );
+
+            state.cancelledAt =
+              deposit.cancelledAt || null;
+
+            state.cancelReason =
+              deposit.cancelReason || "";
+
+            if (deposit._id) {
+              state.currentDeposit = {
+                ...(state.currentDeposit || {}),
+                ...deposit,
+              };
+            }
           }
         }
+      )
 
-        // Update currentDeposit if matching
-        if (
-          state.currentDeposit &&
-          String(state.currentDeposit._id) === String(updatedId)
-        ) {
-          state.currentDeposit.status = action.payload.status || "rejected";
+      .addCase(
+        fetchDepositStatus.rejected,
+        (state, action) => {
+          state.statusLoading = false;
+
+          state.error =
+            action.payload ||
+            "Failed to fetch deposit status";
         }
-      })
-      .addCase(cancelDeposit.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      )
 
-      // ==================
-      // Get Deposit Status
-      // ==================
-      .addCase(getDepositStatus.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getDepositStatus.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentDeposit = action.payload;
+      /* ======================================================
+         GET MY DEPOSITS
+      ====================================================== */
 
-        // Sync into history list if exists
-        const idx = state.deposits.findIndex(
-          (d) => String(d._id) === String(action.payload._id),
-        );
-        if (idx !== -1) {
-          state.deposits[idx] = { ...state.deposits[idx], ...action.payload };
+      .addCase(
+        getMyDeposits.pending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
         }
-      })
-      .addCase(getDepositStatus.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      )
 
-      // ==================
-      // Get My Deposits
-      // ==================
-      .addCase(getMyDeposits.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getMyDeposits.fulfilled, (state, action) => {
-        state.loading = false;
-        state.deposits = action.payload.deposits || [];
-        state.total = action.payload.total || 0;
-        state.currentPage = action.payload.currentPage || 1;
-        state.totalPages = action.payload.totalPages || 1;
-        state.limit = action.payload.limit || 10;
-      })
-      .addCase(getMyDeposits.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(
+        getMyDeposits.fulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.success = true;
 
-      // ==================
-      // Get My Turnover History
-      // ==================
-      .addCase(getMyTurnoverHistory.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getMyTurnoverHistory.fulfilled, (state, action) => {
-        state.loading = false;
-        state.turnover = {
-          downlineCount: action.payload.downlineCount || 0,
-          stats: action.payload.stats || initialState.turnover.stats,
-          commissions: action.payload.commissions || [],
-        };
-      })
-      .addCase(getMyTurnoverHistory.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+          state.deposits =
+            action.payload?.deposits || [];
+
+          state.pagination = {
+            total:
+              Number(action.payload?.total) || 0,
+
+            currentPage:
+              Number(
+                action.payload?.currentPage
+              ) || 1,
+
+            totalPages:
+              Number(
+                action.payload?.totalPages
+              ) || 0,
+
+            limit:
+              Number(action.payload?.limit) ||
+              10,
+          };
+        }
+      )
+
+      .addCase(
+        getMyDeposits.rejected,
+        (state, action) => {
+          state.loading = false;
+
+          state.error =
+            action.payload ||
+            "Failed to fetch deposits";
+
+          state.deposits = [];
+        }
+      )
+
+      /* ======================================================
+         ADMIN
+      ====================================================== */
+
+      .addCase(
+        getAllDepositsForAdmin.pending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+
+      .addCase(
+        getAllDepositsForAdmin.fulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.success = true;
+
+          state.adminDeposits =
+            action.payload?.deposits || [];
+
+          state.adminPagination = {
+            total:
+              Number(action.payload?.total) || 0,
+
+            currentPage:
+              Number(
+                action.payload?.currentPage
+              ) || 1,
+
+            totalPages:
+              Number(
+                action.payload?.totalPages
+              ) || 0,
+
+            perPage:
+              Number(
+                action.payload?.perPage ||
+                  action.payload?.limit
+              ) || 20,
+          };
+
+          state.message =
+            action.payload?.message ||
+            "All deposits fetched successfully";
+        }
+      )
+
+      .addCase(
+        getAllDepositsForAdmin.rejected,
+        (state, action) => {
+          state.loading = false;
+
+          state.error =
+            action.payload ||
+            "Failed to fetch all deposits";
+
+          state.adminDeposits = [];
+        }
+      )
+
+      /* ======================================================
+         SINGLE
+      ====================================================== */
+
+      .addCase(
+        getSingleDeposit.pending,
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+
+      .addCase(
+        getSingleDeposit.fulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.success = true;
+
+          state.currentDeposit =
+            action.payload?.deposit || null;
+        }
+      )
+
+      .addCase(
+        getSingleDeposit.rejected,
+        (state, action) => {
+          state.loading = false;
+
+          state.error =
+            action.payload ||
+            "Failed to fetch deposit details";
+
+          state.currentDeposit = null;
+        }
+      );
   },
 });
 
-export const { clearDepositState, clearCurrentDeposit } = depositSlice.actions;
+/* ==========================================================
+   ACTIONS
+========================================================== */
+
+export const {
+  clearDepositState,
+  clearDeposits,
+  clearAdminDeposits,
+  clearCurrentDeposit,
+  setDepositFilters,
+  setAdminDepositFilters,
+  resetDepositFilters,
+  resetAdminDepositFilters,
+} = depositSlice.actions;
+
+/* ==========================================================
+   SELECTORS
+========================================================== */
+
+export const selectDeposits = (state) =>
+  state.deposit.deposits;
+
+export const selectDepositPagination = (state) =>
+  state.deposit.pagination;
+
+export const selectAdminDeposits = (state) =>
+  state.deposit.adminDeposits;
+
+export const selectAdminDepositPagination = (
+  state
+) => state.deposit.adminPagination;
+
+export const selectCurrentDeposit = (state) =>
+  state.deposit.currentDeposit;
+
+export const selectDepositPaymentUrl = (state) =>
+  state.deposit.paymentUrl;
+
+export const selectDepositOrderId = (state) =>
+  state.deposit.orderId;
+
+export const selectDepositId = (state) =>
+  state.deposit.depositId;
+
+export const selectDepositAmount = (state) =>
+  state.deposit.amount;
+
+export const selectDepositLoading = (state) =>
+  state.deposit.loading;
+
+export const selectDepositError = (state) =>
+  state.deposit.error;
 
 export default depositSlice.reducer;
